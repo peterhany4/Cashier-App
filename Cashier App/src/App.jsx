@@ -1,14 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginPage from './features/login/LoginPage';
 import CashierPage from './features/cashier/CashierPage';
 import AdminDashboardPage from './features/admin/AdminDashboardPage';
 import { CartProvider } from './context/CartContext';
-import { mockMenu } from './data/mockMenu';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null); // holds user object when logged in
   const [currentView, setCurrentView] = useState('cashier'); // 'cashier' or 'admin'
-  const [menu, setMenu] = useState(mockMenu);
+  const [menu, setMenu] = useState([]);
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      if (currentUser && window.api && window.api.db) {
+        try {
+          const dbMenu = await window.api.db.getMenu();
+          setMenu(dbMenu);
+        } catch (err) {
+          console.error('Error fetching menu from SQLite:', err);
+        }
+      }
+    };
+    fetchMenu();
+  }, [currentUser]);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);

@@ -1,26 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function AdminDashboardPage({ user, menu, setMenu }) {
-    // 2. Active Tab State ('menu', 'inventory', 'salaries')
+    // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
     const [activeTab, setActiveTab] = useState('menu');
 
     // --- State: Inventory ---
-    const [inventory, setInventory] = useState([
-        { id: 1, name: 'خبز شاورما طازج', quantity: 120, unit: 'قطعة', lowThreshold: 35 },
-        { id: 2, name: 'لحم عجل مبرد (شاورما)', quantity: 25, unit: 'كجم', lowThreshold: 8 },
-        { id: 3, name: 'صدور دجاج طازجة', quantity: 42, unit: 'كجم', lowThreshold: 10 },
-        { id: 4, name: 'بطاطس بلدي للتحمير', quantity: 50, unit: 'كجم', lowThreshold: 15 },
-        { id: 5, name: 'زيت ذرة نقي للقلي', quantity: 18, unit: 'لتر', lowThreshold: 6 },
-        { id: 6, name: 'طماطم طازجة للسلطة', quantity: 5, unit: 'كجم', lowThreshold: 10 } // Low stock seeded
-    ]);
+    const [inventory, setInventory] = useState([]);
 
     // --- State: Employees & Salaries ---
-    const [employees, setEmployees] = useState([
-        { id: 1, name: 'أحمد محمود سليمان', role: 'كاشير ومسؤول صندوق', baseSalary: 4500, bonuses: 250, deductions: 50, paymentStatus: 'paid', lastPaymentDate: '2026-07-01' },
-        { id: 2, name: 'ياسر الشيف علي', role: 'كبير طهاة شاورما', baseSalary: 8500, bonuses: 600, deductions: 0, paymentStatus: 'pending', lastPaymentDate: '2026-06-30' },
-        { id: 3, name: 'حسن عمر متولي', role: 'مساعد طاهي ومجهز', baseSalary: 5200, bonuses: 150, deductions: 100, paymentStatus: 'paid', lastPaymentDate: '2026-07-01' },
-        { id: 4, name: 'نور الدين مصطفى', role: 'مشرف نظافة وصيانة', baseSalary: 3800, bonuses: 0, deductions: 0, paymentStatus: 'pending', lastPaymentDate: '2026-06-28' }
-    ]);
+    const [employees, setEmployees] = useState([]);
+
+    // --- State: Orders / Transactions Log ---
+    const [orders, setOrders] = useState([]);
 
     // --- Form Inputs States ---
     // Menu item form
@@ -42,6 +33,56 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     const [newEmpBase, setNewEmpBase] = useState('');
     const [showAddEmpForm, setShowAddEmpForm] = useState(false);
 
+    // Add User Account States
+    const [regUsername, setRegUsername] = useState('');
+    const [regPassword, setRegPassword] = useState('');
+    const [regRole, setRegRole] = useState('employee');
+    const [regQuestion, setRegQuestion] = useState('ما هو اسم أول مدرسة درست بها؟');
+    const [regAnswer, setRegAnswer] = useState('');
+    const [showAddUserForm, setShowAddUserForm] = useState(false);
+
+    // Search and expand details for reports
+    const [reportsSearch, setReportsSearch] = useState('');
+    const [expandedOrder, setExpandedOrder] = useState(null);
+
+    // Load initial SQLite data on mount
+    useEffect(() => {
+        const loadDbData = async () => {
+            if (window.api && window.api.db) {
+                try {
+                    const dbInv = await window.api.db.getInventory();
+                    const mappedInv = dbInv.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        lowThreshold: item.low_threshold
+                    }));
+                    setInventory(mappedInv);
+                    
+                    const dbEmp = await window.api.db.getEmployees();
+                    const mappedEmp = dbEmp.map(e => ({
+                        id: e.id,
+                        name: e.name,
+                        role: e.role,
+                        baseSalary: e.base_salary,
+                        bonuses: e.bonuses,
+                        deductions: e.deductions,
+                        paymentStatus: e.payment_status,
+                        lastPaymentDate: e.last_payment_date
+                    }));
+                    setEmployees(mappedEmp);
+
+                    const dbOrders = await window.api.db.getOrders();
+                    setOrders(dbOrders);
+                } catch (err) {
+                    console.error('Failed to load sqlite datasets:', err);
+                }
+            }
+        };
+        loadDbData();
+    }, []);
+
     // 1. Auth Guard Checklist
     if (!user || user.role !== 'admin') {
         return (
@@ -56,122 +97,260 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     }
 
     // --- Handler Functions: Menu ---
-    const handleAddMenuItem = (e) => {
+    const handleAddMenuItem = async (e) => {
         e.preventDefault();
         if (!newItemName || !newItemPrice) return;
-        const newItem = {
-            id: Date.now(),
-            name: newItemName,
-            price: parseFloat(newItemPrice),
-            category: newItemCategory
-        };
-        setMenu([...menu, newItem]);
-        setNewItemName('');
-        setNewItemPrice('');
-        setNewItemCategory('mains');
+        try {
+            if (window.api && window.api.db) {
+                const added = await window.api.db.addMenuItem(newItemName, parseFloat(newItemPrice), newItemCategory);
+                setMenu([...menu, added]);
+            } else {
+                const newItem = {
+                    id: Date.now(),
+                    name: newItemName,
+                    price: parseFloat(newItemPrice),
+                    category: newItemCategory
+                };
+                setMenu([...menu, newItem]);
+            }
+            setNewItemName('');
+            setNewItemPrice('');
+            setNewItemCategory('mains');
+        } catch (err) {
+            alert('خطأ أثناء إضافة الصنف: ' + err.message);
+        }
     };
 
-    const handleDeleteMenuItem = (id) => {
+    const handleDeleteMenuItem = async (id) => {
         if (confirm('هل أنت متأكد من رغبتك في حذف هذا الصنف من القائمة؟')) {
-            setMenu(menu.filter(item => item.id !== id));
+            try {
+                if (window.api && window.api.db) {
+                    await window.api.db.deleteMenuItem(id);
+                }
+                setMenu(menu.filter(item => item.id !== id));
+            } catch (err) {
+                alert('خطأ أثناء حذف الصنف: ' + err.message);
+            }
         }
     };
 
     // --- Handler Functions: Inventory ---
-    const handleAddInventory = (e) => {
+    const handleAddInventory = async (e) => {
         e.preventDefault();
         if (!newInvName || !newInvQty || !newInvThreshold) return;
-        const newItem = {
-            id: Date.now(),
-            name: newInvName,
-            quantity: parseFloat(newInvQty),
-            unit: newInvUnit,
-            lowThreshold: parseFloat(newInvThreshold)
-        };
-        setInventory([...inventory, newItem]);
-        setNewInvName('');
-        setNewInvQty('');
-        setNewInvThreshold('');
-        setShowAddInvForm(false);
-    };
-
-    const adjustStock = (id, amount) => {
-        setInventory(inventory.map(item => {
-            if (item.id === id) {
-                const newQty = Math.max(0, item.quantity + amount);
-                return { ...item, quantity: newQty };
+        try {
+            if (window.api && window.api.db) {
+                const added = await window.api.db.addInventoryItem(newInvName, parseFloat(newInvQty), newInvUnit, parseFloat(newInvThreshold));
+                setInventory([...inventory, {
+                    id: added.id,
+                    name: added.name,
+                    quantity: added.quantity,
+                    unit: added.unit,
+                    lowThreshold: added.low_threshold
+                }]);
+            } else {
+                const newItem = {
+                    id: Date.now(),
+                    name: newInvName,
+                    quantity: parseFloat(newInvQty),
+                    unit: newInvUnit,
+                    lowThreshold: parseFloat(newInvThreshold)
+                };
+                setInventory([...inventory, newItem]);
             }
-            return item;
-        }));
+            setNewInvName('');
+            setNewInvQty('');
+            setNewInvThreshold('');
+            setShowAddInvForm(false);
+        } catch (err) {
+            alert('خطأ أثناء إضافة المادة الخام: ' + err.message);
+        }
     };
 
-    const deleteInventoryItem = (id) => {
+    const adjustStock = async (id, amount) => {
+        try {
+            if (window.api && window.api.db) {
+                const res = await window.api.db.adjustStock(id, amount);
+                setInventory(inventory.map(item => {
+                    if (item.id === id) {
+                        return { ...item, quantity: res.newQuantity };
+                    }
+                    return item;
+                }));
+            } else {
+                setInventory(inventory.map(item => {
+                    if (item.id === id) {
+                        const newQty = Math.max(0, item.quantity + amount);
+                        return { ...item, quantity: newQty };
+                    }
+                    return item;
+                }));
+            }
+        } catch (err) {
+            alert('خطأ في تعديل المخزون: ' + err.message);
+        }
+    };
+
+    const deleteInventoryItem = async (id) => {
         if (confirm('هل تريد إزالة هذا الصنف من تتبع المخزون؟')) {
-            setInventory(inventory.filter(item => item.id !== id));
+            try {
+                if (window.api && window.api.db) {
+                    await window.api.db.deleteInventoryItem(id);
+                }
+                setInventory(inventory.filter(item => item.id !== id));
+            } catch (err) {
+                alert('خطأ أثناء الحذف: ' + err.message);
+            }
         }
     };
 
     // --- Handler Functions: Employees ---
-    const handleAddEmployee = (e) => {
+    const handleAddEmployee = async (e) => {
         e.preventDefault();
         if (!newEmpName || !newEmpRole || !newEmpBase) return;
-        const newEmp = {
-            id: Date.now(),
-            name: newEmpName,
-            role: newEmpRole,
-            baseSalary: parseFloat(newEmpBase),
-            bonuses: 0,
-            deductions: 0,
-            paymentStatus: 'pending',
-            lastPaymentDate: '-'
-        };
-        setEmployees([...employees, newEmp]);
-        setNewEmpName('');
-        setNewEmpRole('');
-        setNewEmpBase('');
-        setShowAddEmpForm(false);
-    };
-
-    const updateSalaryParams = (id, field, value) => {
-        const parsedVal = parseFloat(value) || 0;
-        setEmployees(employees.map(emp => {
-            if (emp.id === id) {
-                return { ...emp, [field]: parsedVal };
-            }
-            return emp;
-        }));
-    };
-
-    const togglePaymentStatus = (id) => {
-        setEmployees(employees.map(emp => {
-            if (emp.id === id) {
-                const newStatus = emp.paymentStatus === 'paid' ? 'pending' : 'paid';
-                const todayStr = newStatus === 'paid' ? new Date().toISOString().split('T')[0] : emp.lastPaymentDate;
-                return {
-                    ...emp,
-                    paymentStatus: newStatus,
-                    lastPaymentDate: todayStr
+        try {
+            if (window.api && window.api.db) {
+                const added = await window.api.db.addEmployee(newEmpName, newEmpRole, parseFloat(newEmpBase));
+                setEmployees([...employees, {
+                    id: added.id,
+                    name: added.name,
+                    role: added.role,
+                    baseSalary: added.base_salary,
+                    bonuses: added.bonuses,
+                    deductions: added.deductions,
+                    paymentStatus: added.payment_status,
+                    lastPaymentDate: added.last_payment_date
+                }]);
+            } else {
+                const newEmp = {
+                    id: Date.now(),
+                    name: newEmpName,
+                    role: newEmpRole,
+                    baseSalary: parseFloat(newEmpBase),
+                    bonuses: 0,
+                    deductions: 0,
+                    paymentStatus: 'pending',
+                    lastPaymentDate: '-'
                 };
+                setEmployees([...employees, newEmp]);
             }
-            return emp;
-        }));
+            setNewEmpName('');
+            setNewEmpRole('');
+            setNewEmpBase('');
+            setShowAddEmpForm(false);
+        } catch (err) {
+            alert('خطأ أثناء إضافة الموظف: ' + err.message);
+        }
     };
 
-    const deleteEmployee = (id) => {
+    const updateSalaryParams = async (id, field, value) => {
+        const parsedVal = parseFloat(value) || 0;
+        try {
+            if (window.api && window.api.db) {
+                const dbField = field === 'baseSalary' ? 'base_salary' : field;
+                await window.api.db.updateSalaryParams(id, dbField, parsedVal);
+            }
+            setEmployees(employees.map(emp => {
+                if (emp.id === id) {
+                    return { ...emp, [field]: parsedVal };
+                }
+                return emp;
+            }));
+        } catch (err) {
+            console.error('Failed to update salary details in SQLite:', err);
+        }
+    };
+
+    const togglePaymentStatus = async (id) => {
+        try {
+            if (window.api && window.api.db) {
+                const res = await window.api.db.togglePaymentStatus(id);
+                setEmployees(employees.map(emp => {
+                    if (emp.id === id) {
+                        return {
+                            ...emp,
+                            paymentStatus: res.paymentStatus,
+                            lastPaymentDate: res.lastPaymentDate
+                        };
+                    }
+                    return emp;
+                }));
+            } else {
+                setEmployees(employees.map(emp => {
+                    if (emp.id === id) {
+                        const newStatus = emp.paymentStatus === 'paid' ? 'pending' : 'paid';
+                        const todayStr = newStatus === 'paid' ? new Date().toISOString().split('T')[0] : emp.lastPaymentDate;
+                        return {
+                            ...emp,
+                            paymentStatus: newStatus,
+                            lastPaymentDate: todayStr
+                        };
+                    }
+                    return emp;
+                }));
+            }
+        } catch (err) {
+            alert('خطأ أثناء تعديل حالة الدفع: ' + err.message);
+        }
+    };
+
+    const deleteEmployee = async (id) => {
         if (confirm('هل أنت متأكد من إنهاء خدمة هذا الموظف وإزالته من كشف الرواتب؟')) {
-            setEmployees(employees.filter(emp => emp.id !== id));
+            try {
+                if (window.api && window.api.db) {
+                    await window.api.db.deleteEmployee(id);
+                }
+                setEmployees(employees.filter(emp => emp.id !== id));
+            } catch (err) {
+                alert('خطأ أثناء إزالة الموظف: ' + err.message);
+            }
+        }
+    };
+
+    // --- Handler Functions: User Registrations ---
+    const handleAddUser = async (e) => {
+        e.preventDefault();
+        if (!regUsername || !regPassword || !regAnswer) return;
+        try {
+            if (window.api && window.api.db) {
+                const res = await window.api.db.registerUser(regUsername, regPassword, regRole, regQuestion, regAnswer);
+                if (res.success) {
+                    alert(`تم إنشاء حساب (${regRole === 'admin' ? 'مدير' : 'كاشير'}) بنجاح للمستخدم: ${regUsername}`);
+                    setRegUsername('');
+                    setRegPassword('');
+                    setRegAnswer('');
+                    setShowAddUserForm(false);
+                } else {
+                    alert('فشل إنشاء الحساب: ' + res.error);
+                }
+            } else {
+                alert('نظام قواعد البيانات غير متصل.');
+            }
+        } catch (err) {
+            alert('خطأ: ' + err.message);
+        }
+    };
+
+    // Trigger reports reload when reports tab selected
+    const handleSelectReportsTab = async () => {
+        setActiveTab('reports');
+        if (window.api && window.api.db) {
+            try {
+                const dbOrders = await window.api.db.getOrders();
+                setOrders(dbOrders);
+            } catch (err) {
+                console.error('Failed to reload orders:', err);
+            }
         }
     };
 
     // --- Calculated Metrics for Top Bar ---
     const totalMenuItems = menu.length;
     const lowStockItemsCount = inventory.filter(item => item.quantity <= item.lowThreshold).length;
-    
+    const totalRevenue = orders.reduce((acc, order) => acc + order.total, 0);
+    const totalOrdersCount = orders.length;
+
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
-    const totalSalariesCost = employees.reduce((acc, emp) => acc + calculateNetPay(emp), 0);
-    const pendingSalariesCost = employees
-        .filter(emp => emp.paymentStatus === 'pending')
-        .reduce((acc, emp) => acc + calculateNetPay(emp), 0);
 
     return (
         <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto" dir="rtl">
@@ -218,6 +397,16 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                     >
                         💼 رواتب الموظفين
                     </button>
+                    <button
+                        onClick={handleSelectReportsTab}
+                        className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                            activeTab === 'reports'
+                                ? 'bg-slate-700 text-emerald-400 shadow-sm animate-pulse'
+                                : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                    >
+                        📋 سجل الفواتير والتقارير
+                    </button>
                 </div>
             </div>
 
@@ -248,23 +437,21 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                 {/* Metric 3 */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">إجمالي رواتب الشهر الحالي</span>
-                        <span className="text-3xl font-extrabold text-white">{totalSalariesCost} <span className="text-xs font-normal text-slate-400">جنية</span></span>
+                        <span className="text-xs text-slate-400 font-bold block mb-1">إجمالي إيرادات المبيعات</span>
+                        <span className="text-3xl font-extrabold text-emerald-400 font-mono">
+                            {totalRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-400">جنية</span>
+                        </span>
                     </div>
-                    <span className="text-3xl p-3 bg-indigo-500/10 rounded-xl text-indigo-400">💸</span>
+                    <span className="text-3xl p-3 bg-emerald-500/10 rounded-xl text-emerald-400">💸</span>
                 </div>
 
                 {/* Metric 4 */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">مستحقات معلقة للموظفين</span>
-                        <span className={`text-3xl font-extrabold ${pendingSalariesCost > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                            {pendingSalariesCost} <span className="text-xs font-normal text-slate-400">جنية</span>
-                        </span>
+                        <span className="text-xs text-slate-400 font-bold block mb-1">عدد الفواتير الصادرة</span>
+                        <span className="text-3xl font-extrabold text-white font-mono">{totalOrdersCount}</span>
                     </div>
-                    <span className={`text-3xl p-3 rounded-xl ${pendingSalariesCost > 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-slate-700/55 text-slate-400'}`}>
-                        ⏳
-                    </span>
+                    <span className="text-3xl p-3 bg-indigo-500/10 rounded-xl text-indigo-400">🧾</span>
                 </div>
             </div>
 
@@ -578,13 +765,92 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                                 </h3>
                                 <p className="text-xs text-slate-400 mt-1">تحديد وحساب الحوافز الشهرية، الخصومات التأديبية، واعتماد تسليم الراتب.</p>
                             </div>
-                            <button
-                                onClick={() => setShowAddEmpForm(!showAddEmpForm)}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
-                            >
-                                {showAddEmpForm ? 'إغلاق النموذج' : 'تسجيل موظف جديد +'}
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => { setShowAddUserForm(!showAddUserForm); setShowAddEmpForm(false); }}
+                                    className="bg-slate-750 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-slate-950/40"
+                                >
+                                    {showAddUserForm ? 'إغلاق نموذج الحسابات' : 'تسجيل حساب مستخدم 👤'}
+                                </button>
+                                <button
+                                    onClick={() => { setShowAddEmpForm(!showAddEmpForm); setShowAddUserForm(false); }}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                >
+                                    {showAddEmpForm ? 'إغلاق نموذج الموظفين' : 'تسجيل موظف جديد +'}
+                                </button>
+                            </div>
                         </div>
+
+                        {/* Add User Account Form */}
+                        {showAddUserForm && (
+                            <form onSubmit={handleAddUser} className="bg-slate-850 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fadeIn">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم مستخدم الحساب</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={regUsername}
+                                        onChange={(e) => setRegUsername(e.target.value)}
+                                        placeholder="مثال: ahmed_pos"
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">كلمة مرور الحساب</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={regPassword}
+                                        onChange={(e) => setRegPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">صلاحية الحساب</label>
+                                    <select
+                                        value={regRole}
+                                        onChange={(e) => setRegRole(e.target.value)}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                    >
+                                        <option value="employee">موظف مبيعات (كاشير)</option>
+                                        <option value="admin">مدير النظام (مسؤول)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">سؤال الأمان</label>
+                                    <select
+                                        value={regQuestion}
+                                        onChange={(e) => setRegQuestion(e.target.value)}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                    >
+                                        <option value="ما هو اسم أول مدرسة درست بها؟">ما هو اسم أول مدرسة درست بها؟</option>
+                                        <option value="ما هو اسم المدينة التي ولدت بها؟">ما هو اسم المدينة التي ولدت بها؟</option>
+                                        <option value="ما هو اسم أول حيوان أليف قمت بتربيته؟">ما هو اسم أول حيوان أليف قمت بتربيته؟</option>
+                                        <option value="ما هي وظيفه أحلامك في الطفولة؟">ما هي وظيفه أحلامك في الطفولة؟</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">إجابة سؤال الأمان</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            required
+                                            value={regAnswer}
+                                            onChange={(e) => setRegAnswer(e.target.value)}
+                                            placeholder="اكتب الإجابة بدقة"
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer shadow whitespace-nowrap"
+                                        >
+                                            تأكيد الحساب
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
 
                         {/* Add Employee Form */}
                         {showAddEmpForm && (
@@ -716,6 +982,93 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                                         {employees.length === 0 && (
                                             <tr>
                                                 <td colSpan="8" className="text-center p-8 text-slate-500">لا يوجد موظفين مسجلين حالياً.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ==================== TAB 4: SALES REPORTS & LOGS ==================== */}
+                {activeTab === 'reports' && (
+                    <div className="space-y-6 animate-fadeIn">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/60 pb-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+                                    <span className="text-emerald-400">📊</span> سجل الفواتير والمبيعات التفصيلي
+                                </h3>
+                                <p className="text-xs text-slate-400 mt-1">عرض وتحليل الفواتير المصدرة والبحث عن العمليات المحفوظة في قاعدة البيانات.</p>
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="ابحث باسم الكاشير أو رقم الفاتورة..."
+                                value={reportsSearch}
+                                onChange={(e) => setReportsSearch(e.target.value)}
+                                className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right w-full sm:w-64"
+                            />
+                        </div>
+
+                        {/* Orders Table */}
+                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-right border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                            <th className="p-3.5 font-bold">رقم الفاتورة</th>
+                                            <th className="p-3.5 font-bold">الكاشير المسؤول</th>
+                                            <th className="p-3.5 font-bold text-center">التاريخ والوقت</th>
+                                            <th className="p-3.5 font-bold text-center">إجمالي الفاتورة</th>
+                                            <th className="p-3.5 font-bold text-center">التفاصيل</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                        {orders
+                                            .filter(order => {
+                                                const searchLower = reportsSearch.toLowerCase();
+                                                return order.cashier.toLowerCase().includes(searchLower) || 
+                                                       order.id.toString().includes(searchLower);
+                                            })
+                                            .map((order) => {
+                                                const isExpanded = expandedOrder === order.id;
+                                                return (
+                                                    <tr key={order.id} className="hover:bg-slate-750/30 transition-colors">
+                                                        <td className="p-3.5 font-bold text-white font-mono">#{order.id}</td>
+                                                        <td className="p-3.5 font-bold text-slate-300">{order.cashier}</td>
+                                                        <td className="p-3.5 text-center font-mono text-slate-400">
+                                                            {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
+                                                        </td>
+                                                        <td className="p-3.5 text-center font-extrabold text-emerald-400 font-mono">
+                                                            {order.total.toFixed(2)} جنية
+                                                        </td>
+                                                        <td className="p-3.5 text-center">
+                                                            <div className="flex flex-col gap-2">
+                                                                <button
+                                                                    onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                                                                    className="text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer mx-auto"
+                                                                >
+                                                                    {isExpanded ? 'إخفاء التفاصيل ⬆️' : 'عرض الأصناف ⬇️'}
+                                                                </button>
+                                                                {isExpanded && (
+                                                                    <div className="bg-slate-900 border border-slate-700/70 rounded-xl p-3 mt-2 text-right text-xs space-y-2 animate-fadeIn max-w-sm mx-auto">
+                                                                        <div className="font-bold border-b border-slate-700 pb-1 text-slate-300">أصناف الفاتورة:</div>
+                                                                        {order.items?.map((item, idx) => (
+                                                                            <div key={idx} className="flex justify-between text-slate-400 gap-4">
+                                                                                <span>{item.item_name} × {item.quantity}</span>
+                                                                                <span className="font-mono text-slate-300">{(item.price * item.quantity).toFixed(2)} جنية</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        {orders.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="text-center p-8 text-slate-500">لا يوجد فواتير مسجلة في النظام حالياً.</td>
                                             </tr>
                                         )}
                                     </tbody>

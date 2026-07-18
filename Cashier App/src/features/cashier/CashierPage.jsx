@@ -7,7 +7,7 @@ const CATEGORIES = [
     { id: 'drinks', label: 'مشروبات باردة' },
 ];
 
-export default function CashierPage({ menu = [] }) {
+export default function CashierPage({ user, menu = [] }) {
     const [activeCategory, setActiveCategory] = useState('mains');
     const { cart, addToCart, removeFromCart, clearCart, getSubtotal } = useCart();
 
@@ -16,18 +16,32 @@ export default function CashierPage({ menu = [] }) {
     const subtotal = getSubtotal();
     const total = subtotal;
 
-    const handleCheckout = (shouldPrint) => {
+    const handleCheckout = async (shouldPrint) => {
         if (cart.length === 0) {
             alert('السلة فارغة! الرجاء إضافة عناصر أولاً.');
             return;
         }
 
-        if (shouldPrint) {
-            alert(`جاري حفظ الطلب وطباعة الفاتورة للعميل والمطبخ...\nالإجمالي: ${total.toFixed(2)} جنية`);
-        } else {
-            alert(`تم حفظ الطلب محلياً بنجاح (بدون طباعة).\nالإجمالي: ${total.toFixed(2)} جنية`);
+        try {
+            const cashierName = user?.username || 'كاشير عام';
+            if (window.api && window.api.db) {
+                const orderData = cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                }));
+                await window.api.db.createOrder(cashierName, total, orderData);
+            }
+
+            if (shouldPrint) {
+                alert(`جاري حفظ الطلب وطباعة الفاتورة للعميل والمطبخ...\nالإجمالي: ${total.toFixed(2)} جنية`);
+            } else {
+                alert(`تم حفظ الطلب محلياً بنجاح في قاعدة البيانات (بدون طباعة).\nالإجمالي: ${total.toFixed(2)} جنية`);
+            }
+            clearCart();
+        } catch (err) {
+            alert('خطأ أثناء حفظ الفاتورة: ' + err.message);
         }
-        clearCart();
     };
 
     return (
