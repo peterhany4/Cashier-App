@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function AdminDashboardPage({ user, menu, setMenu }) {
     // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
@@ -44,6 +44,19 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     // Search and expand details for reports
     const [reportsSearch, setReportsSearch] = useState('');
     const [expandedOrder, setExpandedOrder] = useState(null);
+
+    // In-app Toast — replaces native alert() to keep Electron window focus
+    const [toast, setToast] = useState(null);
+    const toastTimer = useRef(null);
+    const showToast = (msg, type = 'error') => {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast({ msg, type });
+        toastTimer.current = setTimeout(() => setToast(null), 3500);
+    };
+
+    // In-app Confirm Modal — replaces native confirm() dialog
+    const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm }
+    const showConfirm = (msg, onConfirm) => setConfirmModal({ msg, onConfirm });
 
     // Load initial SQLite data on mount
     useEffect(() => {
@@ -122,16 +135,16 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     };
 
     const handleDeleteMenuItem = async (id) => {
-        if (confirm('هل أنت متأكد من رغبتك في حذف هذا الصنف من القائمة؟')) {
+        showConfirm('هل أنت متأكد من رغبتك في حذف هذا الصنف من القائمة؟', async () => {
             try {
                 if (window.api && window.api.db) {
                     await window.api.db.deleteMenuItem(id);
                 }
                 setMenu(menu.filter(item => item.id !== id));
             } catch (err) {
-                alert('خطأ أثناء حذف الصنف: ' + err.message);
+                showToast('خطأ أثناء حذف الصنف: ' + err.message);
             }
-        }
+        });
     };
 
     // --- Handler Functions: Inventory ---
@@ -163,7 +176,7 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
             setNewInvThreshold('');
             setShowAddInvForm(false);
         } catch (err) {
-            alert('خطأ أثناء إضافة المادة الخام: ' + err.message);
+            showToast('خطأ أثناء إضافة المادة الخام: ' + err.message);
         }
     };
 
@@ -187,21 +200,21 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                 }));
             }
         } catch (err) {
-            alert('خطأ في تعديل المخزون: ' + err.message);
+            showToast('خطأ في تعديل المخزون: ' + err.message);
         }
     };
 
     const deleteInventoryItem = async (id) => {
-        if (confirm('هل تريد إزالة هذا الصنف من تتبع المخزون؟')) {
+        showConfirm('هل تريد إزالة هذا الصنف من تتبع المخزون؟', async () => {
             try {
                 if (window.api && window.api.db) {
                     await window.api.db.deleteInventoryItem(id);
                 }
                 setInventory(inventory.filter(item => item.id !== id));
             } catch (err) {
-                alert('خطأ أثناء الحذف: ' + err.message);
+                showToast('خطأ أثناء الحذف: ' + err.message);
             }
-        }
+        });
     };
 
     // --- Handler Functions: Employees ---
@@ -239,7 +252,7 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
             setNewEmpBase('');
             setShowAddEmpForm(false);
         } catch (err) {
-            alert('خطأ أثناء إضافة الموظف: ' + err.message);
+            showToast('خطأ أثناء إضافة الموظف: ' + err.message);
         }
     };
 
@@ -290,21 +303,21 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                 }));
             }
         } catch (err) {
-            alert('خطأ أثناء تعديل حالة الدفع: ' + err.message);
+            showToast('خطأ أثناء تعديل حالة الدفع: ' + err.message);
         }
     };
 
     const deleteEmployee = async (id) => {
-        if (confirm('هل أنت متأكد من إنهاء خدمة هذا الموظف وإزالته من كشف الرواتب؟')) {
+        showConfirm('هل أنت متأكد من إنهاء خدمة هذا الموظف وإزالته من كشف الرواتب؟', async () => {
             try {
                 if (window.api && window.api.db) {
                     await window.api.db.deleteEmployee(id);
                 }
                 setEmployees(employees.filter(emp => emp.id !== id));
             } catch (err) {
-                alert('خطأ أثناء إزالة الموظف: ' + err.message);
+                showToast('خطأ أثناء إزالة الموظف: ' + err.message);
             }
-        }
+        });
     };
 
     // --- Handler Functions: User Registrations ---
@@ -315,19 +328,19 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
             if (window.api && window.api.db) {
                 const res = await window.api.db.registerUser(regUsername, regPassword, regRole, regQuestion, regAnswer);
                 if (res.success) {
-                    alert(`تم إنشاء حساب (${regRole === 'admin' ? 'مدير' : 'كاشير'}) بنجاح للمستخدم: ${regUsername}`);
+                    showToast(`تم إنشاء حساب (${regRole === 'admin' ? 'مدير' : 'كاشير'}) بنجاح للمستخدم: ${regUsername}`, 'success');
                     setRegUsername('');
                     setRegPassword('');
                     setRegAnswer('');
                     setShowAddUserForm(false);
                 } else {
-                    alert('فشل إنشاء الحساب: ' + res.error);
+                    showToast('فشل إنشاء الحساب: ' + res.error);
                 }
             } else {
-                alert('نظام قواعد البيانات غير متصل.');
+                showToast('نظام قواعد البيانات غير متصل.');
             }
         } catch (err) {
-            alert('خطأ: ' + err.message);
+            showToast('خطأ: ' + err.message);
         }
     };
 
@@ -353,8 +366,39 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
     return (
-        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto" dir="rtl">
-            
+        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto relative" dir="rtl">
+
+            {/* In-app Toast */}
+            {toast && (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white ${
+                    toast.type === 'success' ? 'bg-emerald-600 border border-emerald-500' : 'bg-rose-600 border border-rose-500'
+                }`}>
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* In-app Confirm Modal */}
+            {confirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-right" dir="rtl">
+                        <p className="text-white font-semibold text-base mb-6">{confirmModal.msg}</p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setConfirmModal(null)}
+                                className="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm transition cursor-pointer"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }}
+                                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition cursor-pointer"
+                            >
+                                تأكيد الحذف
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* 1. Header & Title Banner */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useCart } from '../../context/CartContext';
 
 const CATEGORIES = [
@@ -11,6 +11,15 @@ export default function CashierPage({ user, menu = [] }) {
     const [activeCategory, setActiveCategory] = useState('mains');
     const { cart, addToCart, removeFromCart, clearCart, getSubtotal } = useCart();
 
+    // In-app toast — replaces native alert() to keep Electron window focus
+    const [toast, setToast] = useState(null);
+    const toastTimer = useRef(null);
+    const showToast = (msg, type = 'error') => {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast({ msg, type });
+        toastTimer.current = setTimeout(() => setToast(null), 3500);
+    };
+
     const filteredMenu = menu.filter(item => item.category === activeCategory);
 
     const subtotal = getSubtotal();
@@ -18,7 +27,7 @@ export default function CashierPage({ user, menu = [] }) {
 
     const handleCheckout = async (shouldPrint) => {
         if (cart.length === 0) {
-            alert('السلة فارغة! الرجاء إضافة عناصر أولاً.');
+            showToast('السلة فارغة! الرجاء إضافة عناصر أولاً.');
             return;
         }
 
@@ -34,18 +43,26 @@ export default function CashierPage({ user, menu = [] }) {
             }
 
             if (shouldPrint) {
-                alert(`جاري حفظ الطلب وطباعة الفاتورة للعميل والمطبخ...\nالإجمالي: ${total.toFixed(2)} جنية`);
+                showToast(`تم الحفظ وإرسال الطلب للطباعة ✓  الإجمالي: ${total.toFixed(2)} جنية`, 'success');
             } else {
-                alert(`تم حفظ الطلب محلياً بنجاح في قاعدة البيانات (بدون طباعة).\nالإجمالي: ${total.toFixed(2)} جنية`);
+                showToast(`تم حفظ الطلب بنجاح ✓  الإجمالي: ${total.toFixed(2)} جنية`, 'success');
             }
             clearCart();
         } catch (err) {
-            alert('خطأ أثناء حفظ الفاتورة: ' + err.message);
+            showToast('خطأ أثناء حفظ الفاتورة: ' + err.message);
         }
     };
 
     return (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden relative">
+            {/* In-app Toast */}
+            {toast && (
+                <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white ${
+                    toast.type === 'success' ? 'bg-emerald-600 border border-emerald-500' : 'bg-rose-600 border border-rose-500'
+                }`}>
+                    {toast.msg}
+                </div>
+            )}
             {/* RIGHT SIDE: Menu & Tabs (Takes up 65% space) */}
             <div className="w-[65%] p-6 flex flex-col gap-6 overflow-y-auto">
                 {/* Category Tabs */}

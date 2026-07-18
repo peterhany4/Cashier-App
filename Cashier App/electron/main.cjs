@@ -11,12 +11,19 @@ function createWindow() {
         height: 800,
         minWidth: 1024,
         minHeight: 768,
+        show: false,          // Hide until ready to prevent white flash
+        backgroundColor: '#0f172a', // Matches Tailwind bg-slate-900 (app's background)
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,
             nodeIntegration: false
         },
         autoHideMenuBar: true
+    });
+
+    // Show window only when content is fully rendered
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show();
     });
 
     if (isDev) {
@@ -114,7 +121,7 @@ function registerIpcHandlers() {
 app.whenReady().then(() => {
     // Init SQLite database in app user data directory
     dbModule.initDatabase(app.getPath('userData'));
-    
+
     registerIpcHandlers();
     createWindow();
 

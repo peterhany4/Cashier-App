@@ -1,10 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function LoginPage({ onLoginSuccess }) {
     const [view, setView] = useState('login'); // 'login', 'reset', 'register'
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    
+
+    // In-app toast (replaces native alert to avoid Electron focus loss)
+    const [toast, setToast] = useState(null); // { msg, type: 'success'|'error' }
+    const toastTimer = useRef(null);
+    const showToast = (msg, type = 'error') => {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast({ msg, type });
+        toastTimer.current = setTimeout(() => setToast(null), 3500);
+    };
+
     // Register Admin States
     const [regUsername, setRegUsername] = useState('');
     const [regPassword, setRegPassword] = useState('');
@@ -48,11 +57,11 @@ export default function LoginPage({ onLoginSuccess }) {
                 } else if (username === 'user' && password === 'user') {
                     onLoginSuccess({ username: 'الموظف', role: 'employee' });
                 } else {
-                    alert('اسم المستخدم أو كلمة المرور غير صحيحة');
+                    showToast('اسم المستخدم أو كلمة المرور غير صحيحة');
                 }
             }
         } catch (err) {
-            alert(err.message || 'فشل تسجيل الدخول');
+            showToast(err.message || 'فشل تسجيل الدخول');
         }
     };
 
@@ -61,23 +70,24 @@ export default function LoginPage({ onLoginSuccess }) {
         try {
             if (window.api && window.api.db) {
                 const res = await window.api.db.registerUser(
-                    regUsername, 
-                    regPassword, 
-                    'admin', 
-                    regQuestion, 
+                    regUsername,
+                    regPassword,
+                    'admin',
+                    regQuestion,
                     regAnswer
                 );
                 if (res.success) {
-                    alert('تم إنشاء حساب مسؤول النظام (المدير) بنجاح! الرجاء تسجيل الدخول.');
+                    // Switch to login first, THEN show toast — avoids native dialog focus loss
                     setView('login');
+                    showToast('تم إنشاء الحساب بنجاح! الرجاء تسجيل الدخول.', 'success');
                 } else {
-                    alert('خطأ أثناء التسجيل: ' + res.error);
+                    showToast('خطأ أثناء التسجيل: ' + res.error);
                 }
             } else {
-                alert('نظام قواعد البيانات غير متصل.');
+                showToast('نظام قواعد البيانات غير متصل.');
             }
         } catch (err) {
-            alert(err.message || 'فشل التسجيل');
+            showToast(err.message || 'فشل التسجيل');
         }
     };
 
@@ -89,10 +99,10 @@ export default function LoginPage({ onLoginSuccess }) {
                 setFetchedQuestion(question);
                 setResetStep(2);
             } else {
-                alert('نظام قواعد البيانات غير متصل.');
+                showToast('نظام قواعد البيانات غير متصل.');
             }
         } catch (err) {
-            alert(err.message || 'اسم المستخدم غير موجود');
+            showToast(err.message || 'اسم المستخدم غير موجود');
         }
     };
 
@@ -102,26 +112,37 @@ export default function LoginPage({ onLoginSuccess }) {
             if (window.api && window.api.db) {
                 const res = await window.api.db.resetPassword(resetUsername, securityAnswer, newPassword);
                 if (res.success) {
-                    alert('تمت إعادة تعيين كلمة المرور بنجاح! الرجاء تسجيل الدخول.');
                     setView('login');
+                    showToast('تمت إعادة تعيين كلمة المرور بنجاح! الرجاء تسجيل الدخول.', 'success');
                     setResetUsername('');
                     setSecurityAnswer('');
                     setNewPassword('');
                     setResetStep(1);
                 }
             } else {
-                alert('نظام قواعد البيانات غير متصل.');
+                showToast('نظام قواعد البيانات غير متصل.');
             }
         } catch (err) {
-            alert(err.message || 'الإجابة غير صحيحة، فشل إعادة تعيين كلمة المرور');
+            showToast(err.message || 'الإجابة غير صحيحة، فشل إعادة تعيين كلمة المرور');
         }
     };
 
     return (
         <div
-            className="min-h-screen bg-slate-900 flex flex-col justify-center items-center px-4"
+            className="min-h-screen w-full overflow-hidden bg-slate-900 flex flex-col justify-center items-center px-4"
             dir="rtl"
         >
+            {/* In-app Toast — replaces native alert() to keep window focus */}
+            {toast && (
+                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white transition-all ${
+                    toast.type === 'success'
+                        ? 'bg-emerald-600 border border-emerald-500'
+                        : 'bg-rose-600 border border-rose-500'
+                }`}>
+                    {toast.msg}
+                </div>
+            )}
+
             <div className="w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-700">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-white tracking-wide">
