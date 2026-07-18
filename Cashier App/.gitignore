@@ -9,7 +9,8 @@ lerna-debug.log*
 
 node_modules
 dist
-release
+Cashier App/release/
+*.exe
 dist-ssr
 *.local
 
