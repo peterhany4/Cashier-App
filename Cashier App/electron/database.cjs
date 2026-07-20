@@ -18,6 +18,11 @@ function initDatabase(userDataPath) {
             security_answer TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS menu (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE NOT NULL,
@@ -60,6 +65,15 @@ function initDatabase(userDataPath) {
             FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
         );
     `);
+
+    // Seed categories with defaults if empty
+    const checkCategories = db.prepare('SELECT count(*) as count FROM categories').get();
+    if (checkCategories.count === 0) {
+        const seedCategories = ['وجبات رئيسية', 'مقبلات جانبية', 'مشروبات باردة'];
+        const insertCat = db.prepare('INSERT INTO categories (name) VALUES (?)');
+        const seedCatTx = db.transaction((cats) => { for (const c of cats) insertCat.run(c); });
+        seedCatTx(seedCategories);
+    }
 
     // Seed inventory with default items if empty
     const checkInventory = db.prepare('SELECT count(*) as count FROM inventory').get();
@@ -137,6 +151,25 @@ function resetPassword(username, securityAnswer, newPassword) {
         throw new Error('إجابة سؤال الأمان غير صحيحة');
     }
     db.prepare('UPDATE users SET password = ? WHERE username = ?').run(newPassword, username.trim().toLowerCase());
+    return { success: true };
+}
+
+// --- DB Operations: Categories ---
+function getCategories() {
+    return db.prepare('SELECT * FROM categories ORDER BY id ASC').all();
+}
+
+function addCategory(name) {
+    try {
+        const info = db.prepare('INSERT INTO categories (name) VALUES (?)').run(name.trim());
+        return { success: true, id: info.lastInsertRowid, name: name.trim() };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
+function deleteCategory(id) {
+    db.prepare('DELETE FROM categories WHERE id = ?').run(id);
     return { success: true };
 }
 
@@ -278,6 +311,9 @@ module.exports = {
     loginUser,
     getSecurityQuestion,
     resetPassword,
+    getCategories,
+    addCategory,
+    deleteCategory,
     getMenu,
     addMenuItem,
     deleteMenuItem,

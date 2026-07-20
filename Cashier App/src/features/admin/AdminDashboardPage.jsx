@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export default function AdminDashboardPage({ user, menu, setMenu }) {
+export default function AdminDashboardPage({ user, menu, setMenu, categories = [], setCategories }) {
     // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
     const [activeTab, setActiveTab] = useState('menu');
 
@@ -17,8 +17,11 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     // Menu item form
     const [newItemName, setNewItemName] = useState('');
     const [newItemPrice, setNewItemPrice] = useState('');
-    const [newItemCategory, setNewItemCategory] = useState('mains');
+    const [newItemCategory, setNewItemCategory] = useState('');
     const [menuSearch, setMenuSearch] = useState('');
+
+    // Category management
+    const [newCategoryName, setNewCategoryName] = useState('');
 
     // Inventory form
     const [newInvName, setNewInvName] = useState('');
@@ -57,6 +60,13 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     // In-app Confirm Modal — replaces native confirm() dialog
     const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm }
     const showConfirm = (msg, onConfirm) => setConfirmModal({ msg, onConfirm });
+
+    // Sync default category selection when categories list arrives
+    useEffect(() => {
+        if (categories.length > 0 && !newItemCategory) {
+            setNewItemCategory(categories[0].name);
+        }
+    }, [categories]);
 
     // Load initial SQLite data on mount
     useEffect(() => {
@@ -112,7 +122,7 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
     // --- Handler Functions: Menu ---
     const handleAddMenuItem = async (e) => {
         e.preventDefault();
-        if (!newItemName || !newItemPrice) return;
+        if (!newItemName || !newItemPrice || !newItemCategory) return;
         try {
             if (window.api && window.api.db) {
                 const added = await window.api.db.addMenuItem(newItemName, parseFloat(newItemPrice), newItemCategory);
@@ -128,7 +138,7 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
             }
             setNewItemName('');
             setNewItemPrice('');
-            setNewItemCategory('mains');
+            setNewItemCategory(categories.length > 0 ? categories[0].name : '');
         } catch (err) {
             alert('خطأ أثناء إضافة الصنف: ' + err.message);
         }
@@ -143,6 +153,51 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                 setMenu(menu.filter(item => item.id !== id));
             } catch (err) {
                 showToast('خطأ أثناء حذف الصنف: ' + err.message);
+            }
+        });
+    };
+
+    // --- Handler Functions: Categories ---
+    const handleAddCategory = async (e) => {
+        e.preventDefault();
+        if (!newCategoryName.trim()) return;
+        try {
+            if (window.api && window.api.db) {
+                const res = await window.api.db.addCategory(newCategoryName.trim());
+                if (res.success) {
+                    setCategories([...categories, { id: res.id, name: res.name }]);
+                    if (!newItemCategory) setNewItemCategory(res.name);
+                    setNewCategoryName('');
+                    showToast(`تم إضافة الفئة: ${res.name}`, 'success');
+                } else {
+                    showToast('فشل إضافة الفئة: ' + res.error);
+                }
+            } else {
+                const newCat = { id: Date.now(), name: newCategoryName.trim() };
+                setCategories([...categories, newCat]);
+                if (!newItemCategory) setNewItemCategory(newCat.name);
+                setNewCategoryName('');
+                showToast(`تم إضافة الفئة: ${newCat.name}`, 'success');
+            }
+        } catch (err) {
+            showToast('خطأ أثناء إضافة الفئة: ' + err.message);
+        }
+    };
+
+    const handleDeleteCategory = async (id, name) => {
+        showConfirm(`هل تريد حذف فئة "${name}"؟ سيبقى الأصناف المرتبطة بها كما هي.`, async () => {
+            try {
+                if (window.api && window.api.db) {
+                    await window.api.db.deleteCategory(id);
+                }
+                const updated = categories.filter(c => c.id !== id);
+                setCategories(updated);
+                if (newItemCategory === name) {
+                    setNewItemCategory(updated.length > 0 ? updated[0].name : '');
+                }
+                showToast(`تم حذف الفئة: ${name}`, 'success');
+            } catch (err) {
+                showToast('خطأ أثناء حذف الفئة: ' + err.message);
             }
         });
     };
@@ -564,21 +619,62 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                                             <select
                                                 value={newItemCategory}
                                                 onChange={(e) => setNewItemCategory(e.target.value)}
+                                                required
                                                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                             >
-                                                <option value="mains">وجبات رئيسية</option>
-                                                <option value="sides">مقبلات جانبية</option>
-                                                <option value="drinks">مشروبات باردة</option>
+                                                {categories.length === 0 && (
+                                                    <option value="" disabled>-- أضف فئة أولاً --</option>
+                                                )}
+                                                {categories.map(cat => (
+                                                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition shadow shadow-emerald-950/50 cursor-pointer"
+                                        disabled={categories.length === 0}
+                                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition shadow shadow-emerald-950/50 cursor-pointer"
                                     >
                                         إدراج في القائمة +
                                     </button>
                                 </form>
+
+                                {/* --- Category Management Section --- */}
+                                <div className="border-t border-slate-700 pt-4 space-y-3">
+                                    <h4 className="font-bold text-sm text-slate-300 flex items-center gap-1.5">🗂️ إدارة الفئات</h4>
+                                    <form onSubmit={handleAddCategory} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            placeholder="اسم الفئة الجديدة..."
+                                            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-2 rounded-lg transition text-xs cursor-pointer border border-slate-600 whitespace-nowrap"
+                                        >
+                                            + إضافة
+                                        </button>
+                                    </form>
+                                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                        {categories.length === 0 && (
+                                            <p className="text-xs text-slate-500 text-center py-2">لا توجد فئات. أضف فئة جديدة.</p>
+                                        )}
+                                        {categories.map(cat => (
+                                            <div key={cat.id} className="flex items-center justify-between bg-slate-900/60 border border-slate-700/50 rounded-lg px-3 py-1.5">
+                                                <span className="text-sm text-slate-200 font-semibold">{cat.name}</span>
+                                                <button
+                                                    onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                                    className="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer transition px-2 py-0.5 hover:bg-rose-500/10 rounded"
+                                                >
+                                                    حذف
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Table: Menu List */}
@@ -601,7 +697,7 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                                                         <td className="p-3.5 font-bold text-white">{item.name}</td>
                                                         <td className="p-3.5 text-center">
                                                             <span className="bg-slate-900/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 border border-slate-700/50">
-                                                                {item.category === 'mains' ? 'وجبة رئيسية' : item.category === 'sides' ? 'مقبلات' : 'مشروبات'}
+                                                                {item.category}
                                                             </span>
                                                         </td>
                                                         <td className="p-3.5 text-center font-extrabold text-emerald-400">{item.price.toFixed(2)} جنية</td>

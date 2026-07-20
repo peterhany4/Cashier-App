@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld('api', {
         addMenuItem: (name, price, category) => ipcRenderer.invoke('db:addMenuItem', name, price, category),
         deleteMenuItem: (id) => ipcRenderer.invoke('db:deleteMenuItem', id),
 
+        getCategories: () => ipcRenderer.invoke('db:getCategories'),
+        addCategory: (name) => ipcRenderer.invoke('db:addCategory', name),
+        deleteCategory: (id) => ipcRenderer.invoke('db:deleteCategory', id),
+
         getInventory: () => ipcRenderer.invoke('db:getInventory'),
         addInventoryItem: (name, quantity, unit, lowThreshold) => 
             ipcRenderer.invoke('db:addInventoryItem', name, quantity, unit, lowThreshold),

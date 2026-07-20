@@ -8,19 +8,24 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null); // holds user object when logged in
   const [currentView, setCurrentView] = useState('cashier'); // 'cashier' or 'admin'
   const [menu, setMenu] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    const fetchMenu = async () => {
+    const fetchData = async () => {
       if (currentUser && window.api && window.api.db) {
         try {
-          const dbMenu = await window.api.db.getMenu();
+          const [dbMenu, dbCategories] = await Promise.all([
+            window.api.db.getMenu(),
+            window.api.db.getCategories()
+          ]);
           setMenu(dbMenu);
+          setCategories(dbCategories);
         } catch (err) {
-          console.error('Error fetching menu from SQLite:', err);
+          console.error('Error fetching data from SQLite:', err);
         }
       }
     };
-    fetchMenu();
+    fetchData();
   }, [currentUser]);
 
   const handleLoginSuccess = (user) => {
@@ -96,12 +101,15 @@ export default function App() {
               <AdminDashboardPage 
                 user={currentUser} 
                 menu={menu} 
-                setMenu={setMenu} 
+                setMenu={setMenu}
+                categories={categories}
+                setCategories={setCategories}
               />
             ) : (
               <CashierPage 
                 user={currentUser} 
-                menu={menu} 
+                menu={menu}
+                categories={categories}
               />
             )}
           </div>

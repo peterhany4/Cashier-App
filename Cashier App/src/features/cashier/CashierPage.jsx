@@ -1,14 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 
-const CATEGORIES = [
-    { id: 'mains', label: 'وجبات رئيسية' },
-    { id: 'sides', label: 'مقبلات جانبية' },
-    { id: 'drinks', label: 'مشروبات باردة' },
-];
+export default function CashierPage({ user, menu = [], categories = [] }) {
+    const [activeCategory, setActiveCategory] = useState(null);
 
-export default function CashierPage({ user, menu = [] }) {
-    const [activeCategory, setActiveCategory] = useState('mains');
+    // Sync active category when categories load
+    useEffect(() => {
+        if (categories.length > 0 && activeCategory === null) {
+            setActiveCategory(categories[0].name);
+        }
+    }, [categories]);
+
     const { cart, addToCart, removeFromCart, clearCart, getSubtotal } = useCart();
 
     // In-app toast — replaces native alert() to keep Electron window focus
@@ -66,19 +68,22 @@ export default function CashierPage({ user, menu = [] }) {
             {/* RIGHT SIDE: Menu & Tabs (Takes up 65% space) */}
             <div className="w-[65%] p-6 flex flex-col gap-6 overflow-y-auto">
                 {/* Category Tabs */}
-                <div className="flex gap-3">
-                    {CATEGORIES.map(category => (
+                <div className="flex gap-3 flex-wrap">
+                    {categories.map(category => (
                         <button
                             key={category.id}
-                            onClick={() => setActiveCategory(category.id)}
-                            className={`flex-1 py-4 px-6 text-lg font-bold rounded-xl border transition-all duration-200 ${activeCategory === category.id
+                            onClick={() => setActiveCategory(category.name)}
+                            className={`flex-1 py-4 px-6 text-lg font-bold rounded-xl border transition-all duration-200 ${activeCategory === category.name
                                 ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-950/50'
                                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
                                 }`}
                         >
-                            {category.label}
+                            {category.name}
                         </button>
                     ))}
+                    {categories.length === 0 && (
+                        <div className="text-slate-500 text-sm py-4">لا توجد فئات. أضف فئات من لوحة التحكم أولاً.</div>
+                    )}
                 </div>
 
                 {/* Items Grid */}

@@ -73,6 +73,18 @@ function registerIpcHandlers() {
         return dbModule.deleteMenuItem(id);
     });
 
+    ipcMain.handle('db:getCategories', async () => {
+        return dbModule.getCategories();
+    });
+
+    ipcMain.handle('db:addCategory', async (event, name) => {
+        return dbModule.addCategory(name);
+    });
+
+    ipcMain.handle('db:deleteCategory', async (event, id) => {
+        return dbModule.deleteCategory(id);
+    });
+
     ipcMain.handle('db:getInventory', async () => {
         return dbModule.getInventory();
     });
