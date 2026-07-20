@@ -365,6 +365,12 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
 
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
+    // Deduct paid salaries from total revenue
+    const totalPaidSalaries = employees
+        .filter(emp => emp.paymentStatus === 'paid')
+        .reduce((acc, emp) => acc + calculateNetPay(emp), 0);
+    const netRevenue = totalRevenue - totalPaidSalaries;
+
     return (
         <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto relative" dir="rtl">
 
@@ -482,9 +488,12 @@ export default function AdminDashboardPage({ user, menu, setMenu }) {
                 <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">إجمالي إيرادات المبيعات</span>
-                        <span className="text-3xl font-extrabold text-emerald-400 font-mono">
-                            {totalRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-400">جنية</span>
+                        <span className={`text-3xl font-extrabold font-mono ${netRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                            {netRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-400">جنية</span>
                         </span>
+                        {totalPaidSalaries > 0 && (
+                            <span className="text-xs text-slate-500 block mt-1">بعد خصم الرواتب المصروفة: {totalPaidSalaries.toFixed(2)}</span>
+                        )}
                     </div>
                     <span className="text-3xl p-3 bg-emerald-500/10 rounded-xl text-emerald-400">💸</span>
                 </div>
