@@ -375,6 +375,21 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         });
     };
 
+    const deleteOrder = async (id) => {
+        showConfirm(`هل أنت متأكد من حذف الفاتورة رقم #${id}؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
+            try {
+                if (window.api && window.api.db) {
+                    await window.api.db.deleteOrder(id);
+                }
+                setOrders(prev => prev.filter(o => o.id !== id));
+                showToast(`تم حذف الفاتورة رقم #${id} بنجاح ✓`, 'success');
+            } catch (err) {
+                console.error('Error deleting order:', err);
+                showToast('حدث خطأ أثناء حذف الفاتورة: ' + err.message);
+            }
+        });
+    };
+
     // --- Handler Functions: User Registrations ---
     const handleAddUser = async (e) => {
         e.preventDefault();
@@ -1170,6 +1185,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <th className="p-3.5 font-bold text-center">التاريخ والوقت</th>
                                             <th className="p-3.5 font-bold text-center">إجمالي الفاتورة</th>
                                             <th className="p-3.5 font-bold text-center">التفاصيل</th>
+                                            <th className="p-3.5 font-bold text-center">الإجراءات</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-700/40 text-sm">
@@ -1212,12 +1228,22 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                 )}
                                                             </div>
                                                         </td>
+                                                        <td className="p-3.5 text-center">
+                                                            <button
+                                                                onClick={() => deleteOrder(order.id)}
+                                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
+                                                                title="حذف الفاتورة"
+                                                            >
+                                                                <span>🗑️</span>
+                                                                <span>حذف</span>
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 );
                                             })}
                                         {orders.length === 0 && (
                                             <tr>
-                                                <td colSpan="5" className="text-center p-8 text-slate-500">لا يوجد فواتير مسجلة في النظام حالياً.</td>
+                                                <td colSpan="6" className="text-center p-8 text-slate-500">لا يوجد فواتير مسجلة في النظام حالياً.</td>
                                             </tr>
                                         )}
                                     </tbody>

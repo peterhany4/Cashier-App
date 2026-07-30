@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld('api', {
         togglePaymentStatus: (id) => ipcRenderer.invoke('db:togglePaymentStatus', id),
         deleteEmployee: (id) => ipcRenderer.invoke('db:deleteEmployee', id),
         createOrder: (cashier, total, items) => ipcRenderer.invoke('db:createOrder', cashier, total, items),
-        getOrders: () => ipcRenderer.invoke('db:getOrders')
+        getOrders: () => ipcRenderer.invoke('db:getOrders'),
+        deleteOrder: (id) => ipcRenderer.invoke('db:deleteOrder', id)
     }
 });

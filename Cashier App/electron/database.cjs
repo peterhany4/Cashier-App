@@ -304,6 +304,11 @@ function getOrders() {
     });
 }
 
+function deleteOrder(id) {
+    db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+    return { success: true };
+}
+
 module.exports = {
     initDatabase,
     checkHasUsers,
@@ -327,5 +332,6 @@ module.exports = {
     togglePaymentStatus,
     deleteEmployee,
     createOrder,
-    getOrders
+    getOrders,
+    deleteOrder
 };

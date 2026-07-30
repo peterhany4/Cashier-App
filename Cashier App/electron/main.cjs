@@ -128,6 +128,10 @@ function registerIpcHandlers() {
     ipcMain.handle('db:getOrders', async () => {
         return dbModule.getOrders();
     });
+
+    ipcMain.handle('db:deleteOrder', async (event, id) => {
+        return dbModule.deleteOrder(id);
+    });
 }
 
 app.whenReady().then(() => {

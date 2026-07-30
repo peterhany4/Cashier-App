@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import LoginPage from './features/login/LoginPage';
 import CashierPage from './features/cashier/CashierPage';
+import CashierReceiptsPage from './features/cashier/CashierReceiptsPage';
 import AdminDashboardPage from './features/admin/AdminDashboardPage';
 import { CartProvider } from './context/CartContext';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null); // holds user object when logged in
-  const [currentView, setCurrentView] = useState('cashier'); // 'cashier' or 'admin'
+  const [currentView, setCurrentView] = useState('cashier'); // 'cashier', 'admin', or 'receipts'
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -60,31 +61,55 @@ export default function App() {
                 </span>
               </div>
 
-              {/* Navigation toggle for admin only */}
-              {currentUser.role === 'admin' && (
-                <div className="flex gap-2 sm:mr-4 border-r border-slate-700 pr-4">
+              {/* Navigation toggle */}
+              <div className="flex gap-2 sm:mr-4 border-r border-slate-700 pr-4">
+                <button
+                  onClick={() => setCurrentView('cashier')}
+                  className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                    currentView === 'cashier'
+                      ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                  }`}
+                >
+                  شاشة الكاشير (POS)
+                </button>
+                
+                {currentUser.role === 'admin' ? (
+                  <>
+                    <button
+                      onClick={() => setCurrentView('admin')}
+                      className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                        currentView === 'admin'
+                          ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                      }`}
+                    >
+                      لوحة التحكم (Dashboard)
+                    </button>
+                    <button
+                      onClick={() => setCurrentView('receipts')}
+                      className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                        currentView === 'receipts'
+                          ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                      }`}
+                    >
+                      سجل فواتيري
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={() => setCurrentView('cashier')}
+                    onClick={() => setCurrentView('receipts')}
                     className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
-                      currentView === 'cashier'
+                      currentView === 'receipts'
                         ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
                     }`}
                   >
-                    شاشة الكاشير (POS)
+                    سجل فواتيري 🧾
                   </button>
-                  <button
-                    onClick={() => setCurrentView('admin')}
-                    className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
-                      currentView === 'admin'
-                        ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
-                    }`}
-                  >
-                    لوحة التحكم (Dashboard)
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             <button
@@ -105,6 +130,8 @@ export default function App() {
                 categories={categories}
                 setCategories={setCategories}
               />
+            ) : currentView === 'receipts' ? (
+              <CashierReceiptsPage user={currentUser} />
             ) : (
               <CashierPage 
                 user={currentUser} 
