@@ -19,18 +19,22 @@ export default function CashierReceiptsPage({ user }) {
     const [confirmModal, setConfirmModal] = useState(null);
     const showConfirm = (msg, onConfirm) => setConfirmModal({ msg, onConfirm });
 
-    // Load cashier's orders
+    // Load cashier's orders for today only (resets clean every midnight)
     useEffect(() => {
         let isMounted = true;
         const fetchOrders = async () => {
             if (window.api && window.api.db) {
                 try {
                     const dbOrders = await window.api.db.getOrders();
-                    // Filter orders belonging to the current cashier
-                    const myOrders = dbOrders.filter(
-                        order => order.cashier && user?.username && order.cashier.toLowerCase() === user.username.toLowerCase()
-                    );
-                    if (isMounted) setOrders(myOrders);
+                    const todayStr = new Date().toDateString();
+                    // Filter orders belonging to current cashier for TODAY only
+                    const myTodayOrders = dbOrders.filter(order => {
+                        if (!order.cashier || !user?.username) return false;
+                        if (order.cashier.toLowerCase() !== user.username.toLowerCase()) return false;
+                        if (!order.timestamp) return false;
+                        return new Date(order.timestamp).toDateString() === todayStr;
+                    });
+                    if (isMounted) setOrders(myTodayOrders);
                 } catch (err) {
                     console.error('Error fetching orders:', err);
                     if (isMounted) showToast('خطأ أثناء تحميل سجل الفواتير');
@@ -119,10 +123,10 @@ export default function CashierReceiptsPage({ user }) {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
                     <div>
                         <h2 className="text-2xl font-black text-slate-100 flex items-center gap-2">
-                            <span className="text-emerald-400">🧾</span> سجل فواتيري
+                            <span className="text-emerald-400">🧾</span> سجل فواتيري (اليوم)
                         </h2>
                         <p className="text-xs text-slate-400 mt-1">
-                            استعراض وإدارة الفواتير التي قمت بإصدارها باسم ({user?.username})
+                            استعراض وإدارة الفواتير التي قمت بإصدارها اليوم باسم ({user?.username})
                         </p>
                     </div>
 
@@ -139,7 +143,7 @@ export default function CashierReceiptsPage({ user }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
                         <div>
-                            <p className="text-xs text-slate-400 font-bold">إجمالي الفواتير المصدرة</p>
+                            <p className="text-xs text-slate-400 font-bold">فواتيرك اليوم</p>
                             <h4 className="text-2xl font-black text-white font-mono mt-1">{orders.length}</h4>
                         </div>
                         <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl font-bold">
@@ -149,7 +153,7 @@ export default function CashierReceiptsPage({ user }) {
 
                     <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
                         <div>
-                            <p className="text-xs text-slate-400 font-bold">مجموع مبيعاتك</p>
+                            <p className="text-xs text-slate-400 font-bold">مجموع مبيعاتك اليوم</p>
                             <h4 className="text-2xl font-black text-emerald-400 font-mono mt-1">
                                 {totalRevenue.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
                             </h4>

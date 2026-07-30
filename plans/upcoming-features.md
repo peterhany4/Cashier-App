@@ -1,6 +1,6 @@
 # 🗂️ Cashier App — Upcoming Features Plan
 
-> **Last Updated:** 2026-07-30  
+> **Last Updated:** 2026-07-31  
 > **Project Stack:** Electron + React (Vite) + SQLite (better-sqlite3)  
 > **Language:** Arabic UI (RTL)
 
@@ -8,11 +8,11 @@
 
 ## Overview
 
-This document outlines the four upcoming feature areas for the Cashier App, broken down into clear implementation tasks with technical details for each.
+This document outlines the five upcoming feature areas for the Cashier App, broken down into clear implementation tasks with technical details for each.
 
 ---
 
-## Feature 1 — Delete Receipt Button (Admin + Cashier Access)
+## Feature 1 — Delete Receipt Button (Admin + Cashier Access) (✅ COMPLETED)
 
 ### Problem
 - The receipts/orders log tab (`سجل الفواتير والتقارير`) is **only accessible to admins** (hardcoded in App.jsx). A regular cashier cannot navigate to it at all.
@@ -61,7 +61,7 @@ ipcMain.handle('db:deleteOrder', (_, id) => db.deleteOrder(id));
 
 ---
 
-## Feature 2 — Time-Filtered Revenue Reports
+## Feature 2 — Time-Filtered Revenue Reports (✅ COMPLETED)
 
 ### Problem
 - The current revenue display is a **flat sum of all orders ever created** — there is no way to filter by period.
@@ -144,7 +144,59 @@ const filteredOrders = orders.filter(order => {
 
 ---
 
-## Feature 3 — Salary Payments Tracked as Receipts / Documented Transactions
+## Feature 3 — Daily Receipt Number Reset
+
+### Problem
+- The `orders` table uses SQLite `AUTOINCREMENT` as its primary key — the ID grows forever (1, 2, 3, ... 15,432 ...) and never resets.
+- For daily operations, staff referring to "receipt #15,432" is awkward and meaningless. A real POS should show something like **"#5 | 31/07/2026"** — a clean daily counter that restarts every new day.
+
+### Why Not Reset the DB ID?
+The `AUTOINCREMENT` primary key must **never be reset** — it is used internally as a foreign key in `order_items`. Resetting it would cause ID collisions and broken data. It can technically count up to 9 quintillion, so it will never run out.
+
+### Proposed Solution: Separate `daily_number` Column
+
+Add a `daily_number` column to the `orders` table. This is a display-only counter that resets to `1` automatically every new calendar day — no button, no manual action needed.
+
+#### Backend Changes Needed
+
+**`electron/database.cjs`** — Modify `createOrder()` to compute and store the daily number:
+```js
+function createOrder(cashier, total, items) {
+    const timestamp = new Date().toISOString();
+    const todayStr = timestamp.split('T')[0]; // e.g. "2026-07-31"
+
+    // Count how many orders already exist today to get the next daily number
+    const todayCount = db.prepare(
+        "SELECT COUNT(*) as cnt FROM orders WHERE timestamp LIKE ?"
+    ).get(todayStr + '%');
+    const dailyNumber = todayCount.cnt + 1;
+
+    const insertOrder = db.prepare(
+        'INSERT INTO orders (cashier, total, timestamp, daily_number) VALUES (?, ?, ?, ?)'
+    );
+    // ... rest of transaction unchanged
+}
+```
+
+**DB Schema** — Add the column (existing databases need a migration):
+```sql
+ALTER TABLE orders ADD COLUMN daily_number INTEGER DEFAULT 1;
+```
+> For existing rows that don't have this column yet, a one-time migration script should back-fill `daily_number` by grouping orders per day and assigning sequential numbers.
+
+#### Display Change
+- Everywhere a receipt ID is shown (Admin Reports tab, Cashier Receipts tab), replace `#${order.id}` with `#${order.daily_number}` alongside the date.
+- The internal `order.id` is still used for all DB operations (delete, fetch items, etc.) — it just isn't shown to the user anymore.
+
+#### Result
+```
+Before:  #15432  |  Ahmed  |  31/07/2026  |  250.00 جنية
+After:   #5      |  Ahmed  |  31/07/2026  |  250.00 جنية
+```
+
+---
+
+## Feature 4 — Salary Payments Tracked as Receipts / Documented Transactions
 
 ### Problem
 - When the admin marks a salary as "تم الصرف" (paid), there is no permanent record of **who was paid**, **how much**, and **on which date** beyond the single `last_payment_date` column in the `employees` table.
@@ -188,7 +240,7 @@ When the admin clicks **"تم الصرف"** (the `togglePaymentStatus` button):
 
 #### Revenue Deduction Logic
 - The admin dashboard **net revenue** metric currently subtracts `totalPaidSalaries` (employees currently marked as paid).
-- After this change, the deduction should come from `salary_payments` filtered to the **same period** selected in Feature 2 (the period filter).
+- After this change, the deduction should come from `salary_payments` filtered to the **same period** selected in Feature 2 (the period filter, now Feature 2).
 - Example: "This Month" net revenue = sum of orders this month − sum of salary net_pay records this month.
 
 #### Backend Changes Needed
@@ -211,7 +263,7 @@ function getSalaryPayments() {
 
 ---
 
-## Feature 4 — Printable Receipts (Customer + Kitchen)
+## Feature 5 — Printable Receipts (Customer + Kitchen)
 
 > **Status: DEFERRED — implement last, after all other features are complete.**
 
@@ -244,11 +296,11 @@ Electron exposes the `webContents.print()` API which can target a specific print
 ## Implementation Order
 
 ```
-Step 1 — Delete Receipt button (Backend + Admin UI)    HIGH PRIORITY
-Step 2 — Cashier Receipts Tab (Cashier can view own)   HIGH PRIORITY
-Step 3 — Revenue Period Filter (Reports Tab)            MEDIUM PRIORITY
+Step 1 — Delete Receipt button (Backend + Admin UI)    ✅ COMPLETED
+Step 2 — Revenue Period Filter (Reports Tab)           ✅ COMPLETED
+Step 3 — Daily Receipt Number Reset (DB + UI)          HIGH PRIORITY
 Step 4 — Salary Payment History (DB + UI)              MEDIUM PRIORITY
-Step 5 — Link Salary deductions to Revenue period       MEDIUM PRIORITY
+Step 5 — Link Salary deductions to Revenue period      MEDIUM PRIORITY
 Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
 ```
 
@@ -259,11 +311,11 @@ Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
 ### Files to Modify
 - `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
 - `src/features/admin/AdminDashboardPage.jsx` — Delete button on receipts, period filter UI, salary history section
-- `electron/database.cjs` — `deleteOrder` function, `salary_payments` table + insert/get functions
+- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get functions
 - `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `recordSalaryPayment`, `getSalaryPayments`)
 - `electron/main.cjs` — Register new IPC handlers for the above
 
 ### Files to Create
 - `src/features/cashier/CashierReceiptsPage.jsx` — Cashier-facing personal receipts view with delete
-- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt template (Feature 4, deferred)
-- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket template (Feature 4, deferred)
+- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt template (Feature 5, deferred)
+- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket template (Feature 5, deferred)

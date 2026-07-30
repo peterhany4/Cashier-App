@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import PeriodFilter from '../../components/PeriodFilter';
 
 export default function AdminDashboardPage({ user, menu, setMenu, categories = [], setCategories }) {
     // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
@@ -46,6 +47,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     // Search and expand details for reports
     const [reportsSearch, setReportsSearch] = useState('');
+    const [periodFilteredOrders, setPeriodFilteredOrders] = useState([]);
     const [expandedOrder, setExpandedOrder] = useState(null);
 
     // In-app Toast — replaces native alert() to keep Electron window focus
@@ -1174,6 +1176,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             />
                         </div>
 
+                        {/* Period Filter Component */}
+                        <PeriodFilter
+                            orders={orders}
+                            onFilterChange={(filtered) => setPeriodFilteredOrders(filtered)}
+                        />
+
                         {/* Orders Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
@@ -1189,10 +1197,10 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-700/40 text-sm">
-                                        {orders
+                                        {periodFilteredOrders
                                             .filter(order => {
                                                 const searchLower = reportsSearch.toLowerCase();
-                                                return order.cashier.toLowerCase().includes(searchLower) || 
+                                                return (order.cashier && order.cashier.toLowerCase().includes(searchLower)) || 
                                                        order.id.toString().includes(searchLower);
                                             })
                                             .map((order) => {
@@ -1241,9 +1249,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                     </tr>
                                                 );
                                             })}
-                                        {orders.length === 0 && (
+                                        {periodFilteredOrders.length === 0 && (
                                             <tr>
-                                                <td colSpan="6" className="text-center p-8 text-slate-500">لا يوجد فواتير مسجلة في النظام حالياً.</td>
+                                                <td colSpan="6" className="text-center p-8 text-slate-500">
+                                                    {orders.length === 0 ? 'لا يوجد فواتير مسجلة في النظام حالياً.' : 'لا توجد فواتير تطابق الفترة المحددة أو البحث.'}
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
