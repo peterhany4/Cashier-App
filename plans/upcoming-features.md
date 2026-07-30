@@ -144,7 +144,7 @@ const filteredOrders = orders.filter(order => {
 
 ---
 
-## Feature 3 — Daily Receipt Number Reset
+## Feature 3 — Daily Receipt Number Reset (✅ COMPLETED)
 
 ### Problem
 - The `orders` table uses SQLite `AUTOINCREMENT` as its primary key — the ID grows forever (1, 2, 3, ... 15,432 ...) and never resets.
