@@ -53,7 +53,8 @@ function initDatabase(userDataPath) {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             cashier TEXT NOT NULL,
             total REAL NOT NULL,
-            timestamp TEXT NOT NULL
+            timestamp TEXT NOT NULL,
+            daily_number INTEGER DEFAULT 1
         );
 
         CREATE TABLE IF NOT EXISTS order_items (
@@ -65,6 +66,16 @@ function initDatabase(userDataPath) {
             FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
         );
     `);
+
+    // Migration: check if daily_number column exists in orders table
+    const tableInfo = db.prepare("PRAGMA table_info(orders)").all();
+    const hasDailyNumber = tableInfo.some(col => col.name === 'daily_number');
+    if (!hasDailyNumber) {
+        db.exec("ALTER TABLE orders ADD COLUMN daily_number INTEGER DEFAULT 1;");
+    }
+
+    // Recalculate daily_number using local calendar date for all orders
+    recalculateDailyNumbers();
 
     // Seed categories with defaults if empty
     const checkCategories = db.prepare('SELECT count(*) as count FROM categories').get();
@@ -98,6 +109,29 @@ function initDatabase(userDataPath) {
             }
         });
         insertTransaction(seedItems);
+    }
+}
+
+function getLocalDateString(d = new Date()) {
+    const dateObj = new Date(d);
+    if (isNaN(dateObj.getTime())) return 'unknown';
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function recalculateDailyNumbers() {
+    if (!db) return;
+    const allOrders = db.prepare("SELECT id, timestamp FROM orders ORDER BY timestamp ASC, id ASC").all();
+    const ordersByDate = {};
+    for (const ord of allOrders) {
+        const dateStr = getLocalDateString(ord.timestamp);
+        if (!ordersByDate[dateStr]) {
+            ordersByDate[dateStr] = 0;
+        }
+        ordersByDate[dateStr] += 1;
+        db.prepare("UPDATE orders SET daily_number = ? WHERE id = ?").run(ordersByDate[dateStr], ord.id);
     }
 }
 
@@ -277,17 +311,25 @@ function deleteEmployee(id) {
 }
 
 function createOrder(cashier, total, items) {
-    const timestamp = new Date().toISOString();
-    const insertOrder = db.prepare('INSERT INTO orders (cashier, total, timestamp) VALUES (?, ?, ?)');
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const todayLocalDate = getLocalDateString(now);
+
+    // Count how many orders already exist today in local time
+    const allOrders = db.prepare("SELECT timestamp FROM orders").all();
+    const todayCount = allOrders.filter(o => getLocalDateString(o.timestamp) === todayLocalDate).length;
+    const dailyNumber = todayCount + 1;
+
+    const insertOrder = db.prepare('INSERT INTO orders (cashier, total, timestamp, daily_number) VALUES (?, ?, ?, ?)');
     const insertItem = db.prepare('INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?, ?, ?, ?)');
 
     const transaction = db.transaction((cashierName, orderTotal, orderItems) => {
-        const info = insertOrder.run(cashierName, orderTotal, timestamp);
+        const info = insertOrder.run(cashierName, orderTotal, timestamp, dailyNumber);
         const orderId = info.lastInsertRowid;
         for (const item of orderItems) {
             insertItem.run(orderId, item.name, item.quantity, item.price);
         }
-        return { success: true, orderId };
+        return { success: true, orderId, dailyNumber };
     });
 
     return transaction(cashier, total, items);

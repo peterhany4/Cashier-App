@@ -50,13 +50,34 @@ export function filterOrdersByPeriod(orders, filterMode, selectedYear, selectedM
     });
 }
 
-export default function PeriodFilter({ orders = [], onFilterChange }) {
+export default function PeriodFilter({
+    orders = [],
+    onFilterChange,          // legacy: called with (filteredOrders, meta) — kept for backwards compat
+    // Controlled mode props (used by AdminDashboardPage to persist state across tab switches)
+    filterMode: controlledFilterMode,
+    selectedYear: controlledYear,
+    selectedMonth: controlledMonth,
+    onFilterModeChange,
+    onYearChange,
+    onMonthChange,
+}) {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth();
 
-    const [filterMode, setFilterMode] = useState('all'); // 'all' | 'today' | 'week' | 'year-month'
-    const [selectedYear, setSelectedYear] = useState(currentYear);
-    const [selectedMonth, setSelectedMonth] = useState('all'); // 'all' or number 0-11
+    // If controlled props provided, use them; otherwise fall back to internal state
+    const isControlled = controlledFilterMode !== undefined;
+
+    const [internalFilterMode, setInternalFilterMode] = useState('year-month');
+    const [internalSelectedYear, setInternalSelectedYear] = useState(currentYear);
+    const [internalSelectedMonth, setInternalSelectedMonth] = useState(currentMonth);
+
+    const filterMode = isControlled ? controlledFilterMode : internalFilterMode;
+    const selectedYear = isControlled ? controlledYear : internalSelectedYear;
+    const selectedMonth = isControlled ? controlledMonth : internalSelectedMonth;
+
+    const setFilterMode = isControlled ? onFilterModeChange : setInternalFilterMode;
+    const setSelectedYear = isControlled ? onYearChange : setInternalSelectedYear;
+    const setSelectedMonth = isControlled ? onMonthChange : setInternalSelectedMonth;
 
     // Extract available distinct years from orders
     const availableYears = useMemo(() => {

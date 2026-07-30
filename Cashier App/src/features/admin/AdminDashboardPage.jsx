@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import PeriodFilter from '../../components/PeriodFilter';
+import PeriodFilter, { filterOrdersByPeriod } from '../../components/PeriodFilter';
 
 export default function AdminDashboardPage({ user, menu, setMenu, categories = [], setCategories }) {
     // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
@@ -47,8 +47,17 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     // Search and expand details for reports
     const [reportsSearch, setReportsSearch] = useState('');
-    const [periodFilteredOrders, setPeriodFilteredOrders] = useState([]);
     const [expandedOrder, setExpandedOrder] = useState(null);
+
+    // --- Controlled Period Filter State (lifted so it persists across tab switches) ---
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    const [filterMode, setFilterMode] = useState('year-month');
+    const [selectedYear, setSelectedYear] = useState(currentYear);
+    const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+
+    // Derived filtered orders — always up to date with both orders list and filter settings
+    const periodFilteredOrders = filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth);
 
     // In-app Toast — replaces native alert() to keep Electron window focus
     const [toast, setToast] = useState(null);
@@ -377,14 +386,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         });
     };
 
-    const deleteOrder = async (id) => {
-        showConfirm(`هل أنت متأكد من حذف الفاتورة رقم #${id}؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
+    const deleteOrder = async (order, displayIndex) => {
+        showConfirm(`هل أنت متأكد من حذف الفاتورة رقم #${displayIndex} (بقيمة ${order.total.toFixed(2)} جنية)؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
             try {
                 if (window.api && window.api.db) {
-                    await window.api.db.deleteOrder(id);
+                    await window.api.db.deleteOrder(order.id);
                 }
-                setOrders(prev => prev.filter(o => o.id !== id));
-                showToast(`تم حذف الفاتورة رقم #${id} بنجاح ✓`, 'success');
+                setOrders(prev => prev.filter(o => o.id !== order.id));
+                showToast(`تم حذف الفاتورة رقم #${displayIndex} بنجاح ✓`, 'success');
             } catch (err) {
                 console.error('Error deleting order:', err);
                 showToast('حدث خطأ أثناء حذف الفاتورة: ' + err.message);
@@ -432,8 +441,10 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     // --- Calculated Metrics for Top Bar ---
     const totalMenuItems = menu.length;
     const lowStockItemsCount = inventory.filter(item => item.quantity <= item.lowThreshold).length;
-    const totalRevenue = orders.reduce((acc, order) => acc + order.total, 0);
-    const totalOrdersCount = orders.length;
+    
+    // Top bar metrics ALWAYS reflect the active period filter — persists across all tab switches
+    const totalRevenue = periodFilteredOrders.reduce((acc, order) => acc + (order.total || 0), 0);
+    const totalOrdersCount = periodFilteredOrders.length;
 
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
@@ -559,7 +570,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 {/* Metric 3 */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">إجمالي إيرادات المبيعات</span>
+                        <span className="text-xs text-slate-400 font-bold block mb-1">
+                            إيرادات الفترة المحددة
+                        </span>
                         <span className={`text-3xl font-extrabold font-mono ${netRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                             {netRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-400">جنية</span>
                         </span>
@@ -573,7 +586,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 {/* Metric 4 */}
                 <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">عدد الفواتير الصادرة</span>
+                        <span className="text-xs text-slate-400 font-bold block mb-1">
+                            فواتير الفترة المحددة
+                        </span>
                         <span className="text-3xl font-extrabold text-white font-mono">{totalOrdersCount}</span>
                     </div>
                     <span className="text-3xl p-3 bg-indigo-500/10 rounded-xl text-indigo-400">🧾</span>
@@ -1176,10 +1191,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             />
                         </div>
 
-                        {/* Period Filter Component */}
+                        {/* Period Filter Component — state is controlled by parent so it persists when switching tabs */}
                         <PeriodFilter
                             orders={orders}
-                            onFilterChange={(filtered) => setPeriodFilteredOrders(filtered)}
+                            filterMode={filterMode}
+                            selectedYear={selectedYear}
+                            selectedMonth={selectedMonth}
+                            onFilterModeChange={setFilterMode}
+                            onYearChange={setSelectedYear}
+                            onMonthChange={setSelectedMonth}
                         />
 
                         {/* Orders Table */}
@@ -1188,7 +1208,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 <table className="w-full text-right border-collapse">
                                     <thead>
                                         <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                            <th className="p-3.5 font-bold">رقم الفاتورة</th>
+                                            <th className="p-3.5 font-bold">#</th>
                                             <th className="p-3.5 font-bold">الكاشير المسؤول</th>
                                             <th className="p-3.5 font-bold text-center">التاريخ والوقت</th>
                                             <th className="p-3.5 font-bold text-center">إجمالي الفاتورة</th>
@@ -1201,13 +1221,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             .filter(order => {
                                                 const searchLower = reportsSearch.toLowerCase();
                                                 return (order.cashier && order.cashier.toLowerCase().includes(searchLower)) || 
-                                                       order.id.toString().includes(searchLower);
+                                                       order.items?.some(item => item.item_name.toLowerCase().includes(searchLower));
                                             })
-                                            .map((order) => {
+                                            .map((order, index) => {
                                                 const isExpanded = expandedOrder === order.id;
+                                                const displayIndex = index + 1;
                                                 return (
                                                     <tr key={order.id} className="hover:bg-slate-750/30 transition-colors">
-                                                        <td className="p-3.5 font-bold text-white font-mono">#{order.id}</td>
+                                                        <td className="p-3.5 font-bold text-white font-mono">#{displayIndex}</td>
                                                         <td className="p-3.5 font-bold text-slate-300">{order.cashier}</td>
                                                         <td className="p-3.5 text-center font-mono text-slate-400">
                                                             {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
@@ -1238,7 +1259,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                         </td>
                                                         <td className="p-3.5 text-center">
                                                             <button
-                                                                onClick={() => deleteOrder(order.id)}
+                                                                onClick={() => deleteOrder(order, displayIndex)}
                                                                 className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
                                                                 title="حذف الفاتورة"
                                                             >

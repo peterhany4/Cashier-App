@@ -50,14 +50,14 @@ export default function CashierReceiptsPage({ user }) {
         return () => { isMounted = false; };
     }, [user?.username]);
 
-    const handleDeleteOrder = (orderId) => {
-        showConfirm(`هل أنت متأكد من حذف الفاتورة رقم #${orderId}؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
+    const handleDeleteOrder = (order, displayIndex) => {
+        showConfirm(`هل أنت متأكد من حذف الفاتورة رقم #${displayIndex} (بقيمة ${order.total.toFixed(2)} جنية)؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
             try {
                 if (window.api && window.api.db) {
-                    await window.api.db.deleteOrder(orderId);
+                    await window.api.db.deleteOrder(order.id);
                 }
-                setOrders(prev => prev.filter(o => o.id !== orderId));
-                showToast(`تم حذف الفاتورة رقم #${orderId} بنجاح ✓`, 'success');
+                setOrders(prev => prev.filter(o => o.id !== order.id));
+                showToast(`تم حذف الفاتورة رقم #${displayIndex} بنجاح ✓`, 'success');
             } catch (err) {
                 console.error('Error deleting order:', err);
                 showToast('حدث خطأ أثناء حذف الفاتورة: ' + err.message);
@@ -69,7 +69,9 @@ export default function CashierReceiptsPage({ user }) {
     const filteredOrders = orders.filter(order => {
         const query = searchQuery.trim().toLowerCase();
         if (!query) return true;
+        const dailyNumStr = (order.daily_number || order.id).toString();
         return (
+            dailyNumStr.includes(query) ||
             order.id.toString().includes(query) ||
             order.items?.some(item => item.item_name.toLowerCase().includes(query))
         );
@@ -170,7 +172,7 @@ export default function CashierReceiptsPage({ user }) {
                         <table className="w-full text-right border-collapse">
                             <thead>
                                 <tr className="bg-slate-750 text-slate-300 border-b border-slate-700 text-sm">
-                                    <th className="p-4 font-bold">رقم الفاتورة</th>
+                                    <th className="p-4 font-bold">#</th>
                                     <th className="p-4 font-bold text-center">التاريخ والوقت</th>
                                     <th className="p-4 font-bold text-center">الإجمالي</th>
                                     <th className="p-4 font-bold text-center">الأصناف</th>
@@ -182,11 +184,12 @@ export default function CashierReceiptsPage({ user }) {
                                     <tr>
                                         <td colSpan="5" className="text-center p-8 text-slate-400">جاري تحميل الفواتير...</td>
                                     </tr>
-                                ) : filteredOrders.map((order) => {
+                                ) : filteredOrders.map((order, index) => {
                                     const isExpanded = expandedOrder === order.id;
+                                    const displayIndex = index + 1;
                                     return (
                                         <tr key={order.id} className="hover:bg-slate-750/40 transition-colors">
-                                            <td className="p-4 font-bold text-white font-mono">#{order.id}</td>
+                                            <td className="p-4 font-bold text-white font-mono">#{displayIndex}</td>
                                             <td className="p-4 text-center font-mono text-slate-400 text-xs">
                                                 {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
                                             </td>
@@ -215,7 +218,7 @@ export default function CashierReceiptsPage({ user }) {
                                             </td>
                                             <td className="p-4 text-center">
                                                 <button
-                                                    onClick={() => handleDeleteOrder(order.id)}
+                                                    onClick={() => handleDeleteOrder(order, displayIndex)}
                                                     className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
                                                     title="حذف الفاتورة"
                                                 >
