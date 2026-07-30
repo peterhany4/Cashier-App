@@ -1202,6 +1202,41 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             onMonthChange={setSelectedMonth}
                         />
 
+                        {/* Filtered Summary Strip */}
+                        {(() => {
+                            const visibleOrders = periodFilteredOrders.filter(order => {
+                                const searchLower = reportsSearch.toLowerCase();
+                                return !searchLower ||
+                                    (order.cashier && order.cashier.toLowerCase().includes(searchLower)) ||
+                                    order.items?.some(item => item.item_name.toLowerCase().includes(searchLower));
+                            });
+                            const filteredTotal = visibleOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+                            return (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-bold">
+                                                {reportsSearch.trim() ? `فواتير "${reportsSearch.trim()}"` : 'إجمالي الفواتير'}
+                                            </p>
+                                            <h4 className="text-2xl font-black text-white font-mono mt-1">{visibleOrders.length}</h4>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl">📄</div>
+                                    </div>
+                                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-xs text-slate-400 font-bold">
+                                                {reportsSearch.trim() ? `مجموع مبيعات "${reportsSearch.trim()}"` : 'إجمالي المبيعات'}
+                                            </p>
+                                            <h4 className="text-2xl font-black text-emerald-400 font-mono mt-1">
+                                                {filteredTotal.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                            </h4>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl">💰</div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
                         {/* Orders Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
