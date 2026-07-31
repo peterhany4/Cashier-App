@@ -1,6 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
 import PeriodFilter, { filterOrdersByPeriod } from '../../components/PeriodFilter';
 
+const ARABIC_MONTH_LABELS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+// Filter salary payments (payment_date is a "YYYY-MM-DD" string) to the same period used for orders
+function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth) {
+    if (!payments || !Array.isArray(payments)) return [];
+    const now = new Date();
+
+    return payments.filter(payment => {
+        if (!payment || !payment.payment_date) return false;
+        const parts = payment.payment_date.split('-').map(Number);
+        if (parts.length < 3 || parts.some(isNaN)) return false;
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+
+        if (filterMode === 'today') {
+            return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        }
+        if (filterMode === 'week') {
+            const dayOfWeek = now.getDay();
+            const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 0, 0, 0, 0);
+            return d >= startOfWeek && d <= now;
+        }
+        if (filterMode === 'year-month') {
+            if (d.getFullYear() !== Number(selectedYear)) return false;
+            if (selectedMonth === null || selectedMonth === undefined || selectedMonth === 'all') return true;
+            return d.getMonth() === Number(selectedMonth);
+        }
+        return true;
+    });
+}
+
+function formatPaymentDate(dateStr) {
+    if (!dateStr) return '-';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return dateStr;
+    return new Date(y, m - 1, d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 export default function AdminDashboardPage({ user, menu, setMenu, categories = [], setCategories }) {
     // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
     const [activeTab, setActiveTab] = useState('menu');
@@ -10,6 +47,13 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     // --- State: Employees & Salaries ---
     const [employees, setEmployees] = useState([]);
+
+    // --- State: Salary Payment History ---
+    const [salaryPayments, setSalaryPayments] = useState([]);
+    const [showSalaryHistory, setShowSalaryHistory] = useState(false);
+    const [salaryHistorySearch, setSalaryHistorySearch] = useState('');
+    const [salaryHistoryYear, setSalaryHistoryYear] = useState('all');
+    const [salaryHistoryMonth, setSalaryHistoryMonth] = useState('all');
 
     // --- State: Orders / Transactions Log ---
     const [orders, setOrders] = useState([]);
@@ -72,6 +116,37 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm }
     const showConfirm = (msg, onConfirm) => setConfirmModal({ msg, onConfirm });
 
+    const loadSalaryPayments = async () => {
+        if (window.api && window.api.db) {
+            try {
+                const dbPayments = await window.api.db.getSalaryPayments();
+                setSalaryPayments(dbPayments || []);
+            } catch (err) {
+                console.error('Failed to load salary payments:', err);
+            }
+        }
+    };
+
+    const loadEmployees = async () => {
+        if (window.api && window.api.db) {
+            try {
+                const dbEmp = await window.api.db.getEmployees();
+                setEmployees(dbEmp.map(e => ({
+                    id: e.id,
+                    name: e.name,
+                    role: e.role,
+                    baseSalary: e.base_salary,
+                    bonuses: e.bonuses,
+                    deductions: e.deductions,
+                    paymentStatus: e.payment_status,
+                    lastPaymentDate: e.last_payment_date
+                })));
+            } catch (err) {
+                console.error('Failed to load employees:', err);
+            }
+        }
+    };
+
     // Sync default category selection when categories list arrives
     useEffect(() => {
         if (categories.length > 0 && !newItemCategory) {
@@ -94,18 +169,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                     }));
                     setInventory(mappedInv);
                     
-                    const dbEmp = await window.api.db.getEmployees();
-                    const mappedEmp = dbEmp.map(e => ({
-                        id: e.id,
-                        name: e.name,
-                        role: e.role,
-                        baseSalary: e.base_salary,
-                        bonuses: e.bonuses,
-                        deductions: e.deductions,
-                        paymentStatus: e.payment_status,
-                        lastPaymentDate: e.last_payment_date
-                    }));
-                    setEmployees(mappedEmp);
+                    await loadEmployees();
+
+                    await loadSalaryPayments();
 
                     const dbOrders = await window.api.db.getOrders();
                     setOrders(dbOrders);
@@ -115,6 +181,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             }
         };
         loadDbData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // 1. Auth Guard Checklist
@@ -341,31 +408,42 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     };
 
     const togglePaymentStatus = async (id) => {
+        const emp = employees.find(e => e.id === id);
         try {
             if (window.api && window.api.db) {
                 const res = await window.api.db.togglePaymentStatus(id);
-                setEmployees(employees.map(emp => {
-                    if (emp.id === id) {
+                if (res.alreadyPaidThisMonth) {
+                    showToast('تم صرف راتب هذا الموظف لهذا الشهر بالفعل. احذف الدفعة من سجل المدفوعات لإعادة الحالة إلى معلق.');
+                    await loadEmployees();
+                    return;
+                }
+                setEmployees(employees.map(e => {
+                    if (e.id === id) {
                         return {
-                            ...emp,
+                            ...e,
                             paymentStatus: res.paymentStatus,
-                            lastPaymentDate: res.lastPaymentDate
+                            lastPaymentDate: res.lastPaymentDate,
+                            bonuses: res.bonuses,
+                            deductions: res.deductions
                         };
                     }
-                    return emp;
+                    return e;
                 }));
+                await loadSalaryPayments();
+                showToast(`تم اعتماد صرف راتب "${emp ? emp.name : ''}" وتسجيله في السجل ✓`, 'success');
             } else {
-                setEmployees(employees.map(emp => {
-                    if (emp.id === id) {
-                        const newStatus = emp.paymentStatus === 'paid' ? 'pending' : 'paid';
-                        const todayStr = newStatus === 'paid' ? new Date().toISOString().split('T')[0] : emp.lastPaymentDate;
+                setEmployees(employees.map(e => {
+                    if (e.id === id) {
+                        const todayStr = new Date().toISOString().split('T')[0];
                         return {
-                            ...emp,
-                            paymentStatus: newStatus,
-                            lastPaymentDate: todayStr
+                            ...e,
+                            paymentStatus: 'paid',
+                            lastPaymentDate: todayStr,
+                            bonuses: 0,
+                            deductions: 0
                         };
                     }
-                    return emp;
+                    return e;
                 }));
             }
         } catch (err) {
@@ -382,6 +460,22 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 setEmployees(employees.filter(emp => emp.id !== id));
             } catch (err) {
                 showToast('خطأ أثناء إزالة الموظف: ' + err.message);
+            }
+        });
+    };
+
+    const deleteSalaryPayment = async (payment) => {
+        showConfirm(`هل أنت متأكد من حذف دفعة راتب "${payment.employee_name}" لشهر ${payment.month_label} (بقيمة ${Number(payment.net_pay).toFixed(2)} جنية)؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
+            try {
+                if (window.api && window.api.db) {
+                    await window.api.db.deleteSalaryPayment(payment.id);
+                }
+                setSalaryPayments(prev => prev.filter(p => p.id !== payment.id));
+                await loadEmployees();
+                showToast('تم حذف الدفعة من السجل بنجاح ✓', 'success');
+            } catch (err) {
+                console.error('Error deleting salary payment:', err);
+                showToast('حدث خطأ أثناء حذف الدفعة: ' + err.message);
             }
         });
     };
@@ -448,11 +542,39 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
-    // Deduct paid salaries from total revenue
-    const totalPaidSalaries = employees
-        .filter(emp => emp.paymentStatus === 'paid')
-        .reduce((acc, emp) => acc + calculateNetPay(emp), 0);
-    const netRevenue = totalRevenue - totalPaidSalaries;
+    // Deduct salaries actually paid during the selected period (from salary_payments history)
+    const periodSalaryPayments = filterSalaryPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth);
+    const totalPaidSalariesInPeriod = periodSalaryPayments.reduce((acc, p) => acc + (p.net_pay || 0), 0);
+    const netRevenue = totalRevenue - totalPaidSalariesInPeriod;
+
+    // Salary payment history derived data
+    const availableSalaryYears = (() => {
+        const yearsSet = new Set();
+        yearsSet.add(new Date().getFullYear());
+        salaryPayments.forEach(p => {
+            if (p.payment_date) {
+                const year = Number(p.payment_date.split('-')[0]);
+                if (!isNaN(year)) yearsSet.add(year);
+            }
+        });
+        return Array.from(yearsSet).sort((a, b) => b - a);
+    })();
+
+    const filteredSalaryHistory = salaryPayments.filter(p => {
+        const searchLower = salaryHistorySearch.trim().toLowerCase();
+        const nameMatch = !searchLower || (p.employee_name && p.employee_name.toLowerCase().includes(searchLower));
+        let periodMatch = true;
+        if (salaryHistoryYear !== 'all') {
+            const year = Number(p.payment_date.split('-')[0]);
+            if (year !== Number(salaryHistoryYear)) periodMatch = false;
+        }
+        if (periodMatch && salaryHistoryMonth !== 'all') {
+            const month = Number(p.payment_date.split('-')[1]);
+            if (month !== Number(salaryHistoryMonth)) periodMatch = false;
+        }
+        return nameMatch && periodMatch;
+    });
+    const salaryHistoryTotal = filteredSalaryHistory.reduce((sum, p) => sum + (p.net_pay || 0), 0);
 
     return (
         <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto relative" dir="rtl">
@@ -576,8 +698,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         <span className={`text-3xl font-extrabold font-mono ${netRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
                             {netRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-400">جنية</span>
                         </span>
-                        {totalPaidSalaries > 0 && (
-                            <span className="text-xs text-slate-500 block mt-1">بعد خصم الرواتب المصروفة: {totalPaidSalaries.toFixed(2)}</span>
+                        {totalPaidSalariesInPeriod > 0 && (
+                            <span className="text-xs text-slate-500 block mt-1">بعد خصم رواتب الفترة: {totalPaidSalariesInPeriod.toFixed(2)}</span>
                         )}
                     </div>
                     <span className="text-3xl p-3 bg-emerald-500/10 rounded-xl text-emerald-400">💸</span>
@@ -1135,16 +1257,23 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                         {netPay} <span className="text-xs text-slate-400 font-normal">جنية</span>
                                                     </td>
                                                     <td className="p-3.5 text-center">
-                                                        <button
-                                                            onClick={() => togglePaymentStatus(emp.id)}
-                                                            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border ${
-                                                                emp.paymentStatus === 'paid'
-                                                                    ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-400 hover:bg-emerald-500/20'
-                                                                    : 'bg-amber-500/10 border-amber-500/35 text-amber-400 hover:bg-amber-500/20'
-                                                            }`}
-                                                        >
-                                                            {emp.paymentStatus === 'paid' ? 'تم الصرف 🟢' : 'معلق / اعتماد الراتب ⏳'}
-                                                        </button>
+                                                        {emp.paymentStatus === 'paid' ? (
+                                                            <button
+                                                                disabled
+                                                                title="تم صرف راتب هذا الموظف لهذا الشهر. احذف الدفعة من سجل المدفوعات لإعادة الحالة إلى معلق."
+                                                                className="px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-not-allowed border bg-emerald-500/10 border-emerald-500/35 text-emerald-400 opacity-70"
+                                                            >
+                                                                تم الصرف هذا الشهر 🟢
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => togglePaymentStatus(emp.id)}
+                                                                title="اعتماد صرف الراتب وتسجيله في سجل المدفوعات"
+                                                                className="px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border bg-amber-500/10 border-amber-500/35 text-amber-400 hover:bg-amber-500/20"
+                                                            >
+                                                                اعتماد الراتب ⏳
+                                                            </button>
+                                                        )}
                                                     </td>
                                                     <td className="p-3.5 text-center font-mono text-xs text-slate-400">
                                                         {emp.lastPaymentDate}
@@ -1168,6 +1297,126 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+
+                        {/* ===== Salary Payments History Section ===== */}
+                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                            <button
+                                onClick={() => setShowSalaryHistory(!showSalaryHistory)}
+                                className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 hover:bg-slate-750/40 transition text-right cursor-pointer"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-emerald-400 text-lg">📜</span>
+                                    <span className="font-bold text-slate-100">سجل مدفوعات الرواتب</span>
+                                    <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">
+                                        {salaryPayments.length} عملية مسجلة
+                                    </span>
+                                </div>
+                                <span className="text-slate-400 text-xs font-bold">
+                                    {showSalaryHistory ? 'إخفاء السجل ⬆️' : 'عرض السجل ⬇️'}
+                                </span>
+                            </button>
+
+                            {showSalaryHistory && (
+                                <div className="border-t border-slate-700/60 p-4 space-y-4 animate-fadeIn">
+                                    {/* Filters */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <input
+                                            type="text"
+                                            placeholder="ابحث باسم الموظف..."
+                                            value={salaryHistorySearch}
+                                            onChange={(e) => setSalaryHistorySearch(e.target.value)}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        />
+                                        <select
+                                            value={salaryHistoryYear}
+                                            onChange={(e) => setSalaryHistoryYear(e.target.value)}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                        >
+                                            <option value="all">كل السنوات</option>
+                                            {availableSalaryYears.map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            value={salaryHistoryMonth}
+                                            onChange={(e) => setSalaryHistoryMonth(e.target.value)}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                        >
+                                            <option value="all">كل الشهور</option>
+                                            {ARABIC_MONTH_LABELS.map((label, idx) => (
+                                                <option key={idx} value={idx + 1}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Summary strip */}
+                                    <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                                        <div className="flex items-center gap-2 text-slate-300 font-semibold">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            <span>إجمالي المدفوعات:</span>
+                                            <span className="font-mono font-black text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                                                {salaryHistoryTotal.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                            </span>
+                                        </div>
+                                        <div className="text-slate-400 font-semibold">
+                                            عدد العمليات: <span className="font-mono font-bold text-white">{filteredSalaryHistory.length}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* History table */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-right border-collapse whitespace-nowrap">
+                                            <thead>
+                                                <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                                    <th className="p-3.5 font-bold">اسم الموظف</th>
+                                                    <th className="p-3.5 font-bold">الدور</th>
+                                                    <th className="p-3.5 font-bold text-center">شهر الدفع</th>
+                                                    <th className="p-3.5 font-bold text-center">الراتب الأساسي</th>
+                                                    <th className="p-3.5 font-bold text-center">المكافآت</th>
+                                                    <th className="p-3.5 font-bold text-center">الاستقطاعات</th>
+                                                    <th className="p-3.5 font-bold text-center">الصافي المدفوع</th>
+                                                    <th className="p-3.5 font-bold text-center">تاريخ الدفع</th>
+                                                    <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-700/40 text-sm">
+                                                {filteredSalaryHistory.map(p => (
+                                                    <tr key={p.id} className="hover:bg-slate-750/30 transition-colors">
+                                                        <td className="p-3.5 font-bold text-white">{p.employee_name}</td>
+                                                        <td className="p-3.5 text-slate-400">{p.employee_role || '—'}</td>
+                                                        <td className="p-3.5 text-center font-semibold text-slate-300">{p.month_label}</td>
+                                                        <td className="p-3.5 text-center font-mono text-slate-200">{Number(p.base_salary).toFixed(2)}</td>
+                                                        <td className="p-3.5 text-center font-mono text-emerald-400">{Number(p.bonuses).toFixed(2)}</td>
+                                                        <td className="p-3.5 text-center font-mono text-rose-400">{Number(p.deductions).toFixed(2)}</td>
+                                                        <td className="p-3.5 text-center font-extrabold text-white">
+                                                            {Number(p.net_pay).toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                                        </td>
+                                                        <td className="p-3.5 text-center font-mono text-xs text-slate-400">{formatPaymentDate(p.payment_date)}</td>
+                                                        <td className="p-3.5 text-center">
+                                                            <button
+                                                                onClick={() => deleteSalaryPayment(p)}
+                                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
+                                                                title="حذف الدفعة"
+                                                            >
+                                                                <span>🗑️</span>
+                                                                <span>حذف</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {filteredSalaryHistory.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="9" className="text-center p-8 text-slate-500">
+                                                            لا توجد دفعات رواتب مسجلة تطابق الفلاتر المحددة.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld('api', {
         updateSalaryParams: (id, field, value) => ipcRenderer.invoke('db:updateSalaryParams', id, field, value),
         togglePaymentStatus: (id) => ipcRenderer.invoke('db:togglePaymentStatus', id),
         deleteEmployee: (id) => ipcRenderer.invoke('db:deleteEmployee', id),
+        getSalaryPayments: () => ipcRenderer.invoke('db:getSalaryPayments'),
+        deleteSalaryPayment: (id) => ipcRenderer.invoke('db:deleteSalaryPayment', id),
         createOrder: (cashier, total, items) => ipcRenderer.invoke('db:createOrder', cashier, total, items),
         getOrders: () => ipcRenderer.invoke('db:getOrders'),
         deleteOrder: (id) => ipcRenderer.invoke('db:deleteOrder', id)
