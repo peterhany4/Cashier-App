@@ -1,6 +1,6 @@
 # 🗂️ Cashier App — Upcoming Features Plan
 
-> **Last Updated:** 2026-07-31  
+> **Last Updated:** 2026-08-01  
 > **Project Stack:** Electron + React (Vite) + SQLite (better-sqlite3)  
 > **Language:** Arabic UI (RTL)
 
@@ -196,7 +196,7 @@ After:   #5      |  Ahmed  |  31/07/2026  |  250.00 جنية
 
 ---
 
-## Feature 4 — Salary Payments Tracked as Receipts / Documented Transactions
+## Feature 4 — Salary Payments Tracked as Receipts / Documented Transactions (✅ COMPLETED)
 
 ### Problem
 - When the admin marks a salary as "تم الصرف" (paid), there is no permanent record of **who was paid**, **how much**, and **on which date** beyond the single `last_payment_date` column in the `employees` table.
@@ -261,6 +261,16 @@ function getSalaryPayments() {
 }
 ```
 
+#### Implementation Notes (what was actually built)
+- **Delete button on history rows** — Each row in `سجل مدفوعات الرواتب` has a 🗑️ button (with `showConfirm()` modal) backed by `deleteSalaryPayment(id)` exposed as `db:deleteSalaryPayment`. Deleting a record reloads employees so the status button stays in sync.
+- **Payment status is now derived, not stored** — `getEmployees()` computes `payment_status` from `salary_payments`: an employee is `paid` **only if** they have a payment record in the **current** month. This means:
+  - Every employee **auto-resets to `معلق`** at the start of each new month (no record that month).
+  - An employee **cannot be paid twice in the same month** — `togglePaymentStatus()` returns `alreadyPaidThisMonth` and the button is disabled (`تم الصرف هذا الشهر 🟢`).
+  - The **only** way to undo a payment is to delete that month's record from the history — the employee then syncs back to pending automatically.
+- **`last_payment_date`** is derived from the most recent payment record (used for display only).
+- **Month filter fix** — the salary-history month dropdown uses 1-based values (1–12) matching the stored `payment_date` (`YYYY-MM-DD`), so each Arabic month filters its own records correctly.
+- Net revenue metric deducts `salary_payments.net_pay` **filtered to the same period** as the Feature 2 report filter (implemented here, tracked as Step 5 below).
+
 ---
 
 ## Feature 5 — Printable Receipts (Customer + Kitchen)
@@ -298,9 +308,9 @@ Electron exposes the `webContents.print()` API which can target a specific print
 ```
 Step 1 — Delete Receipt button (Backend + Admin UI)    ✅ COMPLETED
 Step 2 — Revenue Period Filter (Reports Tab)           ✅ COMPLETED
-Step 3 — Daily Receipt Number Reset (DB + UI)          HIGH PRIORITY
-Step 4 — Salary Payment History (DB + UI)              MEDIUM PRIORITY
-Step 5 — Link Salary deductions to Revenue period      MEDIUM PRIORITY
+Step 3 — Daily Receipt Number Reset (DB + UI)          ✅ COMPLETED
+Step 4 — Salary Payment History (DB + UI)              ✅ COMPLETED
+Step 5 — Link Salary deductions to Revenue period      ✅ COMPLETED
 Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
 ```
 
@@ -310,9 +320,9 @@ Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
 
 ### Files to Modify
 - `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
-- `src/features/admin/AdminDashboardPage.jsx` — Delete button on receipts, period filter UI, salary history section
-- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get functions
-- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `recordSalaryPayment`, `getSalaryPayments`)
+- `src/features/admin/AdminDashboardPage.jsx` — Delete button on receipts, period filter UI, salary history section + filters + delete
+- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status
+- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`)
 - `electron/main.cjs` — Register new IPC handlers for the above
 
 ### Files to Create

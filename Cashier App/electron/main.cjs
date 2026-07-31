@@ -121,6 +121,14 @@ function registerIpcHandlers() {
         return dbModule.deleteEmployee(id);
     });
 
+    ipcMain.handle('db:getSalaryPayments', async () => {
+        return dbModule.getSalaryPayments();
+    });
+
+    ipcMain.handle('db:deleteSalaryPayment', async (event, id) => {
+        return dbModule.deleteSalaryPayment(id);
+    });
+
     ipcMain.handle('db:createOrder', async (event, cashier, total, items) => {
         return dbModule.createOrder(cashier, total, items);
     });

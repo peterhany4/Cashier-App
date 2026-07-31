@@ -65,6 +65,20 @@ function initDatabase(userDataPath) {
             price REAL NOT NULL,
             FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS salary_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id INTEGER,
+            employee_name TEXT NOT NULL,
+            base_salary REAL NOT NULL,
+            bonuses REAL NOT NULL,
+            deductions REAL NOT NULL,
+            net_pay REAL NOT NULL,
+            payment_date TEXT NOT NULL,
+            month_label TEXT NOT NULL,
+            notes TEXT DEFAULT '',
+            FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL
+        );
     `);
 
     // Migration: check if daily_number column exists in orders table
@@ -120,6 +134,8 @@ function getLocalDateString(d = new Date()) {
     const day = String(dateObj.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+const ARABIC_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
 function recalculateDailyNumbers() {
     if (!db) return;
@@ -264,7 +280,29 @@ function deleteInventoryItem(id) {
 
 // --- DB Operations: Employees ---
 function getEmployees() {
-    return db.prepare('SELECT * FROM employees').all();
+    const employees = db.prepare('SELECT * FROM employees ORDER BY id ASC').all();
+    const currentMonthPrefix = getLocalDateString().slice(0, 7);
+
+    // Payment status is derived from the salary_payments history: an employee is
+    // "paid" only if they have a payment record in the current month. This
+    // automatically resets everyone to "pending" at the start of each new month.
+    const payments = db.prepare('SELECT employee_id, payment_date FROM salary_payments ORDER BY payment_date DESC').all();
+    const paidThisMonth = new Set();
+    const latestPaymentByEmployee = {};
+    for (const p of payments) {
+        if (p.employee_id !== null && !(p.employee_id in latestPaymentByEmployee)) {
+            latestPaymentByEmployee[p.employee_id] = p.payment_date;
+        }
+        if (p.payment_date && p.payment_date.startsWith(currentMonthPrefix)) {
+            paidThisMonth.add(p.employee_id);
+        }
+    }
+
+    return employees.map(emp => ({
+        ...emp,
+        payment_status: paidThisMonth.has(emp.id) ? 'paid' : 'pending',
+        last_payment_date: latestPaymentByEmployee[emp.id] || '-'
+    }));
 }
 
 function addEmployee(name, role, baseSalary) {
@@ -292,17 +330,71 @@ function updateSalaryParams(id, field, value) {
     return { success: true };
 }
 
-function togglePaymentStatus(id) {
-    const emp = db.prepare('SELECT payment_status FROM employees WHERE id = ?').get(id);
-    if (!emp) throw new Error('الموظف غير مسجل');
-    const newStatus = emp.payment_status === 'paid' ? 'pending' : 'paid';
-    const dateStr = newStatus === 'paid' ? new Date().toISOString().split('T')[0] : '-';
+function recordSalaryPayment(employeeId, employeeName, baseSalary, bonuses, deductions, netPay, monthLabel) {
+    const date = getLocalDateString();
     db.prepare(`
-        UPDATE employees 
-        SET payment_status = ?, last_payment_date = ? 
-        WHERE id = ?
-    `).run(newStatus, dateStr, id);
-    return { success: true, paymentStatus: newStatus, lastPaymentDate: dateStr };
+        INSERT INTO salary_payments 
+        (employee_id, employee_name, base_salary, bonuses, deductions, net_pay, payment_date, month_label)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(employeeId, employeeName, baseSalary, bonuses, deductions, netPay, date, monthLabel);
+    return { success: true };
+}
+
+function getSalaryPayments() {
+    return db.prepare(`
+        SELECT sp.*, e.role AS employee_role
+        FROM salary_payments sp
+        LEFT JOIN employees e ON e.id = sp.employee_id
+        ORDER BY sp.payment_date DESC, sp.id DESC
+    `).all();
+}
+
+function deleteSalaryPayment(id) {
+    db.prepare('DELETE FROM salary_payments WHERE id = ?').run(id);
+    return { success: true };
+}
+
+function togglePaymentStatus(id) {
+    const emp = db.prepare('SELECT * FROM employees WHERE id = ?').get(id);
+    if (!emp) throw new Error('الموظف غير مسجل');
+
+    const now = new Date();
+    const currentMonthPrefix = getLocalDateString(now).slice(0, 7);
+
+    // Prevent paying the same employee twice in the same calendar month.
+    const existing = db.prepare('SELECT id FROM salary_payments WHERE employee_id = ? AND payment_date LIKE ?')
+        .get(emp.id, currentMonthPrefix + '%');
+    if (existing) {
+        return {
+            success: true,
+            alreadyPaidThisMonth: true,
+            paymentStatus: 'paid',
+            bonuses: emp.bonuses,
+            deductions: emp.deductions
+        };
+    }
+
+    // Marking as paid — snapshot the salary and reset bonuses/deductions for the next cycle
+    const dateStr = getLocalDateString(now);
+    const monthLabel = `${ARABIC_MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+    const netPay = emp.base_salary + emp.bonuses - emp.deductions;
+
+    const tx = db.transaction(() => {
+        recordSalaryPayment(emp.id, emp.name, emp.base_salary, emp.bonuses, emp.deductions, netPay, monthLabel);
+        db.prepare('UPDATE employees SET last_payment_date = ?, bonuses = 0, deductions = 0 WHERE id = ?')
+            .run(dateStr, id);
+    });
+    tx();
+
+    return {
+        success: true,
+        alreadyPaidThisMonth: false,
+        paymentStatus: 'paid',
+        lastPaymentDate: dateStr,
+        bonuses: 0,
+        deductions: 0,
+        netPay
+    };
 }
 
 function deleteEmployee(id) {
@@ -373,6 +465,9 @@ module.exports = {
     updateSalaryParams,
     togglePaymentStatus,
     deleteEmployee,
+    recordSalaryPayment,
+    getSalaryPayments,
+    deleteSalaryPayment,
     createOrder,
     getOrders,
     deleteOrder
