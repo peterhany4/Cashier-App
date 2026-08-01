@@ -146,6 +146,26 @@ function registerIpcHandlers() {
         return dbModule.saveProductComponents(productId, components);
     });
 
+    ipcMain.handle('db:getPurchases', async () => {
+        return dbModule.getPurchases();
+    });
+
+    ipcMain.handle('db:getPurchasePayments', async () => {
+        return dbModule.getPurchasePayments();
+    });
+
+    ipcMain.handle('db:recordPurchase', async (event, inventoryId, itemName, quantity, unit, totalCost, amountPaid, notes) => {
+        return dbModule.recordPurchase(inventoryId, itemName, quantity, unit, totalCost, amountPaid, notes);
+    });
+
+    ipcMain.handle('db:recordPurchasePayment', async (event, purchaseId, amount) => {
+        return dbModule.recordPurchasePayment(purchaseId, amount);
+    });
+
+    ipcMain.handle('db:deletePurchase', async (event, id) => {
+        return dbModule.deletePurchase(id);
+    });
+
     ipcMain.handle('db:createOrder', async (event, cashier, total, items) => {
         return dbModule.createOrder(cashier, total, items);
     });

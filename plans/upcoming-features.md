@@ -414,7 +414,7 @@ function deductComponentsForItem(itemName, itemQty) {
 
 ---
 
-## Feature 8 — Storage Purchases (مشتريات المخزن): Stock In + Revenue Out + Track Remaining Debt
+## Feature 8 — Storage Purchases (مشتريات المخزن): Stock In + Revenue Out + Track Remaining Debt (✅ COMPLETED)
 
 ### Problem
 - When the admin buys raw material — e.g. **7 كجم بطاطس for 5,000 EGP, paying only 1,000 EGP now** — there is no way to record it.
@@ -487,6 +487,19 @@ Add a sub-view **"مشتريات المخزن"** next to the stock list:
 - 🗑️ delete per row (reverses stock, keeps accounting honest).
 - Summary cards: إجمالي المشتريات، المدفوع، المتبقي مستحق للموردين.
 
+#### Implementation Notes (what was actually built)
+- **`electron/database.cjs`** — new `purchases` + `purchase_payments` tables (payments `ON DELETE CASCADE`). Functions:
+  - `recordPurchase(inventoryId, itemName, quantity, unit, totalCost, amountPaid, notes)` — increases inventory stock, stores `balance_due = totalCost − amountPaid`, inserts a dated `purchase_payments` row for the paid slice. Supports an existing inventory item **or** a new name (auto-creates the item; if the name matches an existing item it links to it instead).
+  - `recordPurchasePayment(purchaseId, amount)` — allows **partial** payments, rejects overpaying the remaining balance, flips `status → 'paid'` when balance hits 0.
+  - `deletePurchase(id)` — reverses the stock increase (clamped at 0) and cascades the payment records away.
+  - `getPurchases()` (with computed `paid_amount`) + `getPurchasePayments()`.
+- **Revenue integration (the important part)** — the net-revenue metric now subtracts `purchase_payments.amount` **filtered to the same period** as the orders, exactly like salaries (Feature 4). `filterSalaryPaymentsByPeriod` was generalized into `filterPaymentsByPeriod()` (both read `payment_date`). Only money **actually paid** is deducted; the unpaid `balance_due` never touches revenue until the day it's paid. So buying 10k and paying it in July hits July's net revenue only — nothing appears the next month. Partial payments split across months just like salaries (1k now → −1k this month, 9k later → −9k that month).
+- **Integer amounts only** — per the user: no `.00`. All purchase amounts are whole numbers (`step=1` inputs), any `.5` is rounded **up** (`Math.ceil`, e.g. 0.5 → 1), and all displays (table + summary cards + pay modal) show integers.
+- **`src/features/admin/AdminDashboardPage.jsx`** — "🛒 مشتريات المخزن" sub-view in the inventory tab: add-purchase form (existing item or ➕ new item with name+unit, qty, total cost, paid now → live balance preview), summary cards, purchases table with status badges (مدفوع 🟢 / مستحق ⚠️), **💳 سداد** button opening a pay modal (defaults to the full remaining, editable for partial), and 🗑️ delete with `showConfirm()`. The 🗑️ delete confirms that stock is reversed and its payments removed from revenue.
+- **Search + filters (added after initial build, user requested)** — the section has a **search box** (item name + notes/supplier), a **status filter** (الكل / مدفوع / مستحق), and a **period filter** with two modes: **📅 بالشهر** (year + month, defaults to current year + current month) and **📆 بفترة** (from/to native date inputs). The summary cards **follow the filtered set**, so totals always match the visible rows. Frontend-only.
+- **Verified in Electron** — stock +7, balance 4000→2500→0, overpay rejected, new-item auto-creation, delete reverses stock + cascades payments (22/22 checks passed).
+- IPC channels added in `electron/preload.cjs` + `electron/main.cjs` (`getPurchases`, `getPurchasePayments`, `recordPurchase`, `recordPurchasePayment`, `deletePurchase`).
+
 ---
 
 ## Feature 9 — Printable Receipts (Customer + Kitchen)
@@ -529,7 +542,7 @@ Step 4 — Salary Payment History (DB + UI)                ✅ COMPLETED
 Step 5 — Link Salary deductions to Revenue period        ✅ COMPLETED
 Step 6 — Receipts Tab: Date + Date-Range Filter          ✅ COMPLETED
 Step 7 — Product Components: Auto-Deduct Stock           ✅ COMPLETED
-Step 8 — Storage Purchases + Partial Payment + Debt      ⏳ PENDING
+Step 8 — Storage Purchases + Partial Payment + Debt      ✅ COMPLETED
 Step 9 — Printable Receipts + Printer Config             DEFERRED (last)
 ```
 
@@ -549,10 +562,10 @@ Small non-feature improvements shipped in the same session:
 ### Files to Modify
 - `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
 - `src/components/PeriodFilter.jsx` — ✅ `date` + `range` filter modes, controlled date/range props, dd-mm-yyyy native date inputs (Feature 6)
-- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, ✅ **product components editor in menu tab (Feature 7)**, **storage purchases sub-view in inventory tab (Feature 8)**, net revenue also subtracts purchase payments
-- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`, ✅ **`product_components` table + `getProductComponents`/`saveProductComponents` + recursive stock deduction with blocking in `createOrder()` (Feature 7)**, **`purchases`/`purchase_payments` tables + record/get/delete/settle functions (Feature 8)**
-- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, ✅ **`getProductComponents`/`saveProductComponents` (Feature 7)**, **`getPurchases`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**)
-- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; ✅ register IPC handlers for Feature 7; register new IPC handlers for the above (Feature 8)
+- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, ✅ **product components editor in menu tab (Feature 7)**, ✅ **storage purchases sub-view in inventory tab + search/status/period filters (Feature 8)**, ✅ net revenue also subtracts purchase payments
+- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`, ✅ **`product_components` table + `getProductComponents`/`saveProductComponents` + recursive stock deduction with blocking in `createOrder()` (Feature 7)**, ✅ **`purchases`/`purchase_payments` tables + `getPurchases`/`getPurchasePayments`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**
+- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, ✅ **`getProductComponents`/`saveProductComponents` (Feature 7)**, ✅ **`getPurchases`/`getPurchasePayments`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**)
+- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; ✅ register IPC handlers for Feature 7 and Feature 8
 - `src/styles/index.css` — ✅ global emerald capsule scrollbar + `.scrollbar-right` RTL→right utility
 
 ### Files to Create
