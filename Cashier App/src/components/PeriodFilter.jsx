@@ -15,7 +15,13 @@ const ARABIC_MONTHS = [
     { value: 11, label: 'ديسمبر' },
 ];
 
-export function filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth) {
+function toLocalDateStr(d) {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+export function filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo) {
     if (!orders || !Array.isArray(orders)) return [];
     const now = new Date();
 
@@ -45,6 +51,19 @@ export function filterOrdersByPeriod(orders, filterMode, selectedYear, selectedM
             return d.getMonth() === Number(selectedMonth);
         }
 
+        if (filterMode === 'date') {
+            const dayStr = toLocalDateStr(d);
+            return Boolean(dayStr && selectedDate && dayStr === selectedDate);
+        }
+
+        if (filterMode === 'range') {
+            const dayStr = toLocalDateStr(d);
+            if (!dayStr) return false;
+            if (dateFrom && dayStr < dateFrom) return false;
+            if (dateTo && dayStr > dateTo) return false;
+            return true;
+        }
+
         // 'all' or default
         return true;
     });
@@ -57,9 +76,15 @@ export default function PeriodFilter({
     filterMode: controlledFilterMode,
     selectedYear: controlledYear,
     selectedMonth: controlledMonth,
+    selectedDate: controlledDate,
+    dateFrom: controlledDateFrom,
+    dateTo: controlledDateTo,
     onFilterModeChange,
     onYearChange,
     onMonthChange,
+    onDateChange,
+    onDateFromChange,
+    onDateToChange,
 }) {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth();
@@ -70,14 +95,23 @@ export default function PeriodFilter({
     const [internalFilterMode, setInternalFilterMode] = useState('year-month');
     const [internalSelectedYear, setInternalSelectedYear] = useState(currentYear);
     const [internalSelectedMonth, setInternalSelectedMonth] = useState(currentMonth);
+    const [internalSelectedDate, setInternalSelectedDate] = useState('');
+    const [internalDateFrom, setInternalDateFrom] = useState('');
+    const [internalDateTo, setInternalDateTo] = useState('');
 
     const filterMode = isControlled ? controlledFilterMode : internalFilterMode;
     const selectedYear = isControlled ? controlledYear : internalSelectedYear;
     const selectedMonth = isControlled ? controlledMonth : internalSelectedMonth;
+    const selectedDate = isControlled ? (controlledDate || '') : internalSelectedDate;
+    const dateFrom = isControlled ? (controlledDateFrom || '') : internalDateFrom;
+    const dateTo = isControlled ? (controlledDateTo || '') : internalDateTo;
 
     const setFilterMode = isControlled ? onFilterModeChange : setInternalFilterMode;
     const setSelectedYear = isControlled ? onYearChange : setInternalSelectedYear;
     const setSelectedMonth = isControlled ? onMonthChange : setInternalSelectedMonth;
+    const setSelectedDate = isControlled ? onDateChange : setInternalSelectedDate;
+    const setDateFrom = isControlled ? onDateFromChange : setInternalDateFrom;
+    const setDateTo = isControlled ? onDateToChange : setInternalDateTo;
 
     // Extract available distinct years from orders
     const availableYears = useMemo(() => {
@@ -96,8 +130,8 @@ export default function PeriodFilter({
 
     // Calculate filtered orders
     const filteredOrders = useMemo(() => {
-        return filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth);
-    }, [orders, filterMode, selectedYear, selectedMonth]);
+        return filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
+    }, [orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo]);
 
     // Notify parent component whenever filtered orders change
     useEffect(() => {
@@ -116,16 +150,61 @@ export default function PeriodFilter({
         // Reset year/month selection when using quick shortcuts
         setSelectedYear(currentYear);
         setSelectedMonth('all');
+        // Reset date / range selection
+        setSelectedDate('');
+        setDateFrom('');
+        setDateTo('');
     };
 
     const handleYearChange = (year) => {
         setSelectedYear(Number(year));
         setFilterMode('year-month');
+        setSelectedDate('');
+        setDateFrom('');
+        setDateTo('');
     };
 
     const handleMonthChange = (month) => {
         setSelectedMonth(month === 'all' ? 'all' : Number(month));
         setFilterMode('year-month');
+        setSelectedDate('');
+        setDateFrom('');
+        setDateTo('');
+    };
+
+    const handleDateChange = (value) => {
+        if (!value) {
+            setSelectedDate('');
+            setFilterMode('all');
+            return;
+        }
+        setSelectedDate(value);
+        setFilterMode('date');
+        setSelectedMonth('all');
+        setDateFrom('');
+        setDateTo('');
+    };
+
+    const handleDateFromChange = (value) => {
+        setDateFrom(value || '');
+        if (value) {
+            setFilterMode('range');
+            setSelectedMonth('all');
+            setSelectedDate('');
+        } else if (!dateTo) {
+            setFilterMode('all');
+        }
+    };
+
+    const handleDateToChange = (value) => {
+        setDateTo(value || '');
+        if (value) {
+            setFilterMode('range');
+            setSelectedMonth('all');
+            setSelectedDate('');
+        } else if (!dateFrom) {
+            setFilterMode('all');
+        }
     };
 
     // Metrics for summary strip
@@ -133,10 +212,25 @@ export default function PeriodFilter({
         return filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
     }, [filteredOrders]);
 
+    const formatToDDMMYYYY = (isoDate) => {
+        if (!isoDate) return '';
+        const [y, m, d] = isoDate.split('-');
+        if (!y || !m || !d) return isoDate;
+        return `${d}-${m}-${y}`;
+    };
+
     const getPeriodDescription = () => {
         if (filterMode === 'today') return 'مبيعات اليوم';
         if (filterMode === 'week') return 'مبيعات هذا الأسبوع';
         if (filterMode === 'all') return 'جميع الفواتير (كل الأوقات)';
+        if (filterMode === 'date') {
+            return selectedDate ? `مبيعات يوم ${formatToDDMMYYYY(selectedDate)}` : 'مبيعات يوم محدد';
+        }
+        if (filterMode === 'range') {
+            const from = dateFrom ? formatToDDMMYYYY(dateFrom) : 'البداية';
+            const to = dateTo ? formatToDDMMYYYY(dateTo) : 'النهاية';
+            return `مبيعات من ${from} إلى ${to}`;
+        }
         if (filterMode === 'year-month') {
             const yearStr = selectedYear.toString();
             if (selectedMonth === 'all') return `إجمالي عام ${yearStr}`;
@@ -233,7 +327,64 @@ export default function PeriodFilter({
                 </div>
             </div>
 
-            {/* 3. Summary Strip */}
+            {/* 3. Specific Date + Date Range Filter (dd-mm-yyyy) */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-t border-slate-700/50 pt-4">
+                {/* Specific Day */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
+                        <span>📅</span> تحديد يوم محدد:
+                    </span>
+                    <input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => handleDateChange(e.target.value)}
+                        className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] ${
+                            filterMode === 'date'
+                                ? 'border-emerald-500/70 text-emerald-400'
+                                : 'border-slate-700 text-slate-200'
+                        }`}
+                        title="dd-mm-yyyy"
+                    />
+                    {selectedDate && (
+                        <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono">
+                            {formatToDDMMYYYY(selectedDate)}
+                        </span>
+                    )}
+                </div>
+
+                {/* Date Range */}
+                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
+                        <span>📆</span> فترة زمنية:
+                    </span>
+                    <span className="text-xs text-slate-500">من</span>
+                    <input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => handleDateFromChange(e.target.value)}
+                        className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] ${
+                            filterMode === 'range'
+                                ? 'border-emerald-500/70 text-emerald-400'
+                                : 'border-slate-700 text-slate-200'
+                        }`}
+                        title="dd-mm-yyyy"
+                    />
+                    <span className="text-xs text-slate-500">إلى</span>
+                    <input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => handleDateToChange(e.target.value)}
+                        className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] ${
+                            filterMode === 'range'
+                                ? 'border-emerald-500/70 text-emerald-400'
+                                : 'border-slate-700 text-slate-200'
+                        }`}
+                        title="dd-mm-yyyy"
+                    />
+                </div>
+            </div>
+
+            {/* 4. Summary Strip */}
             <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
                 <div className="flex items-center gap-2 text-slate-300 font-semibold">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>

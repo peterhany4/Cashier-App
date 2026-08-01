@@ -21,8 +21,9 @@ function createWindow() {
         autoHideMenuBar: true
     });
 
-    // Show window only when content is fully rendered
+    // Show window only when content is fully rendered (maximized to fill the screen, not fullscreen)
     mainWindow.once('ready-to-show', () => {
+        mainWindow.maximize();
         mainWindow.show();
     });
 
@@ -59,6 +60,14 @@ function registerIpcHandlers() {
 
     ipcMain.handle('db:resetPassword', async (event, username, securityAnswer, newPassword) => {
         return dbModule.resetPassword(username, securityAnswer, newPassword);
+    });
+
+    ipcMain.handle('db:getUsers', async () => {
+        return dbModule.getUsers();
+    });
+
+    ipcMain.handle('db:deleteUser', async (event, id, currentUsername) => {
+        return dbModule.deleteUser(id, currentUsername);
     });
 
     ipcMain.handle('db:getMenu', async () => {
@@ -127,6 +136,14 @@ function registerIpcHandlers() {
 
     ipcMain.handle('db:deleteSalaryPayment', async (event, id) => {
         return dbModule.deleteSalaryPayment(id);
+    });
+
+    ipcMain.handle('db:getProductComponents', async (event, productId) => {
+        return dbModule.getProductComponents(productId);
+    });
+
+    ipcMain.handle('db:saveProductComponents', async (event, productId, components) => {
+        return dbModule.saveProductComponents(productId, components);
     });
 
     ipcMain.handle('db:createOrder', async (event, cashier, total, items) => {

@@ -80,7 +80,7 @@ export default function CashierReceiptsPage({ user }) {
     const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
 
     return (
-        <div className="flex-1 p-6 overflow-y-auto bg-slate-900 text-white relative" dir="rtl">
+        <div className="flex-1 p-6 overflow-y-auto scrollbar-right bg-slate-900 text-white relative" dir="rtl">
             {/* In-App Toast */}
             {toast && (
                 <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white transition-all ${

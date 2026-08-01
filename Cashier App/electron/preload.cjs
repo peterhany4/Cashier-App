@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('api', {
         getSecurityQuestion: (username) => ipcRenderer.invoke('db:getSecurityQuestion', username),
         resetPassword: (username, securityAnswer, newPassword) => 
             ipcRenderer.invoke('db:resetPassword', username, securityAnswer, newPassword),
+        getUsers: () => ipcRenderer.invoke('db:getUsers'),
+        deleteUser: (id, currentUsername) => ipcRenderer.invoke('db:deleteUser', id, currentUsername),
         
         getMenu: () => ipcRenderer.invoke('db:getMenu'),
         addMenuItem: (name, price, category) => ipcRenderer.invoke('db:addMenuItem', name, price, category),
@@ -31,6 +33,8 @@ contextBridge.exposeInMainWorld('api', {
         deleteEmployee: (id) => ipcRenderer.invoke('db:deleteEmployee', id),
         getSalaryPayments: () => ipcRenderer.invoke('db:getSalaryPayments'),
         deleteSalaryPayment: (id) => ipcRenderer.invoke('db:deleteSalaryPayment', id),
+        getProductComponents: (productId) => ipcRenderer.invoke('db:getProductComponents', productId),
+        saveProductComponents: (productId, components) => ipcRenderer.invoke('db:saveProductComponents', productId, components),
         createOrder: (cashier, total, items) => ipcRenderer.invoke('db:createOrder', cashier, total, items),
         getOrders: () => ipcRenderer.invoke('db:getOrders'),
         deleteOrder: (id) => ipcRenderer.invoke('db:deleteOrder', id)

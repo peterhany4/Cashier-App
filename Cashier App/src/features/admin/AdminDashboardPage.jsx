@@ -1,12 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import PeriodFilter, { filterOrdersByPeriod } from '../../components/PeriodFilter';
+
+const COMPONENT_UNITS = ['قطعة', 'كجم', 'جرام', 'لتر', 'مللتر', 'صندوق'];
 
 const ARABIC_MONTH_LABELS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
 // Filter salary payments (payment_date is a "YYYY-MM-DD" string) to the same period used for orders
-function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth) {
+function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo) {
     if (!payments || !Array.isArray(payments)) return [];
     const now = new Date();
+
+    const toLocalDateStr = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
 
     return payments.filter(payment => {
         if (!payment || !payment.payment_date) return false;
@@ -26,6 +33,15 @@ function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, select
             if (d.getFullYear() !== Number(selectedYear)) return false;
             if (selectedMonth === null || selectedMonth === undefined || selectedMonth === 'all') return true;
             return d.getMonth() === Number(selectedMonth);
+        }
+        if (filterMode === 'date') {
+            return Boolean(selectedDate && toLocalDateStr(d) === selectedDate);
+        }
+        if (filterMode === 'range') {
+            const dayStr = toLocalDateStr(d);
+            if (dateFrom && dayStr < dateFrom) return false;
+            if (dateTo && dayStr > dateTo) return false;
+            return true;
         }
         return true;
     });
@@ -52,8 +68,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [salaryPayments, setSalaryPayments] = useState([]);
     const [showSalaryHistory, setShowSalaryHistory] = useState(false);
     const [salaryHistorySearch, setSalaryHistorySearch] = useState('');
-    const [salaryHistoryYear, setSalaryHistoryYear] = useState('all');
-    const [salaryHistoryMonth, setSalaryHistoryMonth] = useState('all');
+    const [salaryHistoryYear, setSalaryHistoryYear] = useState(new Date().getFullYear());
+    const [salaryHistoryMonth, setSalaryHistoryMonth] = useState(new Date().getMonth() + 1);
 
     // --- State: Orders / Transactions Log ---
     const [orders, setOrders] = useState([]);
@@ -67,6 +83,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     // Category management
     const [newCategoryName, setNewCategoryName] = useState('');
+
+    // Product Components (المكونات) state
+    const [expandedComponentsId, setExpandedComponentsId] = useState(null);
+    const [componentRows, setComponentRows] = useState([]);
+    const [loadingComponents, setLoadingComponents] = useState(false);
+    const [newCompType, setNewCompType] = useState('inventory');
+    const [newCompItem, setNewCompItem] = useState('');
+    const [newCompQty, setNewCompQty] = useState('');
+    const [newCompUnit, setNewCompUnit] = useState('قطعة');
 
     // Inventory form
     const [newInvName, setNewInvName] = useState('');
@@ -89,6 +114,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [regAnswer, setRegAnswer] = useState('');
     const [showAddUserForm, setShowAddUserForm] = useState(false);
 
+    // --- State: User Accounts (for admin management) ---
+    const [userAccounts, setUserAccounts] = useState([]);
+
     // Search and expand details for reports
     const [reportsSearch, setReportsSearch] = useState('');
     const [expandedOrder, setExpandedOrder] = useState(null);
@@ -99,9 +127,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [filterMode, setFilterMode] = useState('year-month');
     const [selectedYear, setSelectedYear] = useState(currentYear);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [selectedDate, setSelectedDate] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
     // Derived filtered orders — always up to date with both orders list and filter settings
-    const periodFilteredOrders = filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth);
+    const periodFilteredOrders = filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
 
     // In-app Toast — replaces native alert() to keep Electron window focus
     const [toast, setToast] = useState(null);
@@ -147,6 +178,17 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         }
     };
 
+    const loadUserAccounts = async () => {
+        if (window.api && window.api.db) {
+            try {
+                const dbUsers = await window.api.db.getUsers();
+                setUserAccounts(dbUsers || []);
+            } catch (err) {
+                console.error('Failed to load user accounts:', err);
+            }
+        }
+    };
+
     // Sync default category selection when categories list arrives
     useEffect(() => {
         if (categories.length > 0 && !newItemCategory) {
@@ -172,6 +214,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                     await loadEmployees();
 
                     await loadSalaryPayments();
+
+                    await loadUserAccounts();
 
                     const dbOrders = await window.api.db.getOrders();
                     setOrders(dbOrders);
@@ -233,6 +277,96 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 showToast('خطأ أثناء حذف الصنف: ' + err.message);
             }
         });
+    };
+
+    // --- Product Components (المكونات) Handlers ---
+    const resolveComponentInfo = (row) => {
+        if (row.component_type === 'inventory') {
+            const inv = inventory.find(i => i.id === row.component_id);
+            return {
+                name: inv ? inv.name : 'صنف مخزن محذوف',
+                stock: inv ? inv.quantity : null,
+                unit: inv ? inv.unit : '',
+                low: inv ? inv.quantity <= inv.lowThreshold : false
+            };
+        }
+        const m = menu.find(x => x.id === row.component_id);
+        return { name: m ? m.name : 'صنف قائمة محذوف', stock: null, unit: '', low: false };
+    };
+
+    const toggleComponents = async (item) => {
+        if (expandedComponentsId === item.id) {
+            setExpandedComponentsId(null);
+            setComponentRows([]);
+            return;
+        }
+        setExpandedComponentsId(item.id);
+        setComponentRows([]);
+        setLoadingComponents(true);
+        setNewCompItem('');
+        setNewCompQty('');
+        try {
+            if (window.api && window.api.db) {
+                const dbComps = await window.api.db.getProductComponents(item.id);
+                setComponentRows((dbComps || []).map(c => ({
+                    key: c.id,
+                    component_type: c.component_type,
+                    component_id: c.component_id,
+                    usage_qty: c.usage_qty,
+                    usage_unit: c.usage_unit
+                })));
+            }
+        } catch (err) {
+            showToast('خطأ أثناء تحميل المكونات: ' + err.message);
+        } finally {
+            setLoadingComponents(false);
+        }
+    };
+
+    const addComponentRow = (e) => {
+        e.preventDefault();
+        if (!newCompItem || !newCompQty) {
+            showToast('اختر الصنف وأدخل الكمية المستخدمة.');
+            return;
+        }
+        const qty = parseFloat(newCompQty);
+        if (!qty || qty <= 0) {
+            showToast('أدخل كمية مستخدمة صحيحة.');
+            return;
+        }
+        setComponentRows(prev => [...prev, {
+            key: `new-${Date.now()}`,
+            component_type: newCompType,
+            component_id: Number(newCompItem),
+            usage_qty: qty,
+            usage_unit: newCompUnit
+        }]);
+        setNewCompItem('');
+        setNewCompQty('');
+    };
+
+    const removeComponentRow = (key) => {
+        setComponentRows(prev => prev.filter(r => r.key !== key));
+    };
+
+    const saveComponents = async () => {
+        const item = menu.find(m => m.id === expandedComponentsId);
+        if (!item) return;
+        try {
+            if (window.api && window.api.db) {
+                await window.api.db.saveProductComponents(item.id, componentRows.map(r => ({
+                    component_type: r.component_type,
+                    component_id: r.component_id,
+                    usage_qty: r.usage_qty,
+                    usage_unit: r.usage_unit
+                })));
+                showToast(`تم حفظ مكونات: ${item.name} ✓`, 'success');
+            } else {
+                showToast('وضع المعاينة: لا يمكن الحفظ بدون قاعدة البيانات.');
+            }
+        } catch (err) {
+            showToast('خطأ أثناء حفظ المكونات: ' + err.message);
+        }
     };
 
     // --- Handler Functions: Categories ---
@@ -508,6 +642,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                     setRegPassword('');
                     setRegAnswer('');
                     setShowAddUserForm(false);
+                    await loadUserAccounts();
                 } else {
                     showToast('فشل إنشاء الحساب: ' + res.error);
                 }
@@ -517,6 +652,32 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         } catch (err) {
             showToast('خطأ: ' + err.message);
         }
+    };
+
+    const deleteUserAccount = async (account) => {
+        const isSelf = account.username === user.username;
+        showConfirm(
+            isSelf
+                ? 'لا يمكنك حذف حسابك الحالي أثناء تسجيل الدخول.'
+                : `هل أنت متأكد من حذف حساب "${account.username}"؟ ستبقى جميع فواتيره وسجلاته محفوظة في قاعدة البيانات ولا تُحذف.`,
+            async () => {
+                if (isSelf) return;
+                try {
+                    if (window.api && window.api.db) {
+                        const res = await window.api.db.deleteUser(account.id, user.username);
+                        if (!res.success) {
+                            showToast('فشل حذف الحساب: ' + (res.error || ''));
+                            return;
+                        }
+                    }
+                    setUserAccounts(prev => prev.filter(a => a.id !== account.id));
+                    showToast(`تم حذف حساب "${account.username}" بنجاح ✓`, 'success');
+                } catch (err) {
+                    console.error('Error deleting user account:', err);
+                    showToast('خطأ أثناء حذف الحساب: ' + err.message);
+                }
+            }
+        );
     };
 
     // Trigger reports reload when reports tab selected
@@ -543,7 +704,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
     // Deduct salaries actually paid during the selected period (from salary_payments history)
-    const periodSalaryPayments = filterSalaryPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth);
+    const periodSalaryPayments = filterSalaryPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
     const totalPaidSalariesInPeriod = periodSalaryPayments.reduce((acc, p) => acc + (p.net_pay || 0), 0);
     const netRevenue = totalRevenue - totalPaidSalariesInPeriod;
 
@@ -577,7 +738,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const salaryHistoryTotal = filteredSalaryHistory.reduce((sum, p) => sum + (p.net_pay || 0), 0);
 
     return (
-        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto relative" dir="rtl">
+        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
             {/* In-app Toast */}
             {toast && (
@@ -812,7 +973,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             + إضافة
                                         </button>
                                     </form>
-                                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                    <div className="space-y-1.5 max-h-48 overflow-y-auto scrollbar-right">
                                         {categories.length === 0 && (
                                             <p className="text-xs text-slate-500 text-center py-2">لا توجد فئات. أضف فئة جديدة.</p>
                                         )}
@@ -847,23 +1008,177 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             {menu
                                                 .filter(item => item.name.toLowerCase().includes(menuSearch.toLowerCase()))
                                                 .map((item) => (
-                                                    <tr key={item.id} className="hover:bg-slate-750/30 transition-colors">
-                                                        <td className="p-3.5 font-bold text-white">{item.name}</td>
-                                                        <td className="p-3.5 text-center">
-                                                            <span className="bg-slate-900/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 border border-slate-700/50">
-                                                                {item.category}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-3.5 text-center font-extrabold text-emerald-400">{item.price.toFixed(2)} جنية</td>
-                                                        <td className="p-3.5 text-center">
-                                                            <button
-                                                                onClick={() => handleDeleteMenuItem(item.id)}
-                                                                className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
-                                                            >
-                                                                حذف 🗑️
-                                                            </button>
-                                                        </td>
-                                                    </tr>
+                                                    <Fragment key={item.id}>
+                                                        <tr className="hover:bg-slate-750/30 transition-colors">
+                                                            <td className="p-3.5 font-bold text-white">{item.name}</td>
+                                                            <td className="p-3.5 text-center">
+                                                                <span className="bg-slate-900/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 border border-slate-700/50">
+                                                                    {item.category}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-3.5 text-center font-extrabold text-emerald-400">{item.price.toFixed(2)} جنية</td>
+                                                            <td className="p-3.5 text-center">
+                                                                <div className="flex flex-wrap items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => toggleComponents(item)}
+                                                                        className={`px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer border ${
+                                                                            expandedComponentsId === item.id
+                                                                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                                                                                : 'bg-slate-900/60 border-slate-600 text-slate-300 hover:bg-slate-800'
+                                                                        }`}
+                                                                        title="ربط المواد الخام المستهلكة لهذا الصنف"
+                                                                    >
+                                                                        ⚙️ المكونات
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteMenuItem(item.id)}
+                                                                        className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
+                                                                    >
+                                                                        حذف 🗑️
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {expandedComponentsId === item.id && (
+                                                            <tr className="bg-slate-900/60 border-t border-slate-700/40">
+                                                                <td colSpan="4" className="p-4">
+                                                                    <div className="bg-slate-850 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                                                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                                                            <h5 className="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                                                                                ⚙️ مكونات: {item.name}
+                                                                            </h5>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <button
+                                                                                    onClick={saveComponents}
+                                                                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-1.5 rounded-lg transition text-xs cursor-pointer"
+                                                                                >
+                                                                                    💾 حفظ المكونات
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => toggleComponents(item)}
+                                                                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg transition text-xs cursor-pointer border border-slate-600"
+                                                                                >
+                                                                                    إغلاق ✕
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                                                                            تُخصم هذه المكونات تلقائياً من المخزن عند كل عملية بيع لهذا الصنف.
+                                                                            الوزن يُحوَّل تلقائياً (مثال: 100 جرام → 0.1 كجم). اضغط "حفظ المكونات" لتطبيق التغييرات.
+                                                                        </p>
+
+                                                                        {loadingComponents && (
+                                                                            <p className="text-xs text-slate-400">جاري تحميل المكونات...</p>
+                                                                        )}
+
+                                                                        {!loadingComponents && componentRows.length === 0 && (
+                                                                            <p className="text-xs text-slate-500 bg-slate-900/40 border border-slate-700/40 rounded-lg px-3 py-2">
+                                                                                لا توجد مكونات مرتبطة بهذا الصنف — أضف مكونات من الأسفل.
+                                                                            </p>
+                                                                        )}
+
+                                                                        {!loadingComponents && componentRows.length > 0 && (
+                                                                            <div className="space-y-1.5">
+                                                                                {componentRows.map(row => {
+                                                                                    const info = resolveComponentInfo(row);
+                                                                                    return (
+                                                                                        <div key={row.key} className="flex items-center justify-between gap-2 bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-xs">
+                                                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                                                <span className="font-bold text-slate-200">{info.name}</span>
+                                                                                                <span className="text-emerald-400 font-mono font-bold">
+                                                                                                    {row.usage_qty} {row.usage_unit}
+                                                                                                </span>
+                                                                                                <span className="text-[10px] text-slate-500">لكل وحدة مباعة</span>
+                                                                                            </div>
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                {info.stock !== null && (
+                                                                                                    <span className={`px-2 py-0.5 rounded font-mono font-bold border ${
+                                                                                                        info.low
+                                                                                                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                                                                                                            : 'bg-slate-800 border-slate-600 text-slate-300'
+                                                                                                    }`}>
+                                                                                                        {info.low && '⬇️ '}المخزون: {info.stock} {info.unit}
+                                                                                                    </span>
+                                                                                                )}
+                                                                                                <button
+                                                                                                    onClick={() => removeComponentRow(row.key)}
+                                                                                                    className="text-rose-400 hover:text-rose-300 px-1.5 py-0.5 rounded hover:bg-rose-500/10 cursor-pointer"
+                                                                                                    title="إزالة المكون"
+                                                                                                >
+                                                                                                    ✕
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Add Component Form */}
+                                                                        <form onSubmit={addComponentRow} className="grid grid-cols-2 md:grid-cols-5 gap-2 items-end pt-1 border-t border-slate-700/40">
+                                                                            <div>
+                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">النوع</label>
+                                                                                <select
+                                                                                    value={newCompType}
+                                                                                    onChange={(e) => { setNewCompType(e.target.value); setNewCompItem(''); }}
+                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                                                >
+                                                                                    <option value="inventory">من المخزن</option>
+                                                                                    <option value="menu">من القائمة</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">الصنف</label>
+                                                                                <select
+                                                                                    required
+                                                                                    value={newCompItem}
+                                                                                    onChange={(e) => setNewCompItem(e.target.value)}
+                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                                                >
+                                                                                    <option value="">-- اختر --</option>
+                                                                                    {(newCompType === 'inventory' ? inventory : menu.filter(m => m.id !== item.id)).map(opt => (
+                                                                                        <option key={opt.id} value={opt.id}>{opt.name}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </div>
+                                                                            <div>
+                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">الكمية المستخدمة</label>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    required
+                                                                                    min="0.001"
+                                                                                    step="any"
+                                                                                    value={newCompQty}
+                                                                                    onChange={(e) => setNewCompQty(e.target.value)}
+                                                                                    placeholder="1"
+                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                                                />
+                                                                            </div>
+                                                                            <div>
+                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">الوحدة</label>
+                                                                                <select
+                                                                                    value={newCompUnit}
+                                                                                    onChange={(e) => setNewCompUnit(e.target.value)}
+                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                                                >
+                                                                                    {COMPONENT_UNITS.map(u => (
+                                                                                        <option key={u} value={u}>{u}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </div>
+                                                                            <button
+                                                                                type="submit"
+                                                                                className="bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-2 rounded-lg transition text-xs cursor-pointer border border-slate-600 whitespace-nowrap"
+                                                                            >
+                                                                                + إضافة مكون
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </Fragment>
                                                 ))}
                                             {menu.length === 0 && (
                                                 <tr>
@@ -1201,6 +1516,74 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </form>
                         )}
 
+                        {/* ===== User Accounts Management ===== */}
+                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 border-b border-slate-700/60 bg-slate-800">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-slate-200 text-lg">👤</span>
+                                    <span className="font-bold text-slate-100">حسابات المستخدمين (الكاشير)</span>
+                                    <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">
+                                        {userAccounts.length} حساب
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500">حذف الحساب لا يحذف فواتير الكاشير وسجلاته المحفوظة.</p>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-right border-collapse whitespace-nowrap">
+                                    <thead>
+                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                            <th className="p-3.5 font-bold">اسم المستخدم</th>
+                                            <th className="p-3.5 font-bold text-center">الصلاحية</th>
+                                            <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                        {userAccounts.map(acc => {
+                                            const isSelf = acc.username === user.username;
+                                            return (
+                                                <tr key={acc.id} className="hover:bg-slate-750/30 transition-colors">
+                                                    <td className="p-3.5 font-bold text-white">
+                                                        {acc.username}
+                                                        {isSelf && (
+                                                            <span className="mr-2 text-[10px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-bold">أنت</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3.5 text-center">
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                                                            acc.role === 'admin'
+                                                                ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                                                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                        }`}>
+                                                            {acc.role === 'admin' ? 'مدير النظام' : 'موظف مبيعات (كاشير)'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-3.5 text-center">
+                                                        <button
+                                                            onClick={() => deleteUserAccount(acc)}
+                                                            disabled={isSelf}
+                                                            className={`${
+                                                                isSelf
+                                                                    ? 'text-slate-600 cursor-not-allowed'
+                                                                    : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer'
+                                                            } px-3 py-1.5 rounded-lg text-xs transition font-bold`}
+                                                            title={isSelf ? 'لا يمكنك حذف حسابك الحالي' : 'حذف الحساب (بدون حذف الفواتير)'}
+                                                        >
+                                                            حذف 🗑️
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {userAccounts.length === 0 && (
+                                            <tr>
+                                                <td colSpan="3" className="text-center p-8 text-slate-500">لا توجد حسابات مسجلة حالياً.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         {/* Employees Salary Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
@@ -1446,9 +1829,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             filterMode={filterMode}
                             selectedYear={selectedYear}
                             selectedMonth={selectedMonth}
+                            selectedDate={selectedDate}
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
                             onFilterModeChange={setFilterMode}
                             onYearChange={setSelectedYear}
                             onMonthChange={setSelectedMonth}
+                            onDateChange={setSelectedDate}
+                            onDateFromChange={setDateFrom}
+                            onDateToChange={setDateTo}
                         />
 
                         {/* Filtered Summary Strip */}
