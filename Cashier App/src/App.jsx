@@ -44,7 +44,7 @@ export default function App() {
       {!currentUser ? (
         <LoginPage onLoginSuccess={handleLoginSuccess} />
       ) : (
-        <div className="min-h-screen bg-slate-900 text-white flex flex-col" dir="rtl">
+        <div className="h-screen bg-slate-900 text-white flex flex-col overflow-hidden" dir="rtl">
           {/* Unified Premium Header */}
           <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -121,7 +121,7 @@ export default function App() {
           </header>
 
           {/* Page Content Display Area */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 min-h-0 flex overflow-hidden">
             {currentUser.role === 'admin' && currentView === 'admin' ? (
               <AdminDashboardPage 
                 user={currentUser} 

@@ -91,15 +91,6 @@ function initDatabase(userDataPath) {
     // Recalculate daily_number using local calendar date for all orders
     recalculateDailyNumbers();
 
-    // Seed categories with defaults if empty
-    const checkCategories = db.prepare('SELECT count(*) as count FROM categories').get();
-    if (checkCategories.count === 0) {
-        const seedCategories = ['وجبات رئيسية', 'مقبلات جانبية', 'مشروبات باردة'];
-        const insertCat = db.prepare('INSERT INTO categories (name) VALUES (?)');
-        const seedCatTx = db.transaction((cats) => { for (const c of cats) insertCat.run(c); });
-        seedCatTx(seedCategories);
-    }
-
     // Seed inventory with default items if empty
     const checkInventory = db.prepare('SELECT count(*) as count FROM inventory').get();
     if (checkInventory.count === 0) {
