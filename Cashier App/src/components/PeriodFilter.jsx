@@ -345,9 +345,6 @@ export default function PeriodFilter({
                         }`}
                         title="dd-mm-yyyy"
                     />
-                    <span className="text-[10px] text-slate-500 font-mono border border-slate-700/60 rounded px-1.5 py-0.5">
-                        dd-mm-yyyy
-                    </span>
                     {selectedDate && (
                         <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono">
                             {formatToDDMMYYYY(selectedDate)}
@@ -384,9 +381,6 @@ export default function PeriodFilter({
                         }`}
                         title="dd-mm-yyyy"
                     />
-                    <span className="text-[10px] text-slate-500 font-mono border border-slate-700/60 rounded px-1.5 py-0.5">
-                        dd-mm-yyyy
-                    </span>
                 </div>
             </div>
 

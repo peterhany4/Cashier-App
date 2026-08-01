@@ -138,6 +138,14 @@ function registerIpcHandlers() {
         return dbModule.deleteSalaryPayment(id);
     });
 
+    ipcMain.handle('db:getProductComponents', async (event, productId) => {
+        return dbModule.getProductComponents(productId);
+    });
+
+    ipcMain.handle('db:saveProductComponents', async (event, productId, components) => {
+        return dbModule.saveProductComponents(productId, components);
+    });
+
     ipcMain.handle('db:createOrder', async (event, cashier, total, items) => {
         return dbModule.createOrder(cashier, total, items);
     });

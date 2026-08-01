@@ -332,7 +332,7 @@ Feature 4 (salaries) and Feature 8 (purchases) deduct from **net revenue using t
 
 ---
 
-## Feature 7 — Product Components (المكونات): Auto-Deduct Stock When an Item Is Sold
+## Feature 7 — Product Components (المكونات): Auto-Deduct Stock When an Item Is Sold (✅ COMPLETED)
 
 ### Problem
 - The `inventory` table already exists (منتجات المخزن) but **nothing consumes it** — selling 5 sandwiches never touches the bread / meat / potato counts.
@@ -396,10 +396,21 @@ function deductComponentsForItem(itemName, itemQty) {
 - In the **قائمة الطعام (menu)** management tab, each menu item gets a **"المكونات"** editor: rows of (inventory/menu item + usage qty + unit), showing the linked item's **current stock** next to each row.
 - A **low-stock warning** (⬇️) highlights a component at or below its `low_threshold`.
 
-#### Low-Stock Decision (pick one during implementation)
-1. **Block:** refuse the sale and toast "الكمية غير كافية في المخزن" — no order is created.
-2. **Allow + warn:** create the order, clamp stock to 0, and toast a warning.
-> Recommendation for a busy restaurant: **block** with a clear message (option 1), with an admin override per component.
+#### Low-Stock Decision (decided: **Block**)
+1. ✅ **Block:** refuse the sale and show the cashier a clear, human-readable toast — no order is created (the whole order transaction rolls back).
+2. ~~Allow + warn:~~ (rejected — a busy kitchen shouldn't sell what it doesn't have)
+> The cashier has **no dashboard access**, so the block message must be self-explanatory and tell them what to do:
+> `عذراً، لا يمكن إتمام البيع — مخزون "خبز شاورما طازج" غير كافٍ. المطلوب: 5 قطعة، المتاح في المخزن: 2 قطعة فقط. يرجى إبلاغ الإدارة لإعادة التعبئة.`
+
+#### Implementation Notes (what was actually built)
+- **`electron/database.cjs`** — new `product_components` table + `getProductComponents(productId)` and `saveProductComponents(productId, list)` (replace-all save in a transaction). The deduction engine inside `createOrder()`:
+  - **Recursive expansion** (`collectInventoryDeductions`) — a `menu`-type component expands into the referenced product's own components, so a "عرض 4 ساندوتش" linked to "ساندوتش شاورما × 4" automatically consumes 4 × the sandwich's bread/meat. Depth guard (≤ 5) prevents infinite loops on circular links.
+  - **Unit normalization** (`normalizeUsage`) — converts `جرام ↔ كجم` and `مللتر ↔ لتر` to the inventory item's own unit before subtracting (e.g. `100 جرام → 0.1 كجم`); unknown/piece units pass through unchanged.
+  - **Blocking** — if stock would go below zero, throws the human-readable message above; because it runs inside the `createOrder` transaction, the order is rolled back and never saved.
+- **IPC** — `getProductComponents` / `saveProductComponents` exposed in `electron/preload.cjs` + `electron/main.cjs`.
+- **`src/features/admin/AdminDashboardPage.jsx`** — expandable **"⚙️ المكونات"** editor row under each menu item (user chose expandable row over modal): add/remove rows (type من المخزن / من القائمة + item + usage qty + unit), shows the linked ingredient's **current stock** and a **⬇️ low-stock** badge, and a **💾 حفظ المكونات** button that commits the whole list.
+- **Verified in Electron** — bread 120→119 (1 قطعة/sandwich), meat 25→24.9 كجم (100 جرام/sandwich), deal → 120→115 / 25→24.5 (recursive), and a blocked sale left the orders table unchanged (rollback confirmed).
+- The cashier's existing checkout toast shows the block message automatically (no cashier UI change needed).
 
 ---
 
@@ -517,7 +528,7 @@ Step 3 — Daily Receipt Number Reset (DB + UI)            ✅ COMPLETED
 Step 4 — Salary Payment History (DB + UI)                ✅ COMPLETED
 Step 5 — Link Salary deductions to Revenue period        ✅ COMPLETED
 Step 6 — Receipts Tab: Date + Date-Range Filter          ✅ COMPLETED
-Step 7 — Product Components: Auto-Deduct Stock           ⏳ PENDING
+Step 7 — Product Components: Auto-Deduct Stock           ✅ COMPLETED
 Step 8 — Storage Purchases + Partial Payment + Debt      ⏳ PENDING
 Step 9 — Printable Receipts + Printer Config             DEFERRED (last)
 ```
@@ -538,10 +549,10 @@ Small non-feature improvements shipped in the same session:
 ### Files to Modify
 - `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
 - `src/components/PeriodFilter.jsx` — ✅ `date` + `range` filter modes, controlled date/range props, dd-mm-yyyy native date inputs (Feature 6)
-- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, **product components editor in menu tab (Feature 7)**, **storage purchases sub-view in inventory tab (Feature 8)**, net revenue also subtracts purchase payments
-- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`, **`product_components` table + component deduction in `createOrder()` (Feature 7)**, **`purchases`/`purchase_payments` tables + record/get/delete/settle functions (Feature 8)**
-- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, **`getProductComponents`/`saveProductComponents` (Feature 7)**, **`getPurchases`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**)
-- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; register new IPC handlers for the above
+- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, ✅ **product components editor in menu tab (Feature 7)**, **storage purchases sub-view in inventory tab (Feature 8)**, net revenue also subtracts purchase payments
+- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`, ✅ **`product_components` table + `getProductComponents`/`saveProductComponents` + recursive stock deduction with blocking in `createOrder()` (Feature 7)**, **`purchases`/`purchase_payments` tables + record/get/delete/settle functions (Feature 8)**
+- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, ✅ **`getProductComponents`/`saveProductComponents` (Feature 7)**, **`getPurchases`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**)
+- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; ✅ register IPC handlers for Feature 7; register new IPC handlers for the above (Feature 8)
 - `src/styles/index.css` — ✅ global emerald capsule scrollbar + `.scrollbar-right` RTL→right utility
 
 ### Files to Create

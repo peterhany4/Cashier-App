@@ -79,6 +79,16 @@ function initDatabase(userDataPath) {
             notes TEXT DEFAULT '',
             FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE SET NULL
         );
+
+        CREATE TABLE IF NOT EXISTS product_components (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,       -- menu.id  (the item being sold)
+            component_type TEXT NOT NULL,      -- 'inventory' | 'menu'
+            component_id INTEGER NOT NULL,     -- inventory.id or menu.id
+            usage_qty REAL NOT NULL,           -- quantity consumed per ONE sold unit
+            usage_unit TEXT NOT NULL,          -- 'قطعة' | 'كجم' | 'جرام' | 'لتر' | 'مللتر' | 'صندوق'
+            FOREIGN KEY (product_id) REFERENCES menu(id) ON DELETE CASCADE
+        );
     `);
 
     // Migration: check if daily_number column exists in orders table
@@ -414,6 +424,93 @@ function deleteEmployee(id) {
     return { success: true };
 }
 
+// --- DB Operations: Product Components (المكونات) ---
+const GRAMS_PER_UNIT = { 'جرام': 1, 'كجم': 1000 };
+const ML_PER_UNIT = { 'مللتر': 1, 'لتر': 1000 };
+
+// Convert a usage amount (usageQty in usageUnit) into the item's own unit (targetUnit).
+// Example: 100 'جرام' → item unit 'كجم' = 0.1. Unknown pairs pass through unchanged.
+function normalizeUsage(usageQty, usageUnit, targetUnit) {
+    if (!usageQty) return 0;
+    if (!usageUnit || !targetUnit || usageUnit === targetUnit) return usageQty;
+
+    const g1 = GRAMS_PER_UNIT[usageUnit];
+    const g2 = GRAMS_PER_UNIT[targetUnit];
+    if (g1 && g2) return (usageQty * g1) / g2;
+
+    const v1 = ML_PER_UNIT[usageUnit];
+    const v2 = ML_PER_UNIT[targetUnit];
+    if (v1 && v2) return (usageQty * v1) / v2;
+
+    return usageQty;
+}
+
+function getProductComponents(productId) {
+    return db.prepare('SELECT * FROM product_components WHERE product_id = ? ORDER BY id ASC').all(productId);
+}
+
+// Replace-all save: deletes the product's current rows and inserts the provided list.
+function saveProductComponents(productId, components) {
+    const del = db.prepare('DELETE FROM product_components WHERE product_id = ?');
+    const ins = db.prepare(`
+        INSERT INTO product_components (product_id, component_type, component_id, usage_qty, usage_unit)
+        VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const tx = db.transaction((pid, comps) => {
+        del.run(pid);
+        for (const c of comps) {
+            if (!c || !c.component_type || !c.component_id) continue;
+            ins.run(pid, c.component_type, c.component_id, Number(c.usage_qty) || 0, c.usage_unit || '');
+        }
+    });
+
+    tx(productId, components || []);
+    return { success: true };
+}
+
+// Expand a product's components (recursively through 'menu'-type links) into a flat
+// list of inventory deductions. depth guard prevents infinite loops on circular links.
+function collectInventoryDeductions(productId, factor, depth, acc) {
+    if (depth > 5) return acc;
+    const components = db.prepare('SELECT * FROM product_components WHERE product_id = ?').all(productId);
+    for (const comp of components) {
+        if (comp.component_type === 'inventory') {
+            acc.push({ inventoryId: comp.component_id, totalUsed: comp.usage_qty * factor, usageUnit: comp.usage_unit });
+        } else if (comp.component_type === 'menu') {
+            collectInventoryDeductions(comp.component_id, comp.usage_qty * factor, depth + 1, acc);
+        }
+    }
+    return acc;
+}
+
+// Deduct the sold item's components from inventory. Throws when stock would go below
+// zero — the caller wraps this in the order transaction so the sale is rolled back.
+function deductComponents(itemName, itemQty) {
+    const product = db.prepare('SELECT id FROM menu WHERE name = ?').get(itemName);
+    if (!product) return;
+
+    const deductions = collectInventoryDeductions(product.id, itemQty, 0, []);
+    if (deductions.length === 0) return;
+
+    const updateInv = db.prepare('UPDATE inventory SET quantity = ? WHERE id = ?');
+    for (const d of deductions) {
+        const inv = db.prepare('SELECT id, name, quantity, unit FROM inventory WHERE id = ?').get(d.inventoryId);
+        if (!inv) continue;
+
+        const totalUsed = normalizeUsage(d.totalUsed, d.usageUnit, inv.unit);
+        if (!totalUsed) continue;
+
+        const newQty = inv.quantity - totalUsed;
+        if (newQty < -0.0001) {
+            throw new Error(
+                `عذراً، لا يمكن إتمام البيع — مخزون "${inv.name}" غير كافٍ. المطلوب: ${Number(totalUsed.toFixed(3))} ${inv.unit}، المتاح في المخزن: ${Number(inv.quantity.toFixed(3))} ${inv.unit} فقط. يرجى إبلاغ الإدارة لإعادة التعبئة.`
+            );
+        }
+        updateInv.run(newQty, inv.id);
+    }
+}
+
 function createOrder(cashier, total, items) {
     const now = new Date();
     const timestamp = now.toISOString();
@@ -432,6 +529,8 @@ function createOrder(cashier, total, items) {
         const orderId = info.lastInsertRowid;
         for (const item of orderItems) {
             insertItem.run(orderId, item.name, item.quantity, item.price);
+            // Consume ingredients from storage — throws (and rolls back) if stock is insufficient
+            deductComponents(item.name, item.quantity);
         }
         return { success: true, orderId, dailyNumber };
     });
@@ -482,6 +581,8 @@ module.exports = {
     recordSalaryPayment,
     getSalaryPayments,
     deleteSalaryPayment,
+    getProductComponents,
+    saveProductComponents,
     createOrder,
     getOrders,
     deleteOrder
