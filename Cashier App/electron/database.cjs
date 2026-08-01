@@ -204,6 +204,27 @@ function resetPassword(username, securityAnswer, newPassword) {
     return { success: true };
 }
 
+function getUsers() {
+    // Only expose safe fields — never passwords or security answers
+    return db.prepare('SELECT id, username, role FROM users ORDER BY id ASC').all();
+}
+
+function deleteUser(id, currentUsername) {
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+    if (!user) throw new Error('المستخدم غير مسجل');
+    if (user.username === currentUsername) {
+        throw new Error('لا يمكن حذف حسابك الحالي أثناء تسجيل الدخول');
+    }
+    const admins = db.prepare('SELECT COUNT(*) as cnt FROM users WHERE role = ?').get('admin');
+    if (user.role === 'admin' && admins.cnt <= 1) {
+        throw new Error('لا يمكن حذف آخر حساب مدير في النظام');
+    }
+    // orders.cashier stores the username as plain text (no FK), so the cashier's
+    // receipts/records are preserved automatically when the account is removed.
+    db.prepare('DELETE FROM users WHERE id = ?').run(id);
+    return { success: true };
+}
+
 // --- DB Operations: Categories ---
 function getCategories() {
     return db.prepare('SELECT * FROM categories ORDER BY id ASC').all();
@@ -450,6 +471,8 @@ module.exports = {
     loginUser,
     getSecurityQuestion,
     resetPassword,
+    getUsers,
+    deleteUser,
     getCategories,
     addCategory,
     deleteCategory,

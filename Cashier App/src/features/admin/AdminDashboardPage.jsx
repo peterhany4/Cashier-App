@@ -89,6 +89,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [regAnswer, setRegAnswer] = useState('');
     const [showAddUserForm, setShowAddUserForm] = useState(false);
 
+    // --- State: User Accounts (for admin management) ---
+    const [userAccounts, setUserAccounts] = useState([]);
+
     // Search and expand details for reports
     const [reportsSearch, setReportsSearch] = useState('');
     const [expandedOrder, setExpandedOrder] = useState(null);
@@ -147,6 +150,17 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         }
     };
 
+    const loadUserAccounts = async () => {
+        if (window.api && window.api.db) {
+            try {
+                const dbUsers = await window.api.db.getUsers();
+                setUserAccounts(dbUsers || []);
+            } catch (err) {
+                console.error('Failed to load user accounts:', err);
+            }
+        }
+    };
+
     // Sync default category selection when categories list arrives
     useEffect(() => {
         if (categories.length > 0 && !newItemCategory) {
@@ -172,6 +186,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                     await loadEmployees();
 
                     await loadSalaryPayments();
+
+                    await loadUserAccounts();
 
                     const dbOrders = await window.api.db.getOrders();
                     setOrders(dbOrders);
@@ -508,6 +524,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                     setRegPassword('');
                     setRegAnswer('');
                     setShowAddUserForm(false);
+                    await loadUserAccounts();
                 } else {
                     showToast('فشل إنشاء الحساب: ' + res.error);
                 }
@@ -517,6 +534,32 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         } catch (err) {
             showToast('خطأ: ' + err.message);
         }
+    };
+
+    const deleteUserAccount = async (account) => {
+        const isSelf = account.username === user.username;
+        showConfirm(
+            isSelf
+                ? 'لا يمكنك حذف حسابك الحالي أثناء تسجيل الدخول.'
+                : `هل أنت متأكد من حذف حساب "${account.username}"؟ ستبقى جميع فواتيره وسجلاته محفوظة في قاعدة البيانات ولا تُحذف.`,
+            async () => {
+                if (isSelf) return;
+                try {
+                    if (window.api && window.api.db) {
+                        const res = await window.api.db.deleteUser(account.id, user.username);
+                        if (!res.success) {
+                            showToast('فشل حذف الحساب: ' + (res.error || ''));
+                            return;
+                        }
+                    }
+                    setUserAccounts(prev => prev.filter(a => a.id !== account.id));
+                    showToast(`تم حذف حساب "${account.username}" بنجاح ✓`, 'success');
+                } catch (err) {
+                    console.error('Error deleting user account:', err);
+                    showToast('خطأ أثناء حذف الحساب: ' + err.message);
+                }
+            }
+        );
     };
 
     // Trigger reports reload when reports tab selected
@@ -1200,6 +1243,74 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 </button>
                             </form>
                         )}
+
+                        {/* ===== User Accounts Management ===== */}
+                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 border-b border-slate-700/60 bg-slate-800">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-slate-200 text-lg">👤</span>
+                                    <span className="font-bold text-slate-100">حسابات المستخدمين (الكاشير)</span>
+                                    <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">
+                                        {userAccounts.length} حساب
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500">حذف الحساب لا يحذف فواتير الكاشير وسجلاته المحفوظة.</p>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-right border-collapse whitespace-nowrap">
+                                    <thead>
+                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                            <th className="p-3.5 font-bold">اسم المستخدم</th>
+                                            <th className="p-3.5 font-bold text-center">الصلاحية</th>
+                                            <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                        {userAccounts.map(acc => {
+                                            const isSelf = acc.username === user.username;
+                                            return (
+                                                <tr key={acc.id} className="hover:bg-slate-750/30 transition-colors">
+                                                    <td className="p-3.5 font-bold text-white">
+                                                        {acc.username}
+                                                        {isSelf && (
+                                                            <span className="mr-2 text-[10px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-bold">أنت</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3.5 text-center">
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                                                            acc.role === 'admin'
+                                                                ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                                                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                        }`}>
+                                                            {acc.role === 'admin' ? 'مدير النظام' : 'موظف مبيعات (كاشير)'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-3.5 text-center">
+                                                        <button
+                                                            onClick={() => deleteUserAccount(acc)}
+                                                            disabled={isSelf}
+                                                            className={`${
+                                                                isSelf
+                                                                    ? 'text-slate-600 cursor-not-allowed'
+                                                                    : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer'
+                                                            } px-3 py-1.5 rounded-lg text-xs transition font-bold`}
+                                                            title={isSelf ? 'لا يمكنك حذف حسابك الحالي' : 'حذف الحساب (بدون حذف الفواتير)'}
+                                                        >
+                                                            حذف 🗑️
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {userAccounts.length === 0 && (
+                                            <tr>
+                                                <td colSpan="3" className="text-center p-8 text-slate-500">لا توجد حسابات مسجلة حالياً.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
                         {/* Employees Salary Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">

@@ -61,6 +61,14 @@ function registerIpcHandlers() {
         return dbModule.resetPassword(username, securityAnswer, newPassword);
     });
 
+    ipcMain.handle('db:getUsers', async () => {
+        return dbModule.getUsers();
+    });
+
+    ipcMain.handle('db:deleteUser', async (event, id, currentUsername) => {
+        return dbModule.deleteUser(id, currentUsername);
+    });
+
     ipcMain.handle('db:getMenu', async () => {
         return dbModule.getMenu();
     });

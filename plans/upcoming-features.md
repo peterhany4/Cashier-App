@@ -271,6 +271,11 @@ function getSalaryPayments() {
 - **Month filter fix** — the salary-history month dropdown uses 1-based values (1–12) matching the stored `payment_date` (`YYYY-MM-DD`), so each Arabic month filters its own records correctly.
 - Net revenue metric deducts `salary_payments.net_pay` **filtered to the same period** as the Feature 2 report filter (implemented here, tracked as Step 5 below).
 
+#### User Account Management (bonus)
+- The Salaries tab now lists all created **user accounts** (`users` table) with a 🗑️ delete button.
+- Backend `getUsers()` returns only safe fields (`id, username, role`) and `deleteUser(id, currentUsername)` guards against deleting your own active account or the **last remaining admin**.
+- Deleting an account does **not** touch the cashier's receipts — `orders.cashier` stores the username as plain text (no FK to `users`), so their order history stays intact.
+
 ---
 
 ## Feature 5 — Printable Receipts (Customer + Kitchen)
@@ -321,8 +326,8 @@ Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
 ### Files to Modify
 - `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
 - `src/features/admin/AdminDashboardPage.jsx` — Delete button on receipts, period filter UI, salary history section + filters + delete
-- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status
-- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`)
+- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`
+- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`)
 - `electron/main.cjs` — Register new IPC handlers for the above
 
 ### Files to Create

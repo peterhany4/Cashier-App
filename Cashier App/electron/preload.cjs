@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('api', {
         getSecurityQuestion: (username) => ipcRenderer.invoke('db:getSecurityQuestion', username),
         resetPassword: (username, securityAnswer, newPassword) => 
             ipcRenderer.invoke('db:resetPassword', username, securityAnswer, newPassword),
+        getUsers: () => ipcRenderer.invoke('db:getUsers'),
+        deleteUser: (id, currentUsername) => ipcRenderer.invoke('db:deleteUser', id, currentUsername),
         
         getMenu: () => ipcRenderer.invoke('db:getMenu'),
         addMenuItem: (name, price, category) => ipcRenderer.invoke('db:addMenuItem', name, price, category),

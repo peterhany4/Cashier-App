@@ -146,7 +146,7 @@ export default function LoginPage({ onLoginSuccess }) {
             <div className="w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-8 border border-slate-700">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-white tracking-wide">
-                        نظام الكاشير الذكي
+                        نظام الكاشير
                     </h1>
                     <p className="text-slate-400 mt-2 text-sm">
                         {view === 'register' 

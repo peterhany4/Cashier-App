@@ -48,7 +48,7 @@ export default function App() {
           {/* Unified Premium Header */}
           <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-              <h1 className="text-2xl font-black text-emerald-400">نظام الكاشير الذكي</h1>
+              <h1 className="text-2xl font-black text-emerald-400">نظام الكاشير</h1>
               
               <div className="flex items-center gap-2 bg-slate-700/50 p-1 rounded-xl border border-slate-700">
                 <span className="text-slate-300 text-xs px-2.5 py-1 font-semibold">
@@ -71,7 +71,7 @@ export default function App() {
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
                   }`}
                 >
-                  شاشة الكاشير (POS)
+                  شاشة الكاشير
                 </button>
                 
                 {currentUser.role === 'admin' ? (
@@ -84,7 +84,7 @@ export default function App() {
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
                       }`}
                     >
-                      لوحة التحكم (Dashboard)
+                      لوحة التحكم
                     </button>
                     <button
                       onClick={() => setCurrentView('receipts')}
