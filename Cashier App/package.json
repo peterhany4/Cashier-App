@@ -2,6 +2,8 @@
   "name": "cashier-app",
   "private": true,
   "version": "1.0.0-beta.1",
+  "description": "Cashier / POS app for restaurants — Arabic RTL, receipts, salaries, inventory and revenue reports",
+  "author": "Peter Hany",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
