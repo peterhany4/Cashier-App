@@ -21,8 +21,9 @@ function createWindow() {
         autoHideMenuBar: true
     });
 
-    // Show window only when content is fully rendered
+    // Show window only when content is fully rendered (maximized to fill the screen, not fullscreen)
     mainWindow.once('ready-to-show', () => {
+        mainWindow.maximize();
         mainWindow.show();
     });
 

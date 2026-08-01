@@ -4,9 +4,14 @@ import PeriodFilter, { filterOrdersByPeriod } from '../../components/PeriodFilte
 const ARABIC_MONTH_LABELS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
 // Filter salary payments (payment_date is a "YYYY-MM-DD" string) to the same period used for orders
-function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth) {
+function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo) {
     if (!payments || !Array.isArray(payments)) return [];
     const now = new Date();
+
+    const toLocalDateStr = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
 
     return payments.filter(payment => {
         if (!payment || !payment.payment_date) return false;
@@ -26,6 +31,15 @@ function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, select
             if (d.getFullYear() !== Number(selectedYear)) return false;
             if (selectedMonth === null || selectedMonth === undefined || selectedMonth === 'all') return true;
             return d.getMonth() === Number(selectedMonth);
+        }
+        if (filterMode === 'date') {
+            return Boolean(selectedDate && toLocalDateStr(d) === selectedDate);
+        }
+        if (filterMode === 'range') {
+            const dayStr = toLocalDateStr(d);
+            if (dateFrom && dayStr < dateFrom) return false;
+            if (dateTo && dayStr > dateTo) return false;
+            return true;
         }
         return true;
     });
@@ -102,9 +116,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [filterMode, setFilterMode] = useState('year-month');
     const [selectedYear, setSelectedYear] = useState(currentYear);
     const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+    const [selectedDate, setSelectedDate] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
     // Derived filtered orders — always up to date with both orders list and filter settings
-    const periodFilteredOrders = filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth);
+    const periodFilteredOrders = filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
 
     // In-app Toast — replaces native alert() to keep Electron window focus
     const [toast, setToast] = useState(null);
@@ -586,7 +603,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
     // Deduct salaries actually paid during the selected period (from salary_payments history)
-    const periodSalaryPayments = filterSalaryPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth);
+    const periodSalaryPayments = filterSalaryPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
     const totalPaidSalariesInPeriod = periodSalaryPayments.reduce((acc, p) => acc + (p.net_pay || 0), 0);
     const netRevenue = totalRevenue - totalPaidSalariesInPeriod;
 
@@ -620,7 +637,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const salaryHistoryTotal = filteredSalaryHistory.reduce((sum, p) => sum + (p.net_pay || 0), 0);
 
     return (
-        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto relative" dir="rtl">
+        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
             {/* In-app Toast */}
             {toast && (
@@ -855,7 +872,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             + إضافة
                                         </button>
                                     </form>
-                                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                    <div className="space-y-1.5 max-h-48 overflow-y-auto scrollbar-right">
                                         {categories.length === 0 && (
                                             <p className="text-xs text-slate-500 text-center py-2">لا توجد فئات. أضف فئة جديدة.</p>
                                         )}
@@ -1557,9 +1574,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             filterMode={filterMode}
                             selectedYear={selectedYear}
                             selectedMonth={selectedMonth}
+                            selectedDate={selectedDate}
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
                             onFilterModeChange={setFilterMode}
                             onYearChange={setSelectedYear}
                             onMonthChange={setSelectedMonth}
+                            onDateChange={setSelectedDate}
+                            onDateFromChange={setDateFrom}
+                            onDateToChange={setDateTo}
                         />
 
                         {/* Filtered Summary Strip */}

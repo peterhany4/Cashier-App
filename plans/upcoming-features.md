@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document outlines the five upcoming feature areas for the Cashier App, broken down into clear implementation tasks with technical details for each.
+This document outlines the upcoming feature areas for the Cashier App, broken down into clear implementation tasks with technical details for each.
 
 ---
 
@@ -278,7 +278,207 @@ function getSalaryPayments() {
 
 ---
 
-## Feature 5 — Printable Receipts (Customer + Kitchen)
+## Feature 6 — Receipts Tab: Filter by a Specific Date or a Date Range (dd-mm-yyyy) (✅ COMPLETED)
+
+### Problem
+- Feature 2 added quick shortcuts (Today / This Week) and a year + month picker, but neither lets the admin answer a simple question like *"what did we sell on **15-03-2026**?"* or *"what did we make **between 01-01-2026 and 31-01-2026**?"*
+- A real business regularly needs an exact-day audit (daily closing, checking a specific incident) or an arbitrary range that doesn't line up with months or weeks.
+
+### Proposed Solution: Specific Date + From/To Range Modes
+
+Add two new filter modes to the existing `PeriodFilter` component — they sit beside Today / This Week / Year+Month and follow the same **"one mode active at a time"** rule (choosing one clears the others).
+
+| Mode | Label | Logic |
+|---|---|---|
+| Specific Date | 📅 يوم محدد | `order.timestamp`'s **local** date equals the picked day |
+| Date Range | 📆 من ... إلى ... | local date is within `[from, to]` **inclusive** |
+
+#### Input Format (dd-mm-yyyy)
+- The HTML `<input type="date">` internally works in ISO (`yyyy-mm-dd`), but the UI must **display and label** the Arabic format **dd-mm-yyyy** (day-month-year, as used in Egypt) — e.g. `15-03-2026`.
+- Parsing must be done on **local date components** (`getFullYear() / getMonth() / getDate()`) — the same approach `filterOrdersByPeriod()` in `src/components/PeriodFilter.jsx` already uses — to avoid UTC timezone off-by-one errors.
+
+#### Implementation (frontend only — no DB change)
+`src/components/PeriodFilter.jsx` — extend `filterOrdersByPeriod()` and the toolbar:
+
+```js
+const [selectedDate, setSelectedDate] = useState('');   // 'yyyy-mm-dd'
+const [dateFrom, setDateFrom] = useState('');           // 'yyyy-mm-dd'
+const [dateTo, setDateTo] = useState('');
+
+// inside filterOrdersByPeriod(...): build dayStr from local components
+const dayStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+if (filterMode === 'date') {
+    return dayStr === selectedDate;                    // single exact day
+}
+if (filterMode === 'range') {
+    return dayStr >= dateFrom && dayStr <= dateTo;     // inclusive range
+}
+```
+
+- A small `pad(n)` helper produces the `yyyy-mm-dd` string from local components.
+- `getPeriodDescription()` gains two new strings: `مبيعات يوم 15-03-2026` and `من 01-01-2026 إلى 31-01-2026`.
+- Selecting a quick shortcut or the year/month picker resets `selectedDate / dateFrom / dateTo` and vice versa.
+- The summary strip (receipt count + total revenue) updates automatically because it is derived from `filteredOrders`.
+
+#### Revenue Note
+Feature 4 (salaries) and Feature 8 (purchases) deduct from **net revenue using the same period** — they must also handle the new `date` and `range` modes so the net-revenue number always matches the visible order list.
+
+#### Implementation Notes (what was actually built)
+- **`src/components/PeriodFilter.jsx`** — `filterOrdersByPeriod()` accepts `(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo)` and handles the new `date` + `range` modes via a `toLocalDateStr()` helper (local components, avoids UTC off-by-one). The component gained controlled props `selectedDate / dateFrom / dateTo / onDateChange / onDateFromChange / onDateToChange` (same dual controlled/uncontrolled pattern as the existing year/month state), a new toolbar row "📅 تحديد يوم محدد" + "📆 فترة زمنية", and `getPeriodDescription()` strings `مبيعات يوم 15-03-2026` / `مبيعات من 01-01-2026 إلى 31-01-2026`.
+- **Date inputs are the native `<input type="date">`** — the user explicitly preferred the native picker over a custom dd-mm-yyyy text input (a custom parsing/draft version was tried and reverted). A small `dd-mm-yyyy` hint badge sits next to each input, and the selected date is echoed back in `dd-mm-yyyy` format. One mode is active at a time — picking a date/range clears Today/Week/Year+Month and vice versa.
+- **`src/features/admin/AdminDashboardPage.jsx`** — added `selectedDate / dateFrom / dateTo` state, passed to `<PeriodFilter>`, and extended `filterSalaryPaymentsByPeriod()` with the same `date`/`range` logic so the **net revenue** metric (orders − salaries) stays consistent with the visible order list.
+- Frontend only — no DB/IPC changes.
+
+---
+
+## Feature 7 — Product Components (المكونات): Auto-Deduct Stock When an Item Is Sold
+
+### Problem
+- The `inventory` table already exists (منتجات المخزن) but **nothing consumes it** — selling 5 sandwiches never touches the bread / meat / potato counts.
+- The admin wants to **link a menu item to one or more items** (inventory items, or other menu items) so every sale **automatically subtracts** the ingredients.
+- Two measurement styles must be supported:
+  - **Pieces (عدد):** bread 50 قطعة linked to a شاورما sandwich (uses 1) → selling 1 sandwich makes 50 − 1 = 49. Linked to a "عرض 4 ساندوتش" deal (uses 4) → selling 1 deal makes 49 − 4 = 45.
+  - **Weight (وزن):** meat 10 كجم linked to a meat sandwich (uses 100 جرام) → selling 1 sandwich makes 10 كجم − 100 جرام = 9.9 كجم.
+
+### Proposed Solution: `product_components` table + deduction inside `createOrder()`
+
+#### New DB Table
+```sql
+CREATE TABLE IF NOT EXISTS product_components (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,       -- menu.id  (the item being sold)
+    component_type TEXT NOT NULL,      -- 'inventory' | 'menu'
+    component_id INTEGER NOT NULL,     -- inventory.id or menu.id
+    usage_qty REAL NOT NULL,           -- quantity consumed per ONE sold unit
+    usage_unit TEXT NOT NULL,          -- 'قطعة' | 'كجم' | 'جرام' | 'لتر' | ...
+    FOREIGN KEY (product_id) REFERENCES menu(id) ON DELETE CASCADE
+);
+```
+
+#### Units & Conversion Rules
+- Store `usage_qty` and `usage_unit` exactly as the admin enters them.
+- The **deduction engine** normalizes weight: if the inventory item's unit is `كجم` but usage was entered as `جرام`, convert grams → kg (`100 جرام → 0.1 كجم`) before subtracting. Keep a small unit map (جرام ↔ كجم, مللتر ↔ لتر).
+- Piece-based items (`قطعة`) subtract as plain numbers.
+- `adjustStock()` in `database.cjs` already clamps at 0 (`Math.max(0, ...)`).
+
+#### Example (the user's exact scenarios)
+| Product sold | Component | Usage | Stock math |
+|---|---|---|---|
+| ساندوتش شاورما (1) | خبز شاورما (قطعة) | 1 قطعة | 50 − 1 = 49 |
+| عرض 4 ساندوتش (1) | خبز شاورما (قطعة) | 4 قطع | 49 − 4 = 45 |
+| ساندوتش لحم (1) | لحم عجل (كجم) | 100 جرام | 10.0 − 0.1 = 9.9 كجم |
+
+A product can have **multiple components** — e.g. ساندوتش شاورما also consumes دجاج (120 جرام) + طماطم (20 جرام) — each is a separate row in `product_components`.
+
+#### Backend — Extend `createOrder()` (`electron/database.cjs`, line 417)
+Inside the existing transaction, after inserting `order_items`, loop each sold item and deduct its components:
+
+```js
+function deductComponentsForItem(itemName, itemQty) {
+    const product = db.prepare('SELECT id FROM menu WHERE name = ?').get(itemName);
+    if (!product) return;                                   // no such product → skip
+    const components = db.prepare(
+        'SELECT * FROM product_components WHERE product_id = ?'
+    ).all(product.id);
+
+    for (const comp of components) {
+        const totalUsed = comp.usage_qty * itemQty;         // scale by number sold
+        const normalized = normalizeUnit(totalUsed, comp.usage_unit);
+        deductFromComponent(comp.component_id, comp.component_type, normalized);
+    }
+}
+```
+
+> `order_items` store `item_name` as plain text, so resolve back to `menu.id` by name; if the item has no components, nothing is deducted. The deduction runs **inside the same DB transaction** as the order insert, so stock and orders never go out of sync.
+
+#### Admin UI
+- In the **قائمة الطعام (menu)** management tab, each menu item gets a **"المكونات"** editor: rows of (inventory/menu item + usage qty + unit), showing the linked item's **current stock** next to each row.
+- A **low-stock warning** (⬇️) highlights a component at or below its `low_threshold`.
+
+#### Low-Stock Decision (pick one during implementation)
+1. **Block:** refuse the sale and toast "الكمية غير كافية في المخزن" — no order is created.
+2. **Allow + warn:** create the order, clamp stock to 0, and toast a warning.
+> Recommendation for a busy restaurant: **block** with a clear message (option 1), with an admin override per component.
+
+---
+
+## Feature 8 — Storage Purchases (مشتريات المخزن): Stock In + Revenue Out + Track Remaining Debt
+
+### Problem
+- When the admin buys raw material — e.g. **7 كجم بطاطس for 5,000 EGP, paying only 1,000 EGP now** — there is no way to record it.
+- They need to:
+  1. **Add the 7 kg to inventory** (المخزن) so it's available and counted.
+  2. **Deduct the paid 1,000 EGP from revenue** — that cash has actually left the business.
+  3. **Track the remaining 4,000 EGP** as debt owed to the supplier, and later settle it (deducting from revenue at that later moment).
+
+### Proposed Solution: `purchases` + `purchase_payments` tables, integrated with revenue
+
+#### New DB Tables
+```sql
+CREATE TABLE IF NOT EXISTS purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER,              -- optional link to inventory item
+    item_name TEXT NOT NULL,           -- 'بطاطس بلدي للتحمير'
+    quantity REAL NOT NULL,            -- 7
+    unit TEXT NOT NULL,                -- 'كجم'
+    total_cost REAL NOT NULL,          -- 5000
+    balance_due REAL NOT NULL,         -- 4000 (0 when fully paid)
+    purchase_date TEXT NOT NULL,       -- 'YYYY-MM-DD'
+    notes TEXT DEFAULT '',
+    status TEXT NOT NULL               -- 'partial' | 'paid'
+);
+
+CREATE TABLE IF NOT EXISTS purchase_payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,      -- FK → purchases
+    amount REAL NOT NULL,              -- each payment slice (1000, then 4000)
+    payment_date TEXT NOT NULL,        -- 'YYYY-MM-DD' — drives revenue period
+    FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE
+);
+```
+
+> `purchase_payments` mirrors the `salary_payments` design (Feature 4): the **period-filtered net-revenue deduction** reads `purchase_payments.payment_date` — exactly like `filterSalaryPaymentsByPeriod()` in `AdminDashboardPage.jsx` already does for salaries.
+
+#### Flow
+**1. تسجيل شراء (Record purchase)** — `recordPurchase(inventoryId, itemName, quantity, unit, totalCost, amountPaid)`
+- Increase `inventory.quantity` by `quantity` (if `inventoryId` is given; otherwise create the inventory item).
+- Insert a `purchases` row with `balance_due = totalCost − amountPaid` and `status = 'partial'`.
+- Insert a `purchase_payments` row for `amountPaid` (dated today).
+
+**2. سداد المتبقي (Pay remaining / partial)** — `recordPurchasePayment(purchaseId, amount)`
+- Insert another `purchase_payments` row (dated today).
+- Decrease `purchases.balance_due` by `amount`; when it reaches 0 → `status = 'paid'`.
+
+**3. Delete (تصحيح خطأ)** — `deletePurchase(id)`
+- Removes the purchase + its payments (CASCADE) and **reverses** the inventory increase, guarded by the existing `showConfirm()` modal like all other destructive actions.
+
+#### Revenue Integration (the important part)
+- The dashboard **net revenue** metric already subtracts `salary_payments.net_pay` filtered to the selected period (Feature 4).
+- Extend it to **also subtract `purchase_payments.amount` filtered to the same period** — and make sure it respects the new `date` / `range` modes from Feature 6.
+- **Only amounts actually paid** are deducted. The unpaid `balance_due` is **not** counted as spent yet — that money hasn't left the business.
+
+```
+Example (July 2026):
+  مبيعات يوليو                              + 30,000
+  رواتب مدفوعة في يوليو                      −  8,000
+  دفعات مشتريات المخزن في يوليو (1,000)      −  1,000
+  ─────────────────────────────────────────────
+  صافي الإيرادات (يوليو)                    = 21,000
+  مستحق للمورد (لم يُدفع بعد)                =  4,000   ← ظاهر في المخزن، غير محسوم من الصافي
+```
+
+#### Admin UI — Inside the **المخزن (inventory)** Tab
+Add a sub-view **"مشتريات المخزن"** next to the stock list:
+- **Add purchase form:** item (existing inventory item or a new name), quantity + unit, total cost, amount paid today → auto-computes the balance.
+- **Purchases list:** item, qty, total, paid so far, **المتبقي (remaining)**, date, status badge (مستحق / مدفوع).
+- **سداد** button on each partial purchase → prompt for the amount, records the payment and deducts revenue at that moment.
+- 🗑️ delete per row (reverses stock, keeps accounting honest).
+- Summary cards: إجمالي المشتريات، المدفوع، المتبقي مستحق للموردين.
+
+---
+
+## Feature 9 — Printable Receipts (Customer + Kitchen)
 
 > **Status: DEFERRED — implement last, after all other features are complete.**
 
@@ -311,13 +511,25 @@ Electron exposes the `webContents.print()` API which can target a specific print
 ## Implementation Order
 
 ```
-Step 1 — Delete Receipt button (Backend + Admin UI)    ✅ COMPLETED
-Step 2 — Revenue Period Filter (Reports Tab)           ✅ COMPLETED
-Step 3 — Daily Receipt Number Reset (DB + UI)          ✅ COMPLETED
-Step 4 — Salary Payment History (DB + UI)              ✅ COMPLETED
-Step 5 — Link Salary deductions to Revenue period      ✅ COMPLETED
-Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
+Step 1 — Delete Receipt button (Backend + Admin UI)      ✅ COMPLETED
+Step 2 — Revenue Period Filter (Reports Tab)             ✅ COMPLETED
+Step 3 — Daily Receipt Number Reset (DB + UI)            ✅ COMPLETED
+Step 4 — Salary Payment History (DB + UI)                ✅ COMPLETED
+Step 5 — Link Salary deductions to Revenue period        ✅ COMPLETED
+Step 6 — Receipts Tab: Date + Date-Range Filter          ✅ COMPLETED
+Step 7 — Product Components: Auto-Deduct Stock           ⏳ PENDING
+Step 8 — Storage Purchases + Partial Payment + Debt      ⏳ PENDING
+Step 9 — Printable Receipts + Printer Config             DEFERRED (last)
 ```
+
+---
+
+## Session Polish (done alongside Feature 6)
+
+Small non-feature improvements shipped in the same session:
+- **App opens maximized (not fullscreen)** — `electron/main.cjs` calls `mainWindow.maximize()` inside `ready-to-show`, so the window fills the screen on launch (taskbar stays visible).
+- **Scrollbar restyled & moved to the right** — `src/styles/index.css` adds a global emerald rounded-capsule scrollbar (16px, dark track, gradient pill thumb with glow) replacing the default white bar, plus a `.scrollbar-right` utility that forces the vertical scrollbar to the **right edge** even in RTL while keeping the content right-aligned (`direction: ltr` on the scroll container, `direction: rtl` on its children).
+- `.scrollbar-right` is applied to: Admin Dashboard root, Cashier Receipts root, the POS items area + cart list (`CashierPage.jsx`), and the admin categories list (`AdminDashboardPage.jsx`).
 
 ---
 
@@ -325,12 +537,14 @@ Step 6 — Printable Receipts + Printer Config           DEFERRED (last)
 
 ### Files to Modify
 - `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
-- `src/features/admin/AdminDashboardPage.jsx` — Delete button on receipts, period filter UI, salary history section + filters + delete
-- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`
-- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`)
-- `electron/main.cjs` — Register new IPC handlers for the above
+- `src/components/PeriodFilter.jsx` — ✅ `date` + `range` filter modes, controlled date/range props, dd-mm-yyyy native date inputs (Feature 6)
+- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, **product components editor in menu tab (Feature 7)**, **storage purchases sub-view in inventory tab (Feature 8)**, net revenue also subtracts purchase payments
+- `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`, **`product_components` table + component deduction in `createOrder()` (Feature 7)**, **`purchases`/`purchase_payments` tables + record/get/delete/settle functions (Feature 8)**
+- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, **`getProductComponents`/`saveProductComponents` (Feature 7)**, **`getPurchases`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**)
+- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; register new IPC handlers for the above
+- `src/styles/index.css` — ✅ global emerald capsule scrollbar + `.scrollbar-right` RTL→right utility
 
 ### Files to Create
 - `src/features/cashier/CashierReceiptsPage.jsx` — Cashier-facing personal receipts view with delete
-- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt template (Feature 5, deferred)
-- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket template (Feature 5, deferred)
+- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt template (Feature 9, deferred)
+- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket template (Feature 9, deferred)

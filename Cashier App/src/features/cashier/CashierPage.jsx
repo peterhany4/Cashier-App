@@ -125,7 +125,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                     </div>
 
                     {/* Items area — the ONLY thing that scrolls, with a visible scrollbar */}
-                    <div className="flex-1 min-h-0 overflow-y-auto items-scroll px-4 py-4">
+                    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-right items-scroll px-4 py-4">
                         <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                             {filteredMenu.map(item => (
                                 <button
@@ -167,7 +167,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                     </div>
 
                     {/* Cart Items List */}
-                    <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+                    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-right p-4 space-y-3">
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col justify-center items-center text-slate-500">
                                 <span className="text-4xl mb-2">🛒</span>
