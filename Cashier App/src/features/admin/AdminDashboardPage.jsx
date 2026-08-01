@@ -5,8 +5,9 @@ const COMPONENT_UNITS = ['قطعة', 'كجم', 'جرام', 'لتر', 'مللتر
 
 const ARABIC_MONTH_LABELS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
-// Filter salary payments (payment_date is a "YYYY-MM-DD" string) to the same period used for orders
-function filterSalaryPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo) {
+// Filter dated payment records (salary_payments / purchase_payments, payment_date is a
+// "YYYY-MM-DD" string) to the same period used for orders.
+function filterPaymentsByPeriod(payments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo) {
     if (!payments || !Array.isArray(payments)) return [];
     const now = new Date();
 
@@ -73,6 +74,29 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     // --- State: Orders / Transactions Log ---
     const [orders, setOrders] = useState([]);
+
+    // --- State: Storage Purchases (مشتريات المخزن) ---
+    const [purchases, setPurchases] = useState([]);
+    const [purchasePayments, setPurchasePayments] = useState([]);
+    const [showAddPurchaseForm, setShowAddPurchaseForm] = useState(false);
+    const [newPurchaseItemId, setNewPurchaseItemId] = useState('');
+    const [newPurchaseName, setNewPurchaseName] = useState('');
+    const [newPurchaseQty, setNewPurchaseQty] = useState('');
+    const [newPurchaseUnit, setNewPurchaseUnit] = useState('كجم');
+    const [newPurchaseCost, setNewPurchaseCost] = useState('');
+    const [newPurchasePaid, setNewPurchasePaid] = useState('');
+    const [newPurchaseNotes, setNewPurchaseNotes] = useState('');
+    const [payModal, setPayModal] = useState(null); // { purchaseId, itemName, remaining }
+    const [payAmountInput, setPayAmountInput] = useState('');
+
+    // Purchases search + filters
+    const [purchasesSearch, setPurchasesSearch] = useState('');
+    const [purchasesStatus, setPurchasesStatus] = useState('all'); // 'all' | 'paid' | 'partial'
+    const [purchasesFilterMode, setPurchasesFilterMode] = useState('year-month'); // 'year-month' | 'range'
+    const [purchasesYear, setPurchasesYear] = useState(new Date().getFullYear());
+    const [purchasesMonth, setPurchasesMonth] = useState(new Date().getMonth() + 1);
+    const [purchasesDateFrom, setPurchasesDateFrom] = useState('');
+    const [purchasesDateTo, setPurchasesDateTo] = useState('');
 
     // --- Form Inputs States ---
     // Menu item form
@@ -219,6 +243,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                     const dbOrders = await window.api.db.getOrders();
                     setOrders(dbOrders);
+
+                    const dbPurchases = await window.api.db.getPurchases();
+                    setPurchases(dbPurchases || []);
+
+                    const dbPurchasePayments = await window.api.db.getPurchasePayments();
+                    setPurchasePayments(dbPurchasePayments || []);
                 } catch (err) {
                     console.error('Failed to load sqlite datasets:', err);
                 }
@@ -484,6 +514,104 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         });
     };
 
+    // --- Handler Functions: Storage Purchases (مشتريات المخزن) ---
+    const refreshPurchases = async () => {
+        if (!window.api || !window.api.db) return;
+        try {
+            const [dbPurchases, dbPayments, dbInv] = await Promise.all([
+                window.api.db.getPurchases(),
+                window.api.db.getPurchasePayments(),
+                window.api.db.getInventory()
+            ]);
+            setPurchases(dbPurchases || []);
+            setPurchasePayments(dbPayments || []);
+            setInventory((dbInv || []).map(item => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                unit: item.unit,
+                lowThreshold: item.low_threshold
+            })));
+        } catch (err) {
+            console.error('Failed to refresh purchases:', err);
+        }
+    };
+
+    const handleAddPurchase = async (e) => {
+        e.preventDefault();
+        const qty = parseFloat(newPurchaseQty);
+        const cost = Math.ceil(parseFloat(newPurchaseCost));
+        const paid = Math.ceil(parseFloat(newPurchasePaid) || 0);
+        if (!qty || qty <= 0) { showToast('أدخل كمية صحيحة.'); return; }
+        if (isNaN(cost) || cost < 0) { showToast('أدخل التكلفة الإجمالية الصحيحة.'); return; }
+        if (isNaN(paid) || paid < 0 || paid > cost) { showToast('المدفوع لا يمكن أن يتجاوز التكلفة الإجمالية.'); return; }
+
+        let inventoryId = null;
+        let itemName = '';
+        let unit = 'قطعة';
+
+        if (newPurchaseItemId === 'new') {
+            if (!newPurchaseName.trim()) { showToast('أدخل اسم الصنف الجديد.'); return; }
+            itemName = newPurchaseName.trim();
+            unit = newPurchaseUnit;
+        } else if (newPurchaseItemId) {
+            const inv = inventory.find(i => i.id === Number(newPurchaseItemId));
+            if (inv) {
+                inventoryId = inv.id;
+                itemName = inv.name;
+                unit = inv.unit;
+            }
+        } else {
+            showToast('اختر صنفاً من المخزن أو أضف صنفاً جديداً.');
+            return;
+        }
+
+        try {
+            await window.api.db.recordPurchase(inventoryId, itemName, qty, unit, cost, paid, newPurchaseNotes.trim());
+            showToast(`تم تسجيل شراء: ${itemName} ✓`, 'success');
+            setShowAddPurchaseForm(false);
+            setNewPurchaseItemId('');
+            setNewPurchaseName('');
+            setNewPurchaseQty('');
+            setNewPurchaseCost('');
+            setNewPurchasePaid('');
+            setNewPurchaseNotes('');
+            await refreshPurchases();
+        } catch (err) {
+            showToast('خطأ أثناء تسجيل الشراء: ' + err.message);
+        }
+    };
+
+    const confirmPayPurchase = async () => {
+        if (!payModal) return;
+        const amount = Math.ceil(parseFloat(payAmountInput));
+        if (isNaN(amount) || amount <= 0) {
+            showToast('أدخل مبلغاً صحيحاً.');
+            return;
+        }
+        try {
+            await window.api.db.recordPurchasePayment(payModal.purchaseId, amount);
+            setPayModal(null);
+            setPayAmountInput('');
+            showToast('تم تسجيل السداد ✓', 'success');
+            await refreshPurchases();
+        } catch (err) {
+            showToast(err.message);
+        }
+    };
+
+    const handleDeletePurchase = (purchase) => {
+        showConfirm(`حذف عملية شراء "${purchase.item_name}"؟ سيتم تراجع الكمية من المخزون وإلغاء دفعاتها من الإيرادات.`, async () => {
+            try {
+                await window.api.db.deletePurchase(purchase.id);
+                showToast('تم حذف عملية الشراء ✓', 'success');
+                await refreshPurchases();
+            } catch (err) {
+                showToast('خطأ أثناء حذف العملية: ' + err.message);
+            }
+        });
+    };
+
     // --- Handler Functions: Employees ---
     const handleAddEmployee = async (e) => {
         e.preventDefault();
@@ -704,9 +832,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const calculateNetPay = (emp) => emp.baseSalary + emp.bonuses - emp.deductions;
 
     // Deduct salaries actually paid during the selected period (from salary_payments history)
-    const periodSalaryPayments = filterSalaryPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
+    const periodSalaryPayments = filterPaymentsByPeriod(salaryPayments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
     const totalPaidSalariesInPeriod = periodSalaryPayments.reduce((acc, p) => acc + (p.net_pay || 0), 0);
-    const netRevenue = totalRevenue - totalPaidSalariesInPeriod;
+
+    // Deduct storage-purchase payments actually made during the same period
+    const periodPurchasePayments = filterPaymentsByPeriod(purchasePayments, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
+    const totalPurchasesPaidInPeriod = periodPurchasePayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+
+    const netRevenue = totalRevenue - totalPaidSalariesInPeriod - totalPurchasesPaidInPeriod;
 
     // Salary payment history derived data
     const availableSalaryYears = (() => {
@@ -737,6 +870,51 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     });
     const salaryHistoryTotal = filteredSalaryHistory.reduce((sum, p) => sum + (p.net_pay || 0), 0);
 
+    // Storage purchases derived data
+    const availablePurchaseYears = (() => {
+        const yearsSet = new Set();
+        yearsSet.add(new Date().getFullYear());
+        purchases.forEach(p => {
+            if (p.purchase_date) {
+                const year = Number(p.purchase_date.split('-')[0]);
+                if (!isNaN(year)) yearsSet.add(year);
+            }
+        });
+        return Array.from(yearsSet).sort((a, b) => b - a);
+    })();
+
+    const filteredPurchases = purchases.filter(p => {
+        const searchLower = purchasesSearch.trim().toLowerCase();
+        const searchMatch = !searchLower ||
+            (p.item_name && p.item_name.toLowerCase().includes(searchLower)) ||
+            (p.notes && p.notes.toLowerCase().includes(searchLower));
+
+        const isPaid = p.status === 'paid' || p.balance_due <= 0;
+        const statusMatch = purchasesStatus === 'all' ||
+            (purchasesStatus === 'paid' ? isPaid : !isPaid);
+
+        let periodMatch = true;
+        if (p.purchase_date) {
+            const parts = p.purchase_date.split('-').map(Number);
+            if (parts.length === 3 && !parts.some(isNaN)) {
+                if (purchasesFilterMode === 'year-month') {
+                    if (parts[0] !== purchasesYear) periodMatch = false;
+                    else if (purchasesMonth !== 'all' && parts[1] !== purchasesMonth) periodMatch = false;
+                } else if (purchasesFilterMode === 'range') {
+                    if (purchasesDateFrom && p.purchase_date < purchasesDateFrom) periodMatch = false;
+                    if (purchasesDateTo && p.purchase_date > purchasesDateTo) periodMatch = false;
+                }
+            }
+        }
+
+        return searchMatch && statusMatch && periodMatch;
+    });
+
+    const purchasesTotalCost = filteredPurchases.reduce((sum, p) => sum + (p.total_cost || 0), 0);
+    const purchasesTotalPaid = filteredPurchases.reduce((sum, p) => sum + (p.paid_amount || 0), 0);
+    const purchasesTotalBalance = filteredPurchases.reduce((sum, p) => sum + (p.balance_due || 0), 0);
+    const purchaseBalancePreview = Math.max(0, Math.ceil(parseFloat(newPurchaseCost) || 0) - Math.ceil(parseFloat(newPurchasePaid) || 0));
+
     return (
         <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
@@ -766,6 +944,44 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition cursor-pointer"
                             >
                                 تأكيد الحذف
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* In-app Pay Purchase Modal */}
+            {payModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-right" dir="rtl">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-3">
+                            <span className="text-emerald-400">💳</span> سداد متبقي عملية شراء
+                        </h3>
+                        <p className="text-sm text-slate-300 mb-4">
+                            {payModal.itemName} — المتبقي: <span className="font-bold text-amber-400">{Math.ceil(payModal.remaining)} جنية</span>
+                        </p>
+                        <label className="block text-xs font-bold text-slate-300 mb-1.5">المبلغ المسدد (جنية)</label>
+                        <input
+                            type="number"
+                            step="1"
+                            min="1"
+                            max={Math.ceil(payModal.remaining)}
+                            value={payAmountInput}
+                            onChange={(e) => setPayAmountInput(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center mb-4"
+                        />
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => { setPayModal(null); setPayAmountInput(''); }}
+                                className="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm transition cursor-pointer"
+                            >
+                                إلغاء
+                            </button>
+                            <button
+                                onClick={confirmPayPurchase}
+                                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition cursor-pointer"
+                            >
+                                تأكيد السداد
                             </button>
                         </div>
                     </div>
@@ -861,6 +1077,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         </span>
                         {totalPaidSalariesInPeriod > 0 && (
                             <span className="text-xs text-slate-500 block mt-1">بعد خصم رواتب الفترة: {totalPaidSalariesInPeriod.toFixed(2)}</span>
+                        )}
+                        {totalPurchasesPaidInPeriod > 0 && (
+                            <span className="text-xs text-slate-500 block mt-1">بعد خصم مشتريات المخزن: {totalPurchasesPaidInPeriod.toFixed(2)}</span>
                         )}
                     </div>
                     <span className="text-3xl p-3 bg-emerald-500/10 rounded-xl text-emerald-400">💸</span>
@@ -1366,6 +1585,323 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 </tr>
                                             );
                                         })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* ==================== PURCHASES: مشتريات المخزن ==================== */}
+                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-700/60 px-5 py-4">
+                                <div>
+                                    <h4 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                                        <span className="text-emerald-400">🛒</span> مشتريات المخزن
+                                    </h4>
+                                    <p className="text-xs text-slate-400 mt-1">تسجيل شراء المواد الخام: يضيف الكمية للمخزن، يخصم المدفوع من الإيرادات، ويتتبع المتبقي للمورد.</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowAddPurchaseForm(!showAddPurchaseForm)}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                >
+                                    {showAddPurchaseForm ? 'إغلاق النموذج' : 'تسجيل عملية شراء +'}
+                                </button>
+                            </div>
+
+                            {/* Add Purchase Form */}
+                            {showAddPurchaseForm && (
+                                <form onSubmit={handleAddPurchase} className="bg-slate-850 border-b border-slate-700/60 p-5 space-y-4 animate-fadeIn">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className={newPurchaseItemId === 'new' ? '' : 'md:col-span-2'}>
+                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">الصنف المشترى</label>
+                                            <select
+                                                value={newPurchaseItemId}
+                                                onChange={(e) => setNewPurchaseItemId(e.target.value)}
+                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                            >
+                                                <option value="">-- اختر من المخزن أو أضف جديد --</option>
+                                                {inventory.map(i => (
+                                                    <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
+                                                ))}
+                                                <option value="new">➕ صنف جديد</option>
+                                            </select>
+                                        </div>
+                                        {newPurchaseItemId === 'new' && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم الصنف الجديد</label>
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        value={newPurchaseName}
+                                                        onChange={(e) => setNewPurchaseName(e.target.value)}
+                                                        placeholder="مثال: بطاطس بلدي"
+                                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">الوحدة</label>
+                                                    <select
+                                                        value={newPurchaseUnit}
+                                                        onChange={(e) => setNewPurchaseUnit(e.target.value)}
+                                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                    >
+                                                        <option value="كجم">كجم</option>
+                                                        <option value="قطعة">قطعة</option>
+                                                        <option value="لتر">لتر</option>
+                                                        <option value="صندوق">صندوق</option>
+                                                    </select>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">الكمية المشتراة</label>
+                                            <input
+                                                type="number"
+                                                required
+                                                min="0.001"
+                                                step="any"
+                                                value={newPurchaseQty}
+                                                onChange={(e) => setNewPurchaseQty(e.target.value)}
+                                                placeholder="7"
+                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">التكلفة الإجمالية (جنية)</label>
+                                            <input
+                                                type="number"
+                                                required
+                                                min="0"
+                                                step="1"
+                                                value={newPurchaseCost}
+                                                onChange={(e) => setNewPurchaseCost(e.target.value)}
+                                                placeholder="5000"
+                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">المدفوع الآن (جنية)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={newPurchasePaid}
+                                                onChange={(e) => setNewPurchasePaid(e.target.value)}
+                                                placeholder="1000"
+                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">ملاحظات (اختياري)</label>
+                                            <input
+                                                type="text"
+                                                value={newPurchaseNotes}
+                                                onChange={(e) => setNewPurchaseNotes(e.target.value)}
+                                                placeholder="المورد / رقم الفاتورة..."
+                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <div className="bg-slate-900/60 border border-slate-700/50 rounded-lg px-3 py-2 text-xs">
+                                            <span className="text-slate-400">المتبقي بعد الدفع: </span>
+                                            <span className="font-bold font-mono text-amber-400">
+                                                {purchaseBalancePreview.toFixed(2)} جنية
+                                            </span>
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                        >
+                                            💾 تسجيل عملية الشراء
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+
+                            {/* Purchases Filters */}
+                            <div className="border-b border-slate-700/60 px-5 py-4 space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <input
+                                        type="text"
+                                        placeholder="ابحث عن صنف أو مورد..."
+                                        value={purchasesSearch}
+                                        onChange={(e) => setPurchasesSearch(e.target.value)}
+                                        className="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                    />
+                                    <select
+                                        value={purchasesStatus}
+                                        onChange={(e) => setPurchasesStatus(e.target.value)}
+                                        className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                    >
+                                        <option value="all">كل الحالات</option>
+                                        <option value="paid">مدفوع 🟢</option>
+                                        <option value="partial">مستحق ⚠️</option>
+                                    </select>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setPurchasesFilterMode('year-month'); setPurchasesDateFrom(''); setPurchasesDateTo(''); }}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                                                purchasesFilterMode === 'year-month'
+                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                            }`}
+                                        >
+                                            📅 بالشهر
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPurchasesFilterMode('range')}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                                                purchasesFilterMode === 'range'
+                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                            }`}
+                                        >
+                                            📆 بفترة
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {purchasesFilterMode === 'year-month' ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs font-bold text-slate-400">الفترة:</span>
+                                        <select
+                                            value={purchasesYear}
+                                            onChange={(e) => setPurchasesYear(Number(e.target.value))}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                        >
+                                            {availablePurchaseYears.map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            value={purchasesMonth}
+                                            onChange={(e) => setPurchasesMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                        >
+                                            <option value="all">كل الشهور</option>
+                                            {ARABIC_MONTH_LABELS.map((label, idx) => (
+                                                <option key={idx} value={idx + 1}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs font-bold text-slate-400">من:</span>
+                                        <input
+                                            type="date"
+                                            value={purchasesDateFrom}
+                                            onChange={(e) => setPurchasesDateFrom(e.target.value)}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] text-slate-200"
+                                        />
+                                        <span className="text-xs text-slate-500">إلى:</span>
+                                        <input
+                                            type="date"
+                                            value={purchasesDateTo}
+                                            onChange={(e) => setPurchasesDateTo(e.target.value)}
+                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] text-slate-200"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Summary Cards (follow the filter above) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-5 py-4">
+                                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-bold">إجمالي المشتريات</p>
+                                        <h4 className="text-xl font-black text-white font-mono mt-1">{Math.ceil(purchasesTotalCost)}</h4>
+                                        <p className="text-[10px] text-slate-500">جنية</p>
+                                    </div>
+                                    <span className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-lg">🧾</span>
+                                </div>
+                                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-bold">المدفوع فعلياً</p>
+                                        <h4 className="text-xl font-black text-emerald-400 font-mono mt-1">{Math.ceil(purchasesTotalPaid)}</h4>
+                                        <p className="text-[10px] text-slate-500">جنية (مخصوم من الإيرادات)</p>
+                                    </div>
+                                    <span className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">💰</span>
+                                </div>
+                                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-slate-400 font-bold">المتبقي مستحق للمورد</p>
+                                        <h4 className="text-xl font-black text-amber-400 font-mono mt-1">{Math.ceil(purchasesTotalBalance)}</h4>
+                                        <p className="text-[10px] text-slate-500">جنية (لم يُخصم بعد)</p>
+                                    </div>
+                                    <span className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg">⏳</span>
+                                </div>
+                            </div>
+
+                            {/* Purchases Table */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-right border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-700/50 text-slate-300 border-t border-slate-700 text-sm">
+                                            <th className="p-3.5 font-bold">الصنف</th>
+                                            <th className="p-3.5 font-bold text-center">الكمية</th>
+                                            <th className="p-3.5 font-bold text-center">التكلفة</th>
+                                            <th className="p-3.5 font-bold text-center">المدفوع</th>
+                                            <th className="p-3.5 font-bold text-center">المتبقي</th>
+                                            <th className="p-3.5 font-bold text-center">التاريخ</th>
+                                            <th className="p-3.5 font-bold text-center">الحالة</th>
+                                            <th className="p-3.5 font-bold text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                        {filteredPurchases.map(p => {
+                                            const isPaid = p.status === 'paid' || p.balance_due <= 0;
+                                            return (
+                                                <tr key={p.id} className="hover:bg-slate-750/30 transition-colors">
+                                                    <td className="p-3.5 font-bold text-white">{p.item_name}</td>
+                                                    <td className="p-3.5 text-center font-mono text-slate-300">{p.quantity} {p.unit}</td>
+                                                    <td className="p-3.5 text-center font-mono text-slate-300">{Math.ceil(p.total_cost)} جنية</td>
+                                                    <td className="p-3.5 text-center font-mono text-emerald-400">{Math.ceil(p.paid_amount || 0)} جنية</td>
+                                                    <td className="p-3.5 text-center font-mono font-bold text-amber-400">{Math.ceil(p.balance_due || 0)} جنية</td>
+                                                    <td className="p-3.5 text-center text-slate-400">{formatPaymentDate(p.purchase_date)}</td>
+                                                    <td className="p-3.5 text-center">
+                                                        {isPaid ? (
+                                                            <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold">مدفوع 🟢</span>
+                                                        ) : (
+                                                            <span className="bg-amber-500/15 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-bold">مستحق ⚠️</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-3.5 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            {!isPaid && (
+                                                                <button
+                                                                    onClick={() => { setPayModal({ purchaseId: p.id, itemName: p.item_name, remaining: p.balance_due }); setPayAmountInput(String(Math.ceil(p.balance_due))); }}
+                                                                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer"
+                                                                >
+                                                                    💳 سداد
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleDeletePurchase(p)}
+                                                                className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
+                                                            >
+                                                                حذف 🗑️
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {filteredPurchases.length === 0 && (
+                                            <tr>
+                                                <td colSpan="8" className="text-center p-8 text-slate-500">
+                                                    {purchases.length === 0
+                                                        ? 'لا توجد مشتريات مسجلة بعد.'
+                                                        : 'لا توجد مشتريات تطابق الفلترة أو البحث الحالي.'}
+                                                </td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>

@@ -89,6 +89,27 @@ function initDatabase(userDataPath) {
             usage_unit TEXT NOT NULL,          -- 'قطعة' | 'كجم' | 'جرام' | 'لتر' | 'مللتر' | 'صندوق'
             FOREIGN KEY (product_id) REFERENCES menu(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            inventory_id INTEGER,              -- optional link to inventory item
+            item_name TEXT NOT NULL,           -- 'بطاطس بلدي للتحمير'
+            quantity REAL NOT NULL,            -- 7
+            unit TEXT NOT NULL,                -- 'كجم'
+            total_cost REAL NOT NULL,          -- 5000
+            balance_due REAL NOT NULL,         -- 4000 (0 when fully paid)
+            purchase_date TEXT NOT NULL,       -- 'YYYY-MM-DD'
+            notes TEXT DEFAULT '',
+            status TEXT NOT NULL               -- 'partial' | 'paid'
+        );
+
+        CREATE TABLE IF NOT EXISTS purchase_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            purchase_id INTEGER NOT NULL,      -- FK → purchases
+            amount REAL NOT NULL,              -- each payment slice (1000, then 4000)
+            payment_date TEXT NOT NULL,        -- 'YYYY-MM-DD' — drives revenue period
+            FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE
+        );
     `);
 
     // Migration: check if daily_number column exists in orders table
@@ -511,6 +532,114 @@ function deductComponents(itemName, itemQty) {
     }
 }
 
+// --- DB Operations: Storage Purchases (مشتريات المخزن) ---
+function getPurchases() {
+    return db.prepare(`
+        SELECT p.*, (p.total_cost - p.balance_due) AS paid_amount
+        FROM purchases p
+        ORDER BY p.purchase_date DESC, p.id DESC
+    `).all();
+}
+
+function getPurchasePayments() {
+    return db.prepare('SELECT * FROM purchase_payments ORDER BY payment_date DESC, id DESC').all();
+}
+
+// Record a raw-material purchase: increases inventory stock, stores the total cost,
+// records the amount actually paid today, and tracks the remaining balance as debt.
+function recordPurchase(inventoryId, itemName, quantity, unit, totalCost, amountPaid, notes) {
+    const date = getLocalDateString();
+    const qty = Number(quantity) || 0;
+    const cost = Number(totalCost) || 0;
+    const paid = Math.min(Math.max(Number(amountPaid) || 0, 0), cost);
+    const balance = Math.max(0, cost - paid);
+
+    const tx = db.transaction(() => {
+        let invId = Number(inventoryId) || null;
+        let createdNew = false;
+
+        if (!invId) {
+            // New item, or a name that matches an existing inventory item
+            const existing = db.prepare('SELECT id FROM inventory WHERE name = ?').get(itemName);
+            if (existing) {
+                invId = existing.id;
+            } else {
+                const info = db.prepare(
+                    'INSERT INTO inventory (name, quantity, unit, low_threshold) VALUES (?, ?, ?, ?)'
+                ).run(itemName, qty, unit || 'قطعة', 0);
+                invId = info.lastInsertRowid;
+                createdNew = true;
+            }
+        }
+
+        // Increase stock (the brand-new item was already created with the full quantity)
+        if (!createdNew && qty > 0) {
+            db.prepare('UPDATE inventory SET quantity = quantity + ? WHERE id = ?').run(qty, invId);
+        }
+
+        const info = db.prepare(`
+            INSERT INTO purchases (inventory_id, item_name, quantity, unit, total_cost, balance_due, purchase_date, notes, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(invId, itemName || 'مادة خام', qty, unit || 'قطعة', cost, balance, date, notes || '', balance > 0 ? 'partial' : 'paid');
+
+        const purchaseId = info.lastInsertRowid;
+
+        // Money actually paid leaves the business now → becomes a revenue deduction
+        if (paid > 0) {
+            db.prepare('INSERT INTO purchase_payments (purchase_id, amount, payment_date) VALUES (?, ?, ?)')
+                .run(purchaseId, paid, date);
+        }
+
+        return { success: true, id: purchaseId };
+    });
+
+    return tx();
+}
+
+// Pay the remaining (or partial) balance of a purchase; the payment is dated today
+// so it joins the period-filtered revenue deduction.
+function recordPurchasePayment(purchaseId, amount) {
+    const purchase = db.prepare('SELECT * FROM purchases WHERE id = ?').get(purchaseId);
+    if (!purchase) throw new Error('عملية الشراء غير موجودة');
+
+    const payAmount = Number(amount) || 0;
+    if (payAmount <= 0) throw new Error('أدخل مبلغاً صحيحاً');
+    if (payAmount > purchase.balance_due + 0.0001) {
+        throw new Error(`المبلغ أكبر من المتبقي (${Number(purchase.balance_due.toFixed(2))} جنية)`);
+    }
+
+    const date = getLocalDateString();
+    const tx = db.transaction(() => {
+        db.prepare('INSERT INTO purchase_payments (purchase_id, amount, payment_date) VALUES (?, ?, ?)')
+            .run(purchaseId, payAmount, date);
+        const newBalance = Math.max(0, purchase.balance_due - payAmount);
+        db.prepare('UPDATE purchases SET balance_due = ?, status = ? WHERE id = ?')
+            .run(newBalance, newBalance > 0 ? 'partial' : 'paid', purchaseId);
+        return { success: true, balance_due: newBalance };
+    });
+    return tx();
+}
+
+// Delete a purchase (and its payments via CASCADE), reversing the stock increase.
+// Revenue deductions disappear automatically since they come from purchase_payments.
+function deletePurchase(id) {
+    const purchase = db.prepare('SELECT * FROM purchases WHERE id = ?').get(id);
+    if (!purchase) return { success: true };
+
+    const tx = db.transaction(() => {
+        if (purchase.inventory_id) {
+            const inv = db.prepare('SELECT quantity FROM inventory WHERE id = ?').get(purchase.inventory_id);
+            if (inv) {
+                const newQty = Math.max(0, inv.quantity - (purchase.quantity || 0));
+                db.prepare('UPDATE inventory SET quantity = ? WHERE id = ?').run(newQty, purchase.inventory_id);
+            }
+        }
+        db.prepare('DELETE FROM purchases WHERE id = ?').run(id);
+        return { success: true };
+    });
+    return tx();
+}
+
 function createOrder(cashier, total, items) {
     const now = new Date();
     const timestamp = now.toISOString();
@@ -583,6 +712,11 @@ module.exports = {
     deleteSalaryPayment,
     getProductComponents,
     saveProductComponents,
+    getPurchases,
+    getPurchasePayments,
+    recordPurchase,
+    recordPurchasePayment,
+    deletePurchase,
     createOrder,
     getOrders,
     deleteOrder

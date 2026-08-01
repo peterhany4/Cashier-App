@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('api', {
         deleteSalaryPayment: (id) => ipcRenderer.invoke('db:deleteSalaryPayment', id),
         getProductComponents: (productId) => ipcRenderer.invoke('db:getProductComponents', productId),
         saveProductComponents: (productId, components) => ipcRenderer.invoke('db:saveProductComponents', productId, components),
+        getPurchases: () => ipcRenderer.invoke('db:getPurchases'),
+        getPurchasePayments: () => ipcRenderer.invoke('db:getPurchasePayments'),
+        recordPurchase: (inventoryId, itemName, quantity, unit, totalCost, amountPaid, notes) => 
+            ipcRenderer.invoke('db:recordPurchase', inventoryId, itemName, quantity, unit, totalCost, amountPaid, notes),
+        recordPurchasePayment: (purchaseId, amount) => ipcRenderer.invoke('db:recordPurchasePayment', purchaseId, amount),
+        deletePurchase: (id) => ipcRenderer.invoke('db:deletePurchase', id),
         createOrder: (cashier, total, items) => ipcRenderer.invoke('db:createOrder', cashier, total, items),
         getOrders: () => ipcRenderer.invoke('db:getOrders'),
         deleteOrder: (id) => ipcRenderer.invoke('db:deleteOrder', id)
