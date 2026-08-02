@@ -97,6 +97,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [purchasesMonth, setPurchasesMonth] = useState(new Date().getMonth() + 1);
     const [purchasesDateFrom, setPurchasesDateFrom] = useState('');
     const [purchasesDateTo, setPurchasesDateTo] = useState('');
+    const [showDebtsOnly, setShowDebtsOnly] = useState(false);
 
     // --- Form Inputs States ---
     // Menu item form
@@ -910,9 +911,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         return searchMatch && statusMatch && periodMatch;
     });
 
-    const purchasesTotalCost = filteredPurchases.reduce((sum, p) => sum + (p.total_cost || 0), 0);
-    const purchasesTotalPaid = filteredPurchases.reduce((sum, p) => sum + (p.paid_amount || 0), 0);
-    const purchasesTotalBalance = filteredPurchases.reduce((sum, p) => sum + (p.balance_due || 0), 0);
+    // Outstanding debt is a LIVE liability — always shown in total across ALL purchases
+    // (not hidden behind the month filter). "Debts" view shows every unpaid purchase, all-time.
+    const globalPurchasesBalance = purchases.reduce((sum, p) => sum + (p.balance_due || 0), 0);
+    const unpaidAllPurchases = purchases.filter(p => (p.balance_due || 0) > 0);
+    const displayedPurchases = showDebtsOnly ? unpaidAllPurchases : filteredPurchases;
+
+    const purchasesTotalCost = displayedPurchases.reduce((sum, p) => sum + (p.total_cost || 0), 0);
+    const purchasesTotalPaid = displayedPurchases.reduce((sum, p) => sum + (p.paid_amount || 0), 0);
     const purchaseBalancePreview = Math.max(0, Math.ceil(parseFloat(newPurchaseCost) || 0) - Math.ceil(parseFloat(newPurchasePaid) || 0));
 
     return (
@@ -1723,7 +1729,27 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 </form>
                             )}
 
-                            {/* Purchases Filters */}
+                            {/* Outstanding debt banner + visibility toggle */}
+                            {globalPurchasesBalance > 0 && (
+                                <div className="bg-amber-500/10 border border-amber-500/30 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+                                    <p className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                        <span className="text-lg">⚠️</span>
+                                        لديك {Math.ceil(globalPurchasesBalance)} جنية مستحقة للموردين
+                                        {showDebtsOnly ? '' : ` (${unpaidAllPurchases.length} عملية غير مسددة)`}.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDebtsOnly(v => !v)}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                                            showDebtsOnly ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700'
+                                        }`}
+                                    >
+                                        {showDebtsOnly ? '✕ إغلاق و عرض كل المشتريات' : '🛡️ عرض الديون المستحقة فقط'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!showDebtsOnly ? (
                             <div className="border-b border-slate-700/60 px-5 py-4 space-y-3">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <input
@@ -1810,8 +1836,13 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </div>
                                 )}
                             </div>
+                        ) : (
+                            <div className="border-b border-slate-700/60 px-5 py-4 flex items-center gap-2 text-sm text-slate-300">
+                                🛡️ عرض: <span className="font-bold text-amber-400">الديون المستحقة فقط</span> — كل المشتريات غير المسددة من كل الفترات (يتم تجاهل الفترة الزمنية).
+                            </div>
+                        )}
 
-                            {/* Summary Cards (follow the filter above) */}
+                            {/* Summary Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-5 py-4">
                                 <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
                                     <div>
@@ -1832,8 +1863,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
                                     <div>
                                         <p className="text-xs text-slate-400 font-bold">المتبقي مستحق للمورد</p>
-                                        <h4 className="text-xl font-black text-amber-400 font-mono mt-1">{Math.ceil(purchasesTotalBalance)}</h4>
-                                        <p className="text-[10px] text-slate-500">جنية (لم يُخصم بعد)</p>
+                                        <h4 className="text-xl font-black text-amber-400 font-mono mt-1">{Math.ceil(globalPurchasesBalance)}</h4>
+                                        <p className="text-[10px] text-slate-500">جنية (كل الفترات — لم يُخصم بعد)</p>
                                     </div>
                                     <span className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg">⏳</span>
                                 </div>
@@ -1855,7 +1886,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-700/40 text-sm">
-                                        {filteredPurchases.map(p => {
+                                        {displayedPurchases.map(p => {
                                             const isPaid = p.status === 'paid' || p.balance_due <= 0;
                                             return (
                                                 <tr key={p.id} className="hover:bg-slate-750/30 transition-colors">
@@ -1893,12 +1924,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 </tr>
                                             );
                                         })}
-                                        {filteredPurchases.length === 0 && (
+                                        {displayedPurchases.length === 0 && (
                                             <tr>
                                                 <td colSpan="8" className="text-center p-8 text-slate-500">
-                                                    {purchases.length === 0
-                                                        ? 'لا توجد مشتريات مسجلة بعد.'
-                                                        : 'لا توجد مشتريات تطابق الفلترة أو البحث الحالي.'}
+                                                    {showDebtsOnly
+                                                        ? '🎉 لا توجد ديون مستحقة — كل الموردين مسددون.'
+                                                        : purchases.length === 0
+                                                            ? 'لا توجد مشتريات مسجلة بعد.'
+                                                            : 'لا توجد مشتريات تطابق الفلترة أو البحث الحالي.'}
                                                 </td>
                                             </tr>
                                         )}
