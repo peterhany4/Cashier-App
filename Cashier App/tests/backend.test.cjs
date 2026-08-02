@@ -88,6 +88,15 @@ app.whenReady().then(() => {
         ok('sale rolled back (no new order, bread stays 44)', dbm.getOrders().length === ordersBefore && invQty(bread.id) === 44);
         ok('block message human-readable (غير كافٍ)', blockedMsg && blockedMsg.includes('غير كافٍ'));
 
+        // canceling a receipt puts the ingredients back
+        const rbw = dbm.addInventoryItem('Restore Bread', 20, 'قطعة', 2);
+        const rsand = dbm.addMenuItem('Restore Sandwich', 40, 'Food');
+        dbm.saveProductComponents(rsand.id, [{ component_type: 'inventory', component_id: rbw.id, usage_qty: 1, usage_unit: 'قطعة' }]);
+        const ro = dbm.createOrder('ahmed', 40, [{ name: 'Restore Sandwich', quantity: 1, price: 40 }]);
+        ok('sell subtracts stock (20→19)', invQty(rbw.id) === 19);
+        dbm.deleteOrder(ro.orderId);
+        ok('cancel restores stock (19→20)', invQty(rbw.id) === 20);
+
         // ------------------------------ Employees / salaries (Feature 4) ------------------------------ //
         section('Employees & salary history');
         const emp = dbm.addEmployee('Sara Test', 'Cashier', 3500);

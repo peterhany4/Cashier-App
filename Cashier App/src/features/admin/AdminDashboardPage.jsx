@@ -748,6 +748,16 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             try {
                 if (window.api && window.api.db) {
                     await window.api.db.deleteOrder(order.id);
+                    // Deleting/cancelling the receipt returns its ingredients to the
+                    // stock — refresh the inventory state so the UI shows the new totals.
+                    const dbInv = await window.api.db.getInventory();
+                    setInventory((dbInv || []).map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        lowThreshold: item.low_threshold
+                    })));
                 }
                 setOrders(prev => prev.filter(o => o.id !== order.id));
                 showToast(`تم حذف الفاتورة رقم #${displayIndex} بنجاح ✓`, 'success');

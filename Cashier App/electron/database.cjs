@@ -532,6 +532,25 @@ function deductComponents(itemName, itemQty) {
     }
 }
 
+// Reverse of deductComponents(): add back the consumed ingredients when a receipt is
+// deleted/cancelled. Uses the same recursive expansion + unit normalization.
+function restoreComponentsForItem(itemName, itemQty) {
+    const product = db.prepare('SELECT id FROM menu WHERE name = ?').get(itemName);
+    if (!product) return;
+
+    const deductions = collectInventoryDeductions(product.id, itemQty, 0, []);
+    if (deductions.length === 0) return;
+
+    const updateInv = db.prepare('UPDATE inventory SET quantity = quantity + ? WHERE id = ?');
+    for (const d of deductions) {
+        const inv = db.prepare('SELECT id, unit FROM inventory WHERE id = ?').get(d.inventoryId);
+        if (!inv) continue;
+        const toAdd = normalizeUsage(d.totalUsed, d.usageUnit, inv.unit);
+        if (!toAdd) continue;
+        updateInv.run(toAdd, inv.id);
+    }
+}
+
 // --- DB Operations: Storage Purchases (مشتريات المخزن) ---
 function getPurchases() {
     return db.prepare(`
@@ -679,8 +698,22 @@ function getOrders() {
 }
 
 function deleteOrder(id) {
-    db.prepare('DELETE FROM orders WHERE id = ?').run(id);
-    return { success: true };
+    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+
+    const tx = db.transaction(() => {
+        // Canceling a receipt must give the ingredients back to the stock, exactly
+        // mirroring the deduction that deductComponents() applied when it was sold.
+        if (order) {
+            const items = db.prepare('SELECT item_name, quantity FROM order_items WHERE order_id = ?').all(id);
+            for (const item of items) {
+                restoreComponentsForItem(item.item_name, item.quantity);
+            }
+        }
+        db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+        return { success: true };
+    });
+
+    return tx();
 }
 
 module.exports = {
