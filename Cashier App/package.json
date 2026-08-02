@@ -10,6 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "electron tests/backend.test.cjs",
+    "test:frontend": "vitest run",
     "preview": "vite preview",
     "rebuild": "electron-rebuild -w better-sqlite3",
     "postinstall": "npm run rebuild",
@@ -26,6 +28,8 @@
   "devDependencies": {
     "@electron/rebuild": "^4.2.0",
     "@eslint/js": "^10.0.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
@@ -37,7 +41,9 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "jsdom": "^30.0.1",
     "vite": "^8.1.1",
+    "vitest": "^4.1.10",
     "wait-on": "^9.0.10"
   },
   "build": {
