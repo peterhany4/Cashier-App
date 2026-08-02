@@ -61,27 +61,24 @@ A fast, offline **Point-of-Sale (POS) / Cashier desktop app** built for a single
 ## 📁 Project Structure
 
 ```
-Cashier App/
 ├─ electron/
-│  ├─ main.cjs         # Main process, BrowserWindow, IPC handler registration
-│  ├─ preload.cjs      # Safe IPC bridge (context-isolated) exposed to the renderer
-│  └─ database.cjs     # All SQL + business logic (orders, stock, salaries, purchases)
+│  ├─ main.cjs          # Main process (startup, BrowserWindow, IPC handlers)
+│  ├─ preload.cjs       # Safe IPC bridge (context-isolated) exposed to the renderer
+│  └─ database.cjs      # All SQL + business logic (orders, stock, salaries, purchases)
 ├─ src/
-│  ├─ App.jsx          # Auth + @router-ish view switching (POS / Dashboard / Receipts)
+│  ├─ App.jsx           # Role-based view switching (login / POS / Dashboard / Receipts)
 │  ├─ main.jsx
 │  ├─ context/CartContext.jsx      # Cart state shared across the POS
 │  ├─ components/PeriodFilter.jsx # Reusable period filter (today/date/range)
 │  ├─ features/
 │  │  ├─ login/LoginPage.jsx
-│  │  ├─ cashier/     CashierPage.jsx, CashierReceiptsPage.jsx
-│  │  └─ admin/       AdminDashboardPage.jsx (reports, menu, inventory)
+│  │  ├─ cashier/      CashierPage.jsx, CashierReceiptsPage.jsx
+│  │  └─ admin/        AdminDashboardPage.jsx (reports, menu, inventory)
 │  └─ styles/index.css
 ├─ tests/backend.test.cjs   # Backend (DB) integration suite
 ├─ plans/upcoming-features.md
 └─ package.json
 ```
-
-> ⚠️ The folder already contains both the repo root **and** a nested `Cashier App/` folder (the actual app) — see [Repo layout](#repo-layout) below.
 
 ---
 
@@ -165,11 +162,7 @@ Feature 9 is designed but intentionally **paused while we wait for the client's 
 
 ## 📝 Repo Layout
 
-The git repository root is **`D:\Programming\Cashier App`** and contains two things:
-- `Cashier App/` — the Electron app itself (where this README lives)
-- `plans/` — design documentation (`upcoming-features.md`)
-
-Run all commands from inside **`Cashier App/`**.
+The git repository root **is** the app — source, `electron/`, `tests/` and `plans/` all live directly at the top level. Run **all** commands from the repo root (`D:\Programming\Cashier App`).
 
 ---
 
