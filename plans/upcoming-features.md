@@ -1,6 +1,6 @@
 # 🗂️ Cashier App — Upcoming Features Plan
 
-> **Last Updated:** 2026-08-01  
+> **Last Updated:** 2026-08-02  
 > **Project Stack:** Electron + React (Vite) + SQLite (better-sqlite3)  
 > **Language:** Arabic UI (RTL)
 
@@ -411,6 +411,7 @@ function deductComponentsForItem(itemName, itemQty) {
 - **`src/features/admin/AdminDashboardPage.jsx`** — expandable **"⚙️ المكونات"** editor row under each menu item (user chose expandable row over modal): add/remove rows (type من المخزن / من القائمة + item + usage qty + unit), shows the linked ingredient's **current stock** and a **⬇️ low-stock** badge, and a **💾 حفظ المكونات** button that commits the whole list.
 - **Verified in Electron** — bread 120→119 (1 قطعة/sandwich), meat 25→24.9 كجم (100 جرام/sandwich), deal → 120→115 / 25→24.5 (recursive), and a blocked sale left the orders table unchanged (rollback confirmed).
 - The cashier's existing checkout toast shows the block message automatically (no cashier UI change needed).
+- **Canceled/ deleted receipts return the stock (added after build)** — `deleteOrder()` now mirrors the deduction: before removing an order it re‑expands the same item components (+ unit conversion) and **adds the ingredients back** to `inventory`, inside one transaction. So when a customer cancels and the cashier deletes the receipt, the consumed quantities are restored. (`restoreComponentsForItem()` in `electron/database.cjs`; the admin dashboard re‑loads inventory after a delete.) Verified: sell bread 20→19, delete the order → 19→20.
 
 ---
 
@@ -499,12 +500,20 @@ Add a sub-view **"مشتريات المخزن"** next to the stock list:
 - **Search + filters (added after initial build, user requested)** — the section has a **search box** (item name + notes/supplier), a **status filter** (الكل / مدفوع / مستحق), and a **period filter** with two modes: **📅 بالشهر** (year + month, defaults to current year + current month) and **📆 بفترة** (from/to native date inputs). The summary cards **follow the filtered set**, so totals always match the visible rows. Frontend-only.
 - **Verified in Electron** — stock +7, balance 4000→2500→0, overpay rejected, new-item auto-creation, delete reverses stock + cascades payments (22/22 checks passed).
 - IPC channels added in `electron/preload.cjs` + `electron/main.cjs` (`getPurchases`, `getPurchasePayments`, `recordPurchase`, `recordPurchasePayment`, `deletePurchase`).
+- **Outstanding debt is always visible (added after build)** — a supplier debt is a *live liability*, not a per‑month figure, so it must not hide behind the month filter. Now: the **"المتبقي مستحق للمورد"** summary card always shows the **global** total across all purchases (all months), a persistent amber banner appears whenever you owe anything ("لديك X مستحقة"), and a **"🛡️ عرض الديون المستحقة فقط"** toggle lists only the unpaid purchases from every period (ignoring the date filter). Kept the month filter for *history* ("what did I buy/pay in month X") as a separate concept.
 
 ---
 
 ## Feature 9 — Printable Receipts (Customer + Kitchen)
 
-> **Status: DEFERRED — implement last, after all other features are complete.**
+> **Status: PAUSED — waiting on the client's printer details (hardware + one/two printers). Buildable without hardware (test via "Microsoft Print to PDF"), but we agreed to let it until the answers are ready. Per the user.**
+
+> **Agreed with the user (before pause):**
+> - **Receipts = HTML template (not React components).** Simpler + reliable: a self-contained HTML string (template function in one shared module) loaded into a hidden `BrowserWindow` via a `data:`/`file:` URL, then `webContents.print({ deviceName })`. Deviation from the plan's `CustomerReceipt.jsx`/`KitchenReceipt.jsx`.
+> - **Engine = printer driver via `webContents.print`**, not raw ESC/POS. If the client's exact 80 mm thermal printer prints badly, add ESC/POS later.
+> - **Hidden window in the main process**, print after `createOrder` succeeds (DB/stock committed first).
+> - **Settings**: a tiny `settings` (key→value) table storing `customer_printer`, `kitchen_printer`, restaurant header, footer. Picker uses `webContents.getPrinters()` in an ⚙️ settings area (exact tab TBD).
+> - **Blocked on two answers:** (1) printer hardware (normal USB vs 80 mm thermal model), (2) is there a second kitchen printer or one — if one, customer receipt + a kitchen *screen*? And confirm "حفظ وطباعة" = prints both where two printers exist.
 
 ### Overview
 Two separate receipt layouts need to be created and sent to two different printers:
@@ -543,7 +552,7 @@ Step 5 — Link Salary deductions to Revenue period        ✅ COMPLETED
 Step 6 — Receipts Tab: Date + Date-Range Filter          ✅ COMPLETED
 Step 7 — Product Components: Auto-Deduct Stock           ✅ COMPLETED
 Step 8 — Storage Purchases + Partial Payment + Debt      ✅ COMPLETED
-Step 9 — Printable Receipts + Printer Config             DEFERRED (last)
+Step 9 — Printable Receipts + Printer Config             PAUSED (waiting on printer details)
 ```
 
 ---
@@ -570,5 +579,28 @@ Small non-feature improvements shipped in the same session:
 
 ### Files to Create
 - `src/features/cashier/CashierReceiptsPage.jsx` — Cashier-facing personal receipts view with delete
-- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt template (Feature 9, deferred)
-- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket template (Feature 9, deferred)
+- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt (Feature 9, paused — likely an HTML template, not React)
+- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket (Feature 9, paused — likely an HTML template, not React)
+
+---
+
+## ➕ Current State / Ground Truth (for resuming)
+
+Snapshot of the repo so a fresh session can pick up without re-discovery (recorded 2026-08-02):
+
+- **All code is shipped & complete except Feature 9 (paused).** Features 1–8 + the two "added after build" items (Feature 7 stock-restore-on-delete, Feature 8 global outstanding-debt) are done and verified.
+- **Node version matters** — runtime uses Electron's bundled Node; the **backend tests** (`tests/backend.test.cjs`) run on the system Node and use the built-in **`node:sqlite`** (not `better-sqlite3`). They create an in-memory DB, so they also test the "missing/defaults" fallback paths.
+- **How to verify:**
+  - Backend: `npm test` → **45 checks pass**
+  - Frontend (Vitest): `npm run test:frontend` → **12 pass** (`src/test/setup.js`, `src/components/PeriodFilter.test.jsx`, `src/context/CartContext.test.jsx`)
+  - Build: `npm run build` passes; `npm run lint` has **6 pre-existing errors unrelated to current work** (do not worry about them unless the task touches them).
+- **Version & installer:** `1.0.0-beta.1`; installer built to `release/Local Cashier App Setup 1.0.0-beta.1.exe`.
+- **Seed data:** `scripts/seed-test-db.cjs` builds the standalone `seed-test-db.exe` (a **37 MB single binary** in `seeder/`, using the bundled `node:sqlite`) that makes a full demo DB so Feature 7/8 stock & purchases can be exercised end-to-end. `seeder/` is **git-ignored**.
+- **Git:** repo root `D:\Programming\Cashier App`; current branch **`Feature-9`**; remote `origin` = `https://github.com/peterhany4/Cashier-App.git`. The customer contract/agreement HTML file is **git-ignored** (`contract-license-agreement.html`).
+- **Net-revenue formula** (the "important part"): orders for the period − `salary_payments.net_pay` (same period) − `purchase_payments.amount` (same period), all through `filterPaymentsByPeriod()` respect the `date`/`range` modes too.
+- **Key file roles:**
+  - `electron/database.cjs` — DB layer, all SQL + business logic (orders, stock, components, purchases, salaries, settings-free).
+  - `electron/preload.cjs` — IPC bridge (each feature adds its channels here).
+  - `electron/main.cjs` — main process: `mainWindow.maximize()`, IPC handler registration.
+  - `src/features/admin/AdminDashboardPage.jsx` — reports, menu + components editor, inventory + purchases sub-view.
+  - `src/features/cashier/CashierPage.jsx` — POS checkout (its **Stub Print** button was deliberately left as a stub and is what Feature 9 replaces).
