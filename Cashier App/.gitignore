@@ -14,6 +14,7 @@ release/
 dist-ssr
 *.local
 seeder/
+contract-license-agreement.html
 
 # Editor directories and files
 .vscode/*
