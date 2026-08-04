@@ -3,6 +3,7 @@ import LoginPage from './features/login/LoginPage';
 import CashierPage from './features/cashier/CashierPage';
 import CashierReceiptsPage from './features/cashier/CashierReceiptsPage';
 import AdminDashboardPage from './features/admin/AdminDashboardPage';
+import SettingsPage from './features/admin/SettingsPage';
 import { CartProvider } from './context/CartContext';
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState('cashier'); // 'cashier', 'admin', or 'receipts'
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [dbVersion, setDbVersion] = useState(0); // bumped after a DB restore so views re-fetch
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,6 +29,27 @@ export default function App() {
       }
     };
     fetchData();
+  }, [currentUser, dbVersion]);
+
+  useEffect(() => {
+    if (window.api && window.api.db && window.api.db.onDatabaseRestored) {
+      // When a restore overwrites the DB, re-fetch menu/categories + bump dbVersion
+      // so the admin dashboard re-loads its own datasets.
+      const unsubscribe = window.api.db.onDatabaseRestored(() => {
+        setDbVersion(v => v + 1);
+        if (currentUser && window.api.db) {
+          Promise.all([
+            window.api.db.getMenu(),
+            window.api.db.getCategories()
+          ]).then(([dbMenu, dbCategories]) => {
+            setMenu(dbMenu);
+            setCategories(dbCategories);
+          }).catch((err) => console.error('Error reloading after restore:', err));
+        }
+      });
+      return () => { if (window.api.db.onDatabaseRestored) unsubscribe(); };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const handleLoginSuccess = (user) => {
@@ -110,6 +133,22 @@ export default function App() {
                   </button>
                 )}
               </div>
+
+              {currentUser.role === 'admin' && (
+                <div className="flex gap-2 sm:mr-4 border-r border-slate-700 pr-4">
+                  <button
+                    onClick={() => setCurrentView('settings')}
+                    title="الإعدادات"
+                    className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
+                      currentView === 'settings'
+                        ? 'bg-slate-700 text-emerald-400 shadow-sm'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-700/40'
+                    }`}
+                  >
+                    ⚙️ الإعدادات
+                  </button>
+                </div>
+              )}
             </div>
 
             <button
@@ -129,7 +168,10 @@ export default function App() {
                 setMenu={setMenu}
                 categories={categories}
                 setCategories={setCategories}
+                dbVersion={dbVersion}
               />
+            ) : currentUser.role === 'admin' && currentView === 'settings' ? (
+              <SettingsPage />
             ) : currentView === 'receipts' ? (
               <CashierReceiptsPage user={currentUser} />
             ) : (

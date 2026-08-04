@@ -130,6 +130,26 @@ app.whenReady().then(() => {
         ok('new-item purchase creates inventory 10', dbm.getInventory().find(i => i.name === 'Test Butter').quantity === 10);
         dbm.deletePurchase(newPurchase.id);
         ok('delete reverses stock (0) and drops payments', dbm.getInventory().find(i => i.name === 'Test Butter').quantity <= 0 && dbm.getPurchasePayments().filter(pp => pp.purchase_id === newPurchase.id).length === 0);
+
+        // ------------------------------ Backup / Restore (Feature 9) ------------------------------ //
+        section('Backup & restore');
+        const backupPath = path.join(tmp, 'pos_test_backup.db');
+        ok('getDatabasePath points at pos_database.db', path.basename(dbm.getDatabasePath()) === 'pos_database.db');
+        const menuCountBefore = dbm.getMenu().length;
+        // simulate backup
+        dbm.closeDatabase();
+        fs.copyFileSync(dbm.getDatabasePath(), backupPath);
+        dbm.openDatabase();
+        ok('backup file created (real bytes)', fs.existsSync(backupPath) && fs.statSync(backupPath).size > 0);
+        // mutate live db
+        dbm.addMenuItem('PostBackup Item', 5, 'Food');
+        ok('live db changed after backup', dbm.getMenu().length === menuCountBefore + 1);
+        // restore = copy backup back over pos_database.db, then reopen
+        dbm.closeDatabase();
+        fs.copyFileSync(backupPath, dbm.getDatabasePath());
+        dbm.openDatabase();
+        ok('restore brings back the pre-backup menu', dbm.getMenu().length === menuCountBefore && !dbm.getMenu().some(i => i.name === 'PostBackup Item'));
+        ok('reopened DB still writable', typeof dbm.addMenuItem('AfterRestore Item', 9, 'Food').id === 'number');
     }
     catch (err) {
         fail++;

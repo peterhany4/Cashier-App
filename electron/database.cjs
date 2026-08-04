@@ -2,12 +2,11 @@ const Database = require('better-sqlite3');
 const path = require('path');
 
 let db;
+let currentUserDataPath = null;
+let currentDbPath = null;
 
-function initDatabase(userDataPath) {
-    const dbPath = path.join(userDataPath, 'pos_database.db');
-    db = new Database(dbPath);
-
-    // Create Tables
+// Runs the schema + migrations against the currently open `db` handle.
+function setupSchema() {
     db.exec(`
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,6 +145,21 @@ function initDatabase(userDataPath) {
         });
         insertTransaction(seedItems);
     }
+}
+
+// Opens the database at the app's userData path and applies the schema.
+function initDatabase(userDataPath) {
+    currentUserDataPath = userDataPath;
+    currentDbPath = path.join(userDataPath, 'pos_database.db');
+    openDatabase();
+}
+
+// Re-opens the database at the stored path and applies the schema (idempotent).
+// Used after a restore, when initDatabase has already stored the path.
+function openDatabase() {
+    if (!currentUserDataPath || !currentDbPath) return;
+    db = new Database(currentDbPath);
+    setupSchema();
 }
 
 function getLocalDateString(d = new Date()) {
@@ -716,8 +730,24 @@ function deleteOrder(id) {
     return tx();
 }
 
+// Returns the absolute path of the live database file (used by the backup/restore IPC).
+function getDatabasePath() {
+    return currentDbPath;
+}
+
+// Closes the open DB handle. Required before copying/overwriting the database file.
+function closeDatabase() {
+    if (db) {
+        try { db.close(); } catch (_) { /* ignore */ }
+        db = null;
+    }
+}
+
 module.exports = {
     initDatabase,
+    getDatabasePath,
+    closeDatabase,
+    openDatabase,
     checkHasUsers,
     registerUser,
     loginUser,
