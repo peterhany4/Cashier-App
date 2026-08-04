@@ -55,7 +55,7 @@ function formatPaymentDate(dateStr) {
     return new Date(y, m - 1, d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export default function AdminDashboardPage({ user, menu, setMenu, categories = [], setCategories }) {
+export default function AdminDashboardPage({ user, menu, setMenu, categories = [], setCategories, dbVersion = 0 }) {
     // 2. Active Tab State ('menu', 'inventory', 'salaries', 'reports')
     const [activeTab, setActiveTab] = useState('menu');
 
@@ -221,7 +221,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         }
     }, [categories]);
 
-    // Load initial SQLite data on mount
+    // Load initial SQLite data on mount, and re-load whenever dbVersion changes
+    // (dbVersion is bumped by App.jsx after a database restore so the UI refreshes).
     useEffect(() => {
         const loadDbData = async () => {
             if (window.api && window.api.db) {
@@ -257,7 +258,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
         };
         loadDbData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [dbVersion]);
 
     // 1. Auth Guard Checklist
     if (!user || user.role !== 'admin') {

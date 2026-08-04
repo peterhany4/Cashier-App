@@ -43,6 +43,13 @@ contextBridge.exposeInMainWorld('api', {
         deletePurchase: (id) => ipcRenderer.invoke('db:deletePurchase', id),
         createOrder: (cashier, total, items) => ipcRenderer.invoke('db:createOrder', cashier, total, items),
         getOrders: () => ipcRenderer.invoke('db:getOrders'),
-        deleteOrder: (id) => ipcRenderer.invoke('db:deleteOrder', id)
+        deleteOrder: (id) => ipcRenderer.invoke('db:deleteOrder', id),
+        backupDatabase: () => ipcRenderer.invoke('db:backupDatabase'),
+        restoreDatabase: () => ipcRenderer.invoke('db:restoreDatabase'),
+        onDatabaseRestored: (callback) => {
+            const listener = () => callback();
+            ipcRenderer.on('db:databaseRestored', listener);
+            return () => ipcRenderer.removeListener('db:databaseRestored', listener);
+        }
     }
 });

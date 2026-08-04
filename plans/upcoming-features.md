@@ -504,7 +504,42 @@ Add a sub-view **"مشتريات المخزن"** next to the stock list:
 
 ---
 
-## Feature 9 — Printable Receipts (Customer + Kitchen)
+## Feature 9 — Database Backup (نسخة احتياطية) + Restore (✅ COMPLETED)
+
+### Purpose
+- Let the **admin** back up the database to anywhere on the PC, and restore a backup later — protection against data loss (orders, salaries, stock, purchases).
+
+### Where it lives
+- Reachable via an **admin-only ⚙️ gear button in the top header**, between the nav buttons (لوحة التحكم / سجل فواتيري) and تسجيل الخروج — it opens its own **settings view** (`currentView === 'settings'`) rendering `<SettingsPage/>`. Removed from the dashboard tab bar so لوحة الإشراف keeps its 4 business tabs at their normal width.
+- The settings view only mounts for `role === 'admin'`, so **cashiers can never reach it** (restoring replaces the whole DB → not a cashier task).
+- The same settings page also hosts Feature 10's printer config later (an empty **🖨️ إعدادات الطباعة** placeholder is included now).
+
+### Export (backup)
+- Button **"💾 نسخ احتياطي"** → Electron **save dialog** (`dialog.showSaveDialog`, main process) → admin picks a folder and names the file freely.
+- Default suggested name: `pos_database_backup_YYYY-MM-DD.db`.
+- A plain file copy of the live `pos_database.db`.
+
+### Import (restore)
+- Button **"🔄 استعادة نسخة"** → Electron **open dialog** (`dialog.showOpenDialog`) **filtered to `.db`** files.
+- Admin picks their backup (any name). The app **renames it back to `pos_database.db`** (the exact filename the app reads) and replaces the live database.
+- **Safety (because it swaps the whole DB):**
+  1. Strong double **confirmation** modal — "سيحل محل جميع البيانات الحالية" warning.
+  2. Main process: **close** the current `better-sqlite3` db → copy the chosen file over `pos_database.db` → **reopen** → notify the renderer to **reload all data**.
+
+### Technical notes
+- Dialogs run in the **main process** (Electron `dialog` APIs are main-only); file copy uses `fs.copyFileSync`.
+- The `better-sqlite3` handle must be **closed before copying and re-opened after** (`closeDatabase()` / `openDatabase()`); the renderer re-fetches everything (menu, inventory, employees, orders, purchases) — `App.jsx` listens for the `db:databaseRestored` event and bumps `dbVersion`, which the admin dashboard reloads on.
+- New IPC channels: `db:backupDatabase`, `db:restoreDatabase` (registered in `electron/main.cjs`, exposed in `electron/preload.cjs`).
+
+### UI
+- **`src/features/admin/SettingsPage.jsx`** (new component) laid out in sub-sections so a later frontend redesign only touches styling, not structure:
+  - 💾 النسخ الاحتياطي للبيانات — the backup/restore cards.
+  - 🖨️ إعدادات الطباعة — empty placeholder (Feature 10).
+- Basic styling for now (the user plans a full frontend redesign while printers are delayed).
+
+---
+
+## Feature 10 — Printable Receipts (Customer + Kitchen)
 
 > **Status: PAUSED — waiting on the client's printer details (hardware + one/two printers). Buildable without hardware (test via "Microsoft Print to PDF"), but we agreed to let it until the answers are ready. Per the user.**
 
@@ -512,7 +547,7 @@ Add a sub-view **"مشتريات المخزن"** next to the stock list:
 > - **Receipts = HTML template (not React components).** Simpler + reliable: a self-contained HTML string (template function in one shared module) loaded into a hidden `BrowserWindow` via a `data:`/`file:` URL, then `webContents.print({ deviceName })`. Deviation from the plan's `CustomerReceipt.jsx`/`KitchenReceipt.jsx`.
 > - **Engine = printer driver via `webContents.print`**, not raw ESC/POS. If the client's exact 80 mm thermal printer prints badly, add ESC/POS later.
 > - **Hidden window in the main process**, print after `createOrder` succeeds (DB/stock committed first).
-> - **Settings**: a tiny `settings` (key→value) table storing `customer_printer`, `kitchen_printer`, restaurant header, footer. Picker uses `webContents.getPrinters()` in an ⚙️ settings area (exact tab TBD).
+> - **Settings**: a tiny `settings` (key→value) table storing `customer_printer`, `kitchen_printer`, restaurant header, footer. Picker uses `webContents.getPrinters()` in the ⚙️ إعدادات tab (created in Feature 9).
 > - **Blocked on two answers:** (1) printer hardware (normal USB vs 80 mm thermal model), (2) is there a second kitchen printer or one — if one, customer receipt + a kitchen *screen*? And confirm "حفظ وطباعة" = prints both where two printers exist.
 
 ### Overview
@@ -552,7 +587,8 @@ Step 5 — Link Salary deductions to Revenue period        ✅ COMPLETED
 Step 6 — Receipts Tab: Date + Date-Range Filter          ✅ COMPLETED
 Step 7 — Product Components: Auto-Deduct Stock           ✅ COMPLETED
 Step 8 — Storage Purchases + Partial Payment + Debt      ✅ COMPLETED
-Step 9 — Printable Receipts + Printer Config             PAUSED (waiting on printer details)
+Step 9 — Database Backup + Restore (Admin settings)      ✅ COMPLETED
+Step 10 — Printable Receipts + Printer Config            PAUSED (waiting on printer details)
 ```
 
 ---
@@ -569,18 +605,19 @@ Small non-feature improvements shipped in the same session:
 ## Files Impact Summary
 
 ### Files to Modify
-- `src/App.jsx` — Add `receipts` view state, show nav button for cashier role
+- `src/App.jsx` — Add `receipts` view state, show nav button for cashier role; ✅ **⚙️ gear button in top header (admin-only) that opens `currentView === 'settings'`, + `dbVersion` state / `onDatabaseRestored` listener to re-fetch after a restore (Feature 9)**
 - `src/components/PeriodFilter.jsx` — ✅ `date` + `range` filter modes, controlled date/range props, dd-mm-yyyy native date inputs (Feature 6)
-- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, ✅ **product components editor in menu tab (Feature 7)**, ✅ **storage purchases sub-view in inventory tab + search/status/period filters (Feature 8)**, ✅ net revenue also subtracts purchase payments
+- `src/features/admin/AdminDashboardPage.jsx` — ✅ delete button on receipts, ✅ period filter UI, ✅ salary history section + filters + delete, ✅ net revenue respects `date`/`range` periods, ✅ **product components editor in menu tab (Feature 7)**, ✅ **storage purchases sub-view in inventory tab + search/status/period filters (Feature 8)**, ✅ net revenue also subtracts purchase payments, ✅ re-loads datasets when `dbVersion` prop changes (after a restore)
 - `electron/database.cjs` — `deleteOrder`, `daily_number` logic in `createOrder`, `salary_payments` table + insert/get/delete functions, derived `getEmployees()` status, `getUsers`/`deleteUser`, ✅ **`product_components` table + `getProductComponents`/`saveProductComponents` + recursive stock deduction with blocking in `createOrder()` (Feature 7)**, ✅ **`purchases`/`purchase_payments` tables + `getPurchases`/`getPurchasePayments`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**
-- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, ✅ **`getProductComponents`/`saveProductComponents` (Feature 7)**, ✅ **`getPurchases`/`getPurchasePayments`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**)
-- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; ✅ register IPC handlers for Feature 7 and Feature 8
+- `electron/preload.cjs` — Expose new IPC channels (`deleteOrder`, `getSalaryPayments`, `deleteSalaryPayment`, `getUsers`, `deleteUser`, ✅ **`getProductComponents`/`saveProductComponents` (Feature 7)**, ✅ **`getPurchases`/`getPurchasePayments`/`recordPurchase`/`recordPurchasePayment`/`deletePurchase` (Feature 8)**, ⏳→✅ **`backupDatabase`/`restoreDatabase` + `onDatabaseRestored` (Feature 9)**)
+- `electron/main.cjs` — ✅ `mainWindow.maximize()` on startup; ✅ register IPC handlers for Feature 7 and Feature 8; ⏳→✅ **`db:backupDatabase` (save dialog + copy) / `db:restoreDatabase` (open dialog + close→copy→reopen + notify renderer) (Feature 9)**
 - `src/styles/index.css` — ✅ global emerald capsule scrollbar + `.scrollbar-right` RTL→right utility
 
 ### Files to Create
 - `src/features/cashier/CashierReceiptsPage.jsx` — Cashier-facing personal receipts view with delete
-- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt (Feature 9, paused — likely an HTML template, not React)
-- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket (Feature 9, paused — likely an HTML template, not React)
+- `src/features/admin/SettingsPage.jsx` — ⏳→✅ **backup/restore UI + Feature 10 printer placeholder (Feature 9, new)**
+- `src/features/receipts/CustomerReceipt.jsx` — Printable customer receipt (Feature 10, paused — likely an HTML template, not React)
+- `src/features/receipts/KitchenReceipt.jsx` — Printable kitchen ticket (Feature 10, paused — likely an HTML template, not React)
 
 ---
 
@@ -588,10 +625,10 @@ Small non-feature improvements shipped in the same session:
 
 Snapshot of the repo so a fresh session can pick up without re-discovery (recorded 2026-08-02):
 
-- **All code is shipped & complete except Feature 9 (paused).** Features 1–8 + the two "added after build" items (Feature 7 stock-restore-on-delete, Feature 8 global outstanding-debt) are done and verified.
+- **All code is shipped & complete except Feature 10.** Features 1–9 + the two "added after build" items (Feature 7 stock-restore-on-delete, Feature 8 global outstanding-debt) are done and verified. Feature 10 (printers) is paused.
 - **Node version matters** — runtime uses Electron's bundled Node; the **backend tests** (`tests/backend.test.cjs`) run on the system Node and use the built-in **`node:sqlite`** (not `better-sqlite3`). They create an in-memory DB, so they also test the "missing/defaults" fallback paths.
 - **How to verify:**
-  - Backend: `npm test` → **45 checks pass**
+  - Backend: `npm test` → **50 checks pass**
   - Frontend (Vitest): `npm run test:frontend` → **12 pass** (`src/test/setup.js`, `src/components/PeriodFilter.test.jsx`, `src/context/CartContext.test.jsx`)
   - Build: `npm run build` passes; `npm run lint` has **6 pre-existing errors unrelated to current work** (do not worry about them unless the task touches them).
 - **Version & installer:** `1.0.0-beta.1`; installer built to `release/Local Cashier App Setup 1.0.0-beta.1.exe`.

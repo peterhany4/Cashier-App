@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const dbModule = require('./database.cjs');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -176,6 +177,61 @@ function registerIpcHandlers() {
 
     ipcMain.handle('db:deleteOrder', async (event, id) => {
         return dbModule.deleteOrder(id);
+    });
+
+    ipcMain.handle('db:backupDatabase', async (event) => {
+        const dbPath = dbModule.getDatabasePath();
+        if (!dbPath) return { success: false, canceled: true, error: 'DB not initialized' };
+
+        const today = new Date().toISOString().slice(0, 10);
+        const result = await dialog.showSaveDialog(mainWindow, {
+            title: 'حفظ نسخة احتياطية من قاعدة البيانات',
+            defaultPath: `pos_database_backup_${today}.db`,
+            filters: [{ name: 'قاعدة بيانات', extensions: ['db'] }]
+        });
+
+        if (result.canceled || !result.filePath) return { success: false, canceled: true };
+        const dest = result.filePath;
+
+        try {
+            dbModule.closeDatabase();
+            fs.copyFileSync(dbPath, dest);
+            return { success: true, destPath: dest };
+        } catch (err) {
+            return { success: false, error: err.message };
+        } finally {
+            dbModule.openDatabase();
+        }
+    });
+
+    ipcMain.handle('db:restoreDatabase', async (event) => {
+        const dbPath = dbModule.getDatabasePath();
+        if (!dbPath) return { success: false, canceled: true, error: 'DB not initialized' };
+
+        const result = await dialog.showOpenDialog(mainWindow, {
+            title: 'اختر النسخة الاحتياطية لاستعادتها',
+            filters: [{ name: 'قاعدة بيانات', extensions: ['db'] }],
+            properties: ['openFile']
+        });
+
+        if (result.canceled || !result.filePaths || !result.filePaths[0]) {
+            return { success: false, canceled: true };
+        }
+        const src = result.filePaths[0];
+
+        try {
+            dbModule.closeDatabase();
+            fs.copyFileSync(src, dbPath);
+            dbModule.openDatabase();
+            // Notify the renderer that data changed so it can re-fetch everything.
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send('db:databaseRestored');
+            }
+            return { success: true };
+        } catch (err) {
+            try { dbModule.openDatabase(); } catch (_) { /* keep original error */ }
+            return { success: false, error: err.message };
+        }
     });
 }
 
