@@ -233,9 +233,10 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 - **Direction selected: Option 1 — Depth & polish.** Add real elevation: layered cards, gradients on metrics, softer borders, refined header + buttons, better empty states, consistent spacing/rounding. Same palette → noticeably more "premium/designed."
 - Tasklist below tracks the per-screen work.
 
-### Alternatives — ON HOLD (remember these in case the new design is disliked)
+### Alternatives — revisited (2026-08-07)
+- ~~**Light theme** — TRIED and REVERTED (commit `4ba31f4` → reverted by `a91d5`). The user disliked the light palette; reverted back to dark + emerald, which is the working state.~~
 - **Option 2 — New accent + depth:** same depth polish, but swap the brand accent (emerald → amber/gold or teal) for a noticeably fresh look.
-- **Option 3 — Different layout:** restructure major screens (e.g., left sidebar nav instead of top tabs, left receipt/cart pane, big touch targets on POS) — a clearly different feel beyond colors.
+- **Option 3 — Different layout:** restructure major screens (e.g., left sidebar nav instead of top tabs, category/left receipt & cart pane, big touch targets on POS) — a clearly different feel beyond colors. **The user has now pointed at LAYOUT as the main thing they don't like** ("it is the layout, it could be better"), so layout restructuring is the forward direction.
 
 | Task | Status |
 |---|---|
@@ -244,9 +245,17 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 | Login: elevated card + depth | ✅ |
 | POS: refined item cards + cart panel + checkout | ✅ |
 | Admin: metric cards depth + section polish | ✅ metric depth; section polish partial |
-| Tables: consistent header/badges | ▢ |
+| Tables: consistent header/badges | ▢ IN PROGRESS |
 | Empty states replace plain text | ▢ |
 | Verify lint, tests, build green | ✅ lint 0, 12 frontend, build |
+
+### Forward direction — LAYOUT (the user's main dislike, 2026-08-07)
+The user reverted the light theme and clarified that **layout, not color**, is what feels off. Continue toward Option 3 (different layout) incrementally and safely, keeping dark + emerald and behavior unchanged. Kill-list of "webpage" layout smells to address, most impactful first:
+1. **Admin `MenuTab` tall column** — split "add form + table + components editor" so headers/forms pin and only the table scrolls; component editor as a contained panel instead of a giant expanding `<tr>`.
+2. **Left/right navigation** — consider a persistent side rail (or better groomed top tabs) so each screen isn't one long scrolling document.
+3. **Receipts order-details** — master/detail contained panel instead of pushing the whole page down.
+4. **Category tabs active state** — replace jarring `animate-pulse` with a clean static active treatment.
+5. **Consistent table headers/badges** + **empty states** (the two open to-do rows).
 
 ---
 
