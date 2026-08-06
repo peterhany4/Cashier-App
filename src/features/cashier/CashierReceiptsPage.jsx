@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import icons from '../../components/icons';
 import { useToast, useConfirm } from '../../components/ui';
 import EmptyState from '../../components/ui/EmptyState';
@@ -148,47 +148,66 @@ export default function CashierReceiptsPage({ user }) {
                                     const isExpanded = expandedOrder === order.id;
                                     const displayIndex = index + 1;
                                     return (
-                                        <tr key={order.id} className={rowClass}>
-                                            <td className={cx(tdClass, 'font-bold text-white font-mono')}>#{displayIndex}</td>
-                                            <td className={cx(tdClass, 'text-center font-mono text-slate-400 text-xs')}>
-                                                {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
-                                            </td>
-                                            <td className={cx(tdClass, 'text-center font-extrabold text-emerald-400 font-mono text-base')}>
-                                                {order.total.toFixed(2)} جنية
-                                            </td>
-                                            <td className={cx(tdClass, 'text-center')}>
-                                                <button
-                                                    onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                                                    className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer"
-                                                >
-                                                    {isExpanded
-                                                        ? <>إخفاء التفاصيل <icons.chevronUp size={14} className="inline" /></>
-                                                        : <>عرض الأصناف <icons.chevronDown size={14} className="inline" /></>}
-                                                </button>
+                                        <Fragment key={order.id}>
+                                            <tr className={rowClass}>
+                                                <td className={cx(tdClass, 'font-bold text-white font-mono')}>#{displayIndex}</td>
+                                                <td className={cx(tdClass, 'text-center font-mono text-slate-400 text-xs')}>
+                                                    {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
+                                                </td>
+                                                <td className={cx(tdClass, 'text-center font-extrabold text-emerald-400 font-mono text-base')}>
+                                                    {order.total.toFixed(2)} جنية
+                                                </td>
+                                                <td className={cx(tdClass, 'text-center')}>
+                                                    <button
+                                                        onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                                                        className={cx(
+                                                            'px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer inline-flex items-center gap-1',
+                                                            isExpanded
+                                                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                                                : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
+                                                        )}
+                                                    >
+                                                        {isExpanded
+                                                            ? <>إغلاق <icons.chevronUp size={14} /></>
+                                                            : <>عرض الأصناف <icons.chevronDown size={14} /></>}
+                                                    </button>
+                                                </td>
+                                                <td className={cx(tdClass, 'text-center')}>
+                                                    <button
+                                                        onClick={() => handleDeleteOrder(order, displayIndex)}
+                                                        className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
+                                                        title="حذف الفاتورة"
+                                                    >
+                                                        <span><icons.trash size={14} className="inline" /></span>
+                                                        <span>حذف</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
 
-                                                {isExpanded && (
-                                                    <div className="bg-slate-900 border border-slate-700/70 rounded-xl p-3 mt-2 text-right text-xs space-y-2 max-w-sm mx-auto animate-fadeIn">
-                                                        <div className="font-bold border-b border-slate-700 pb-1 text-slate-300">أصناف الفاتورة:</div>
-                                                        {order.items?.map((item, idx) => (
-                                                            <div key={idx} className="flex justify-between text-slate-400 gap-4">
-                                                                <span>{item.item_name} × {item.quantity}</span>
-                                                                <span className="font-mono text-slate-300">{(item.price * item.quantity).toFixed(2)} جنية</span>
+                                            {isExpanded && (
+                                                <tr className="bg-slate-900/70">
+                                                    <td colSpan="5" className="p-4">
+                                                        <div className="rounded-xl border border-slate-700/70 bg-slate-900 overflow-hidden animate-fadeIn">
+                                                            <div className="px-4 py-2.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+                                                                <span className="font-bold text-slate-200 text-sm">أصناف الفاتورة #{displayIndex}</span>
+                                                                <span className="font-mono text-emerald-400 font-extrabold text-sm">الإجمالي {order.total.toFixed(2)} جنية</span>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className={cx(tdClass, 'text-center')}>
-                                                <button
-                                                    onClick={() => handleDeleteOrder(order, displayIndex)}
-                                                    className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
-                                                    title="حذف الفاتورة"
-                                                >
-                                                    <span><icons.trash size={14} className="inline" /></span>
-                                                    <span>حذف</span>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                                            <div className="divide-y divide-slate-800">
+                                                                {order.items?.map((item, idx) => (
+                                                                    <div key={idx} className="flex items-center justify-between px-4 py-2 text-sm">
+                                                                        <span className="text-slate-200 font-semibold">{item.item_name}</span>
+                                                                        <span className="flex items-center gap-4">
+                                                                            <span className="text-slate-400 text-xs">× {item.quantity}</span>
+                                                                            <span className="font-mono text-slate-200 w-28 text-left">{(item.price * item.quantity).toFixed(2)} جنية</span>
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </Fragment>
                                     );
                                 })}
 
