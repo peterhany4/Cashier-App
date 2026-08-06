@@ -78,7 +78,7 @@ export default function CashierReceiptsPage({ user }) {
     const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
 
     return (
-        <div className="flex-1 p-6 overflow-y-auto scrollbar-right bg-slate-900 text-white relative" dir="rtl">
+        <div className="flex-1 p-6 overflow-y-auto scrollbar-right app-bg text-white relative" dir="rtl">
 
             {/* Header & Stats Strip */}
             <div className="space-y-6">

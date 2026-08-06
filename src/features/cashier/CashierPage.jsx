@@ -118,15 +118,15 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                                 <button
                                     key={item.id}
                                     onClick={() => addToCart(item)}
-                                    className="bg-slate-800 border border-slate-700 hover:border-emerald-500 rounded-xl p-3.5 flex flex-col justify-between items-start text-right transition group h-28 shadow-sm"
+                                    className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/70 hover:border-emerald-500/60 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-950/30 rounded-2xl p-3.5 flex flex-col justify-between items-start text-right transition-all duration-200 group h-28 shadow-sm"
                                 >
                                     <span className="text-base font-bold text-slate-100 group-hover:text-emerald-300 transition-colors leading-snug line-clamp-2">
                                         {item.name}
                                     </span>
                                     <div className="w-full flex justify-between items-center mt-2">
-                                        <span className="text-base font-extrabold text-emerald-400">{item.price} جنية</span>
-                                        <span className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-lg text-xs font-bold border border-emerald-500/20">
-                                            إضافة +
+                                        <span className="text-base font-extrabold text-emerald-400 tabular-nums">{item.price} جنية</span>
+                                        <span className="bg-emerald-500/15 text-emerald-300 group-hover:bg-emerald-500 group-hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-500/30 transition-colors flex items-center gap-1">
+                                            <icons.plus size={12} strokeWidth={3} /> إضافة
                                         </span>
                                     </div>
                                 </button>
@@ -162,7 +162,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                             </div>
                         ) : (
                             cart.map(item => (
-                                <div key={item.id} className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 flex justify-between items-center">
+                                <div key={item.id} className="bg-surface-1/90 border border-slate-700/60 p-3 rounded-xl flex justify-between items-center hover:border-emerald-500/40 transition-colors">
                                     <div>
                                         <h4 className="font-bold text-sm text-slate-200">{item.name}</h4>
                                         <span className="text-xs text-slate-400 tabular-nums">{item.price} جنية × {item.quantity}</span>
@@ -190,7 +190,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
             </div>
 
             {/* FIXED BOTTOM CHECKOUT BAR — always glued to the bottom of the window, never scrolled away */}
-            <div className="fixed bottom-0 inset-x-0 z-30 bg-slate-800 border-t border-slate-700 px-5 py-3 flex items-center justify-between gap-4 shadow-2xl">
+            <div className="fixed bottom-0 inset-x-0 z-30 bg-slate-800/85 backdrop-blur-xl border-t border-slate-700/70 px-5 py-3 flex items-center justify-between gap-4 shadow-2xl shadow-slate-950/40">
                 <div>
                     <div className="text-xs text-slate-400 font-bold">
                         الإجمالي الكلي {cart.length > 0 ? `(${cart.reduce((n, it) => n + it.quantity, 0)} صنف)` : ''}

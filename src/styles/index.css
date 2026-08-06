@@ -89,6 +89,14 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* Layered app backdrop — subtle depth/glow instead of a flat dark page */
+.app-bg {
+    background:
+        radial-gradient(1000px 520px at 12% -12%, rgba(16, 185, 129, 0.10), transparent 60%),
+        radial-gradient(900px 480px at 88% -4%, rgba(56, 189, 248, 0.06), transparent 55%),
+        linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+}
+
 /* Global subtle scrollbar — thin rounded capsule, desktop feel (not a heavy webpage bar) */
 * {
     scrollbar-width: thin;

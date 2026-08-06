@@ -64,7 +64,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="flex-1 min-h-0 w-full bg-slate-900 text-slate-100 p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
+        <div className="flex-1 min-h-0 w-full app-bg text-slate-100 p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
             <div className="flex justify-center">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full max-w-5xl items-start">

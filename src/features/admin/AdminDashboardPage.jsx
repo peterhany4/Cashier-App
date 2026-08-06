@@ -932,7 +932,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const purchaseBalancePreview = Math.max(0, Math.ceil(parseFloat(newPurchaseCost) || 0) - Math.ceil(parseFloat(newPurchasePaid) || 0));
 
     return (
-        <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
+        <div className="flex-1 app-bg text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
             {/* In-app Pay Purchase Modal */}
             {payModal && (
@@ -1029,7 +1029,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             {/* 2. Top Metrics Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
                 {/* Metric 1 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">أصناف القائمة النشطة</span>
                         <span className="text-3xl font-extrabold text-white">{totalMenuItems}</span>
@@ -1038,7 +1038,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 </div>
 
                 {/* Metric 2 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">نقص في المخزون (تنبيه)</span>
                         <span className={`text-3xl font-extrabold ${lowStockItemsCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -1051,7 +1051,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 </div>
 
                 {/* Metric 3 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">
                             إيرادات الفترة المحددة
@@ -1070,7 +1070,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 </div>
 
                 {/* Metric 4 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">
                             فواتير الفترة المحددة

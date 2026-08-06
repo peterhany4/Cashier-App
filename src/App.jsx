@@ -71,11 +71,16 @@ export default function App() {
           {!currentUser ? (
             <LoginPage onLoginSuccess={handleLoginSuccess} />
           ) : (
-            <div className="h-screen bg-slate-900 text-white flex flex-col overflow-hidden" dir="rtl">
+            <div className="h-screen app-bg text-white flex flex-col overflow-hidden" dir="rtl">
           {/* Unified Premium Header */}
-          <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg">
+          <header className="bg-slate-800/70 backdrop-blur-xl border-b border-slate-700/60 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg shadow-slate-950/30">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-              <h1 className="text-2xl font-black text-emerald-400">نظام الكاشير</h1>
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 inline-flex items-center justify-center shadow-lg shadow-emerald-950/30">
+                  <icons.cart size={20} strokeWidth={2} />
+                </span>
+                <h1 className="text-2xl font-black text-emerald-400 tracking-tight">نظام الكاشير</h1>
+              </div>
               
               <div className="flex items-center gap-2 bg-slate-700/50 p-1 rounded-xl border border-slate-700">
                 <span className="text-slate-300 text-xs px-2.5 py-1 font-semibold">

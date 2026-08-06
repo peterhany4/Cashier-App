@@ -224,6 +224,32 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 
 ---
 
+## 🎚️ Visual Restyle — Depth & Polish (=== IN PROGRESS ===)
+
+> **Why this section exists:** Phases 0–3 delivered the design *system* (tokens, primitives, icons, font, unified toast/confirm) but the screens were **not visually restyled** — so the visible change was limited to font + icons. This is the pass that actually makes the UI *feel* different.
+
+### Decision (agreed 2026-08-05)
+- **Keep the dark + emerald identity.**
+- **Direction selected: Option 1 — Depth & polish.** Add real elevation: layered cards, gradients on metrics, softer borders, refined header + buttons, better empty states, consistent spacing/rounding. Same palette → noticeably more "premium/designed."
+- Tasklist below tracks the per-screen work.
+
+### Alternatives — ON HOLD (remember these in case the new design is disliked)
+- **Option 2 — New accent + depth:** same depth polish, but swap the brand accent (emerald → amber/gold or teal) for a noticeably fresh look.
+- **Option 3 — Different layout:** restructure major screens (e.g., left sidebar nav instead of top tabs, left receipt/cart pane, big touch targets on POS) — a clearly different feel beyond colors.
+
+| Task | Status |
+|---|---|
+| Global layered page backdrop (subtle gradient, not flat) | ✅ `app-bg` applied to all page roots |
+| Branded, elevated App header (brand tile + blur-bg) | ✅ |
+| Login: elevated card + depth | ✅ |
+| POS: refined item cards + cart panel + checkout | ✅ |
+| Admin: metric cards depth + section polish | ✅ metric depth; section polish partial |
+| Tables: consistent header/badges | ▢ |
+| Empty states replace plain text | ▢ |
+| Verify lint, tests, build green | ✅ lint 0, 12 frontend, build |
+
+---
+
 ## 🗺️ Suggested Commit Sequence (for execution)
 
 ```
