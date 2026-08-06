@@ -185,11 +185,13 @@ Fixed the **6 pre-existing lint errors** + 4 warnings so lint is now fully clean
 - PeriodFilter.jsx — split `filterOrdersByPeriod` + `toLocalDateStr` out into **`src/components/periodFilterUtils.js`** (the react-refresh "only-export-components" rule). Named distinctly (`periodFilterUtils`, NOT `periodFilter`) to avoid a case-only filename collision on Windows' case-insensitive filesystem — `PeriodFilter.jsx` vs `periodFilter.js` clashed. Updated imports in `PeriodFilter.jsx`, `AdminDashboardPage.jsx`, `PeriodFilter.test.jsx`.
 All green after: lint 0, 12 frontend, 50 backend, build.
 
-### Phase 1 — Primitives
-- [ ] Build `Button, Input, Select, TextArea, Card, Table, Badge, Modal, Toast, StatCard, EmptyState`
-- [ ] Add `useToast` + shared confirm (context/helpers)
-- [ ] `src/components/ui/` exported cleanly
-- [ ] Verification green (existing screens temporarily swap a few atoms as proof, or primitives covered by a start on Phase 2)
+### Phase 1 — Primitives ✅ COMPLETED (2026-08-05)
+- [x] Build `Button, Input, Select, TextArea, Card, Table, Badge, Modal, Toast, StatCard, EmptyState`
+- [x] Add `useToast` + shared confirm (context/helpers)
+- [x] `src/components/ui/` exported cleanly
+- [x] Verification green (existing screens temporarily swap a few atoms as proof, or primitives covered by a start on Phase 2)
+
+**Built:** `src/components/ui/{utils,Field,Button,Input,Select,TextArea,Card,Badge,StatCard,EmptyState,Table,Modal,ConfirmProvider,ToastProvider,index}.js`. All styled on Phase-0 tokens (surface + brand/warning/danger/info). `ToastProvider`/`useToast` and `ConfirmProvider`/`useConfirm` wired into `App.jsx` as providers (live scaffolding; screens adopt them in Phase 2). `fieldBase`/`fieldSize` live in `utils.js` (not exported from components) to satisfy `react-refresh/only-export-components`. Lint 0, 12 frontend tests, 50 backend, build ✅.
 
 ### Phase 2 — Global sweep
 - [ ] Emoji → lucide across all 5 screens + `PeriodFilter`

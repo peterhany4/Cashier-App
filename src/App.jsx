@@ -5,6 +5,8 @@ import CashierReceiptsPage from './features/cashier/CashierReceiptsPage';
 import AdminDashboardPage from './features/admin/AdminDashboardPage';
 import SettingsPage from './features/admin/SettingsPage';
 import { CartProvider } from './context/CartContext';
+import { ToastProvider } from './components/ui';
+import ConfirmProvider from './components/ui/ConfirmProvider';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null); // holds user object when logged in
@@ -62,11 +64,13 @@ export default function App() {
   };
 
   return (
-    <CartProvider>
-      {!currentUser ? (
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
-      ) : (
-        <div className="h-screen bg-slate-900 text-white flex flex-col overflow-hidden" dir="rtl">
+    <ToastProvider>
+      <ConfirmProvider>
+        <CartProvider>
+          {!currentUser ? (
+            <LoginPage onLoginSuccess={handleLoginSuccess} />
+          ) : (
+            <div className="h-screen bg-slate-900 text-white flex flex-col overflow-hidden" dir="rtl">
           {/* Unified Premium Header */}
           <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
@@ -183,6 +187,8 @@ export default function App() {
           </div>
         </div>
       )}
-    </CartProvider>
+      </CartProvider>
+      </ConfirmProvider>
+    </ToastProvider>
   );
 }
