@@ -189,12 +189,12 @@ export default function PeriodFilter({
     };
 
     return (
-        <div className="bg-surface-1 border border-slate-700/70 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg backdrop-blur-md">
+        <div className="bg-surface-1 border border-slate-200/70 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg backdrop-blur-md">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 
                 {/* 1. Quick Shortcuts */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
+                    <span className="text-xs font-bold text-slate-600 flex items-center gap-1 ml-1">
                         <span><icons.zap size={13} className="inline" /></span> الوصول السريع:
                     </span>
                     <button
@@ -202,8 +202,8 @@ export default function PeriodFilter({
                         onClick={() => handleQuickShortcut('today')}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             filterMode === 'today'
-                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 shadow'
+                                : 'bg-surface-1 border-slate-200 text-slate-600 hover:bg-surface-3'
                         }`}
                     >
                         <icons.calendar size={14} className="inline" /> اليوم
@@ -213,8 +213,8 @@ export default function PeriodFilter({
                         onClick={() => handleQuickShortcut('week')}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             filterMode === 'week'
-                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 shadow'
+                                : 'bg-surface-1 border-slate-200 text-slate-600 hover:bg-surface-3'
                         }`}
                     >
                         <icons.history size={14} className="inline" /> هذا الأسبوع
@@ -224,8 +224,8 @@ export default function PeriodFilter({
                         onClick={() => handleQuickShortcut('all')}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             filterMode === 'all'
-                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700 shadow'
+                                : 'bg-surface-1 border-slate-200 text-slate-600 hover:bg-surface-3'
                         }`}
                     >
                         <icons.infinity size={14} className="inline" /> كل الأوقات
@@ -234,7 +234,7 @@ export default function PeriodFilter({
 
                 {/* 2. Historical Year + Month Picker */}
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
+                    <span className="text-xs font-bold text-slate-600 flex items-center gap-1 ml-1">
                         <span><icons.calendarRange size={13} className="inline" /></span> تصفية تاريخية:
                     </span>
                     
@@ -243,10 +243,10 @@ export default function PeriodFilter({
                         <select
                             value={selectedYear}
                             onChange={(e) => handleYearChange(e.target.value)}
-                            className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center ${
+                            className={`bg-surface-2 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center ${
                                 filterMode === 'year-month'
-                                    ? 'border-emerald-500/70 text-emerald-400'
-                                    : 'border-slate-700 text-slate-200'
+                                    ? 'border-emerald-500/70 text-emerald-700'
+                                    : 'border-slate-200 text-ink-soft'
                             }`}
                         >
                             {availableYears.map(year => (
@@ -260,10 +260,10 @@ export default function PeriodFilter({
                         <select
                             value={selectedMonth}
                             onChange={(e) => handleMonthChange(e.target.value)}
-                            className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center ${
+                            className={`bg-surface-2 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center ${
                                 filterMode === 'year-month' && selectedMonth !== 'all'
-                                    ? 'border-emerald-500/70 text-emerald-400'
-                                    : 'border-slate-700 text-slate-200'
+                                    ? 'border-emerald-500/70 text-emerald-700'
+                                    : 'border-slate-200 text-ink-soft'
                             }`}
                         >
                             <option value="all">كل السنة (12 شهر)</option>
@@ -276,25 +276,25 @@ export default function PeriodFilter({
             </div>
 
             {/* 3. Specific Date + Date Range Filter (dd-mm-yyyy) */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-t border-slate-700/50 pt-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-t border-slate-200/50 pt-4">
                 {/* Specific Day */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
+                    <span className="text-xs font-bold text-slate-600 flex items-center gap-1 ml-1">
                         <span><icons.calendar size={13} className="inline" /></span> تحديد يوم محدد:
                     </span>
                     <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => handleDateChange(e.target.value)}
-                        className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] ${
+                        className={`bg-surface-2 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:light] ${
                             filterMode === 'date'
-                                ? 'border-emerald-500/70 text-emerald-400'
-                                : 'border-slate-700 text-slate-200'
+                                ? 'border-emerald-500/70 text-emerald-700'
+                                : 'border-slate-200 text-ink-soft'
                         }`}
                         title="dd-mm-yyyy"
                     />
                     {selectedDate && (
-                        <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono">
+                        <span className="text-xs font-bold text-emerald-700 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono">
                             {formatToDDMMYYYY(selectedDate)}
                         </span>
                     )}
@@ -302,7 +302,7 @@ export default function PeriodFilter({
 
                 {/* Date Range */}
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                    <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
+                    <span className="text-xs font-bold text-slate-600 flex items-center gap-1 ml-1">
                         <span><icons.calendarRange size={13} className="inline" /></span> فترة زمنية:
                     </span>
                     <span className="text-xs text-slate-500">من</span>
@@ -310,10 +310,10 @@ export default function PeriodFilter({
                         type="date"
                         value={dateFrom}
                         onChange={(e) => handleDateFromChange(e.target.value)}
-                        className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] ${
+                        className={`bg-surface-2 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:light] ${
                             filterMode === 'range'
-                                ? 'border-emerald-500/70 text-emerald-400'
-                                : 'border-slate-700 text-slate-200'
+                                ? 'border-emerald-500/70 text-emerald-700'
+                                : 'border-slate-200 text-ink-soft'
                         }`}
                         title="dd-mm-yyyy"
                     />
@@ -322,10 +322,10 @@ export default function PeriodFilter({
                         type="date"
                         value={dateTo}
                         onChange={(e) => handleDateToChange(e.target.value)}
-                        className={`bg-slate-900 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] ${
+                        className={`bg-surface-2 border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:light] ${
                             filterMode === 'range'
-                                ? 'border-emerald-500/70 text-emerald-400'
-                                : 'border-slate-700 text-slate-200'
+                                ? 'border-emerald-500/70 text-emerald-700'
+                                : 'border-slate-200 text-ink-soft'
                         }`}
                         title="dd-mm-yyyy"
                     />
@@ -333,26 +333,26 @@ export default function PeriodFilter({
             </div>
 
             {/* 4. Summary Strip */}
-            <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
-                <div className="flex items-center gap-2 text-slate-300 font-semibold">
+            <div className="bg-surface-2/80 border border-slate-200/50 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-600 font-semibold">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>النطاق النشط:</span>
-                    <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                    <span className="text-emerald-700 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                         {getPeriodDescription()}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-slate-200">
+                <div className="flex items-center gap-4 text-ink-soft">
                     <div>
-                        <span className="text-slate-400">عدد الفواتير: </span>
-                        <span className="font-mono font-bold text-white bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                        <span className="text-slate-600">عدد الفواتير: </span>
+                        <span className="font-mono font-bold text-ink bg-surface-1 px-2 py-0.5 rounded border border-slate-200">
                             {filteredOrders.length}
                         </span>
                     </div>
                     <div>
-                        <span className="text-slate-400">إجمالي المبيعات: </span>
-                        <span className="font-mono font-black text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700 text-sm">
-                            {filteredTotalRevenue.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                        <span className="text-slate-600">إجمالي المبيعات: </span>
+                        <span className="font-mono font-black text-emerald-700 bg-surface-1 px-2 py-0.5 rounded border border-slate-200 text-sm">
+                            {filteredTotalRevenue.toFixed(2)} <span className="text-xs text-slate-600 font-normal">جنية</span>
                         </span>
                     </div>
                 </div>

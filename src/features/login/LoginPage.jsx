@@ -130,15 +130,15 @@ export default function LoginPage({ onLoginSuccess }) {
             dir="rtl"
         >
 
-            <div className="w-full max-w-md bg-slate-800/70 backdrop-blur-xl rounded-2xl shadow-2xl shadow-slate-950/50 ring-1 ring-emerald-500/10 p-8 border border-slate-700/70">
+            <div className="w-full max-w-md bg-white/85 backdrop-blur-xl rounded-2xl shadow-2xl shadow-slate-900/10 ring-1 ring-emerald-500/15 p-8 border border-slate-200">
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 mb-4">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 mb-4">
                         <icons.cart size={26} strokeWidth={1.75} />
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-wide">
+                    <h1 className="text-3xl font-bold text-ink tracking-wide">
                         نظام الكاشير
                     </h1>
-                    <p className="text-slate-400 mt-2 text-sm">
+                    <p className="text-slate-500 mt-2 text-sm">
                         {view === 'register' 
                             ? 'إعداد مسؤول النظام لأول مرة' 
                             : view === 'reset' 
@@ -151,7 +151,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     /* --- نموذج تسجيل الدخول --- */
                     <form onSubmit={handleLoginSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                            <label className="block text-sm font-medium text-slate-600 mb-2">
                                 اسم المستخدم
                             </label>
                             <input
@@ -159,14 +159,14 @@ export default function LoginPage({ onLoginSuccess }) {
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-right"
+                                className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-3 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-right"
                                 placeholder="أدخل اسم المستخدم"
                             />
                         </div>
 
                         <div>
                             <div className="flex justify-between mb-2">
-                                <label className="text-sm font-medium text-slate-300">
+                                <label className="text-sm font-medium text-slate-600">
                                     كلمة المرور
                                 </label>
                             </div>
@@ -175,13 +175,13 @@ export default function LoginPage({ onLoginSuccess }) {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-right"
+                                className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-3 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-right"
                                 placeholder="••••••••"
                             />
                             <button
                                 type="button"
                                 onClick={() => { setView('reset'); setResetStep(1); }}
-                                className="text-xs text-emerald-400 hover:underline mt-2 cursor-pointer"
+                                className="text-xs text-emerald-700 hover:underline mt-2 cursor-pointer"
                             >
                                 نسيت كلمة المرور؟
                             </button>
@@ -199,11 +199,11 @@ export default function LoginPage({ onLoginSuccess }) {
                 {view === 'register' && (
                     /* --- نموذج إنشاء المدير الرئيسي (أول تشغيل) --- */
                     <form onSubmit={handleRegisterSubmit} className="space-y-4">
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-xs text-emerald-300 text-center mb-2">
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-xs text-emerald-700 text-center mb-2">
                                 <icons.warning size={14} className="inline" /> لم يتم العثور على حسابات في النظام. الرجاء تعيين بيانات المسؤول الأول للبدء.
                             </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-300 mb-1">
+                            <label className="block text-xs font-bold text-slate-600 mb-1">
                                 اسم المستخدم للمسؤول
                             </label>
                             <input
@@ -211,13 +211,13 @@ export default function LoginPage({ onLoginSuccess }) {
                                 required
                                 value={regUsername}
                                 onChange={(e) => setRegUsername(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
+                                className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-2.5 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
                                 placeholder="مثال: admin"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-300 mb-1">
+                            <label className="block text-xs font-bold text-slate-600 mb-1">
                                 كلمة المرور
                             </label>
                             <input
@@ -225,19 +225,19 @@ export default function LoginPage({ onLoginSuccess }) {
                                 required
                                 value={regPassword}
                                 onChange={(e) => setRegPassword(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
+                                className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-2.5 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
                                 placeholder="••••••••"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-300 mb-1">
+                            <label className="block text-xs font-bold text-slate-600 mb-1">
                                 اختر سؤال الأمان
                             </label>
                             <select
                                 value={regQuestion}
                                 onChange={(e) => setRegQuestion(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
+                                className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
                             >
                                 <option value="ما هو اسم أول حيوان أليف قمت بتربيته؟">ما هو اسم أول حيوان أليف قمت بتربيته؟</option>
                                 <option value="ما هو اسم أول مدرسة درست بها؟">ما هو اسم أول مدرسة درست بها؟</option>
@@ -247,7 +247,7 @@ export default function LoginPage({ onLoginSuccess }) {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-300 mb-1">
+                            <label className="block text-xs font-bold text-slate-600 mb-1">
                                 إجابة سؤال الأمان
                             </label>
                             <input
@@ -255,7 +255,7 @@ export default function LoginPage({ onLoginSuccess }) {
                                 required
                                 value={regAnswer}
                                 onChange={(e) => setRegAnswer(e.target.value)}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
+                                className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-2.5 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right text-sm"
                                 placeholder="اكتب إجابة السؤال بدقة"
                             />
                         </div>
@@ -274,7 +274,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     <form onSubmit={resetStep === 1 ? handleResetCheckUsername : handleResetSubmit} className="space-y-6">
                         {resetStep === 1 ? (
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-slate-600 mb-2">
                                     اسم المستخدم المراد استرجاعه
                                 </label>
                                 <input
@@ -282,18 +282,18 @@ export default function LoginPage({ onLoginSuccess }) {
                                     required
                                     value={resetUsername}
                                     onChange={(e) => setResetUsername(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
+                                    className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-3 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
                                     placeholder="أدخل اسم المستخدم"
                                 />
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 text-right">
-                                    <span className="block text-xs text-slate-400 font-bold mb-1">سؤال الأمان المسجل:</span>
-                                    <span className="text-sm text-slate-200 font-semibold">{fetchedQuestion}</span>
+<div className="bg-surface-2 p-4 rounded-xl border border-surface-3 text-right">
+                                    <span className="block text-xs text-slate-600 font-bold mb-1">سؤال الأمان المسجل:</span>
+                                    <span className="text-sm text-ink-soft font-semibold">{fetchedQuestion}</span>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
                                         إجابة سؤال الأمان
                                     </label>
                                     <input
@@ -301,12 +301,12 @@ export default function LoginPage({ onLoginSuccess }) {
                                         required
                                         value={securityAnswer}
                                         onChange={(e) => setSecurityAnswer(e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
+                                        className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-3 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
                                         placeholder="أدخل الإجابة"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                                    <label className="block text-sm font-medium text-slate-600 mb-1.5">
                                         كلمة المرور الجديدة
                                     </label>
                                     <input
@@ -314,7 +314,7 @@ export default function LoginPage({ onLoginSuccess }) {
                                         required
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
+                                        className="w-full bg-surface-2 border border-surface-3 rounded-xl px-4 py-3 text-ink-soft focus:outline-none focus:ring-2 focus:ring-emerald-500 text-right"
                                         placeholder="أدخل كلمة المرور الجديدة"
                                     />
                                 </div>

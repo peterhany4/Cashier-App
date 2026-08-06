@@ -73,34 +73,34 @@ export default function App() {
           ) : (
             <div className="h-screen app-bg text-white flex flex-col overflow-hidden" dir="rtl">
           {/* Unified Premium Header */}
-          <header className="bg-slate-800/70 backdrop-blur-xl border-b border-slate-700/60 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg shadow-slate-950/30">
+          <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/70 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-lg shadow-slate-900/5">
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-3">
-                <span className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 inline-flex items-center justify-center shadow-lg shadow-emerald-950/30">
+                <span className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 inline-flex items-center justify-center shadow-md shadow-emerald-600/10">
                   <icons.cart size={20} strokeWidth={2} />
                 </span>
-                <h1 className="text-2xl font-black text-emerald-400 tracking-tight">نظام الكاشير</h1>
+                <h1 className="text-2xl font-black text-emerald-700 tracking-tight">نظام الكاشير</h1>
               </div>
               
-              <div className="flex items-center gap-2 bg-slate-700/50 p-1 rounded-xl border border-slate-700">
-                <span className="text-slate-300 text-xs px-2.5 py-1 font-semibold">
+              <div className="flex items-center gap-2 bg-surface-3/60 p-1 rounded-xl border border-slate-200">
+                <span className="text-slate-600 text-xs px-2.5 py-1 font-semibold">
                   المستخدم: {currentUser.username}
                 </span>
                 <span className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
-                  currentUser.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                  currentUser.role === 'admin' ? 'bg-amber-500/15 text-amber-700 border border-amber-500/30' : 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
                 }`}>
                   {currentUser.role === 'admin' ? 'مدير النظام' : 'موظف مبيعات'}
                 </span>
               </div>
 
               {/* Navigation toggle */}
-              <div className="flex gap-2 sm:mr-4 border-r border-slate-700 pr-4">
+              <div className="flex gap-2 sm:mr-4 border-r border-slate-200 pr-4">
                 <button
                   onClick={() => setCurrentView('cashier')}
                   className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                     currentView === 'cashier'
-                      ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                      ? 'bg-emerald-600 text-white shadow shadow-emerald-900/20'
+                      : 'text-slate-500 hover:text-slate-800 hover:bg-surface-3/70'
                   }`}
                 >
                   شاشة الكاشير
@@ -112,8 +112,8 @@ export default function App() {
                       onClick={() => setCurrentView('admin')}
                       className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                         currentView === 'admin'
-                          ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                          ? 'bg-emerald-600 text-white shadow shadow-emerald-900/20'
+                          : 'text-slate-500 hover:text-slate-800 hover:bg-surface-3/70'
                       }`}
                     >
                       لوحة التحكم
@@ -122,8 +122,8 @@ export default function App() {
                       onClick={() => setCurrentView('receipts')}
                       className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                         currentView === 'receipts'
-                          ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                          ? 'bg-emerald-600 text-white shadow shadow-emerald-900/20'
+                          : 'text-slate-500 hover:text-slate-800 hover:bg-surface-3/70'
                       }`}
                     >
                       سجل فواتيري
@@ -134,8 +134,8 @@ export default function App() {
                     onClick={() => setCurrentView('receipts')}
                     className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                       currentView === 'receipts'
-                        ? 'bg-emerald-600 text-white shadow shadow-emerald-950/40'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
+                        ? 'bg-emerald-600 text-white shadow shadow-emerald-900/20'
+                        : 'text-slate-500 hover:text-slate-800 hover:bg-surface-3/70'
                     }`}
                   >
                     سجل فواتيري <icons.receipt size={15} className="inline" />
@@ -144,14 +144,14 @@ export default function App() {
               </div>
 
               {currentUser.role === 'admin' && (
-                <div className="flex gap-2 sm:mr-4 border-r border-slate-700 pr-4">
+                <div className="flex gap-2 sm:mr-4 border-r border-slate-200 pr-4">
                   <button
                     onClick={() => setCurrentView('settings')}
                     title="الإعدادات"
                     className={`px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                       currentView === 'settings'
-                        ? 'bg-slate-700 text-emerald-400 shadow-sm'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-700/40'
+                        ? 'bg-surface-3 text-emerald-700 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-800 hover:bg-surface-3/70'
                     }`}
                   >
                     <icons.settings size={16} className="inline" /> الإعدادات
@@ -162,7 +162,7 @@ export default function App() {
 
             <button
               onClick={handleLogout}
-              className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-rose-950/40"
+              className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-rose-900/20"
             >
               تسجيل الخروج
             </button>

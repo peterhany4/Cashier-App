@@ -262,11 +262,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     // 1. Auth Guard Checklist
     if (!user || user.role !== 'admin') {
         return (
-            <div className="flex-1 flex flex-col justify-center items-center bg-slate-900 text-white p-6" dir="rtl">
+            <div className="flex-1 flex flex-col justify-center items-center bg-surface-2 text-ink p-6" dir="rtl">
                 <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-8 max-w-md text-center shadow-lg">
                 <span className="text-5xl mb-4 block"><icons.ban size={48} className="inline text-danger-400" /></span>
-                    <h2 className="text-2xl font-black text-rose-400 mb-2">وصول غير مصرح به</h2>
-                    <p className="text-slate-300">عذراً، ليس لديك الصلاحيات الكافية للوصول إلى لوحة التحكم.</p>
+                    <h2 className="text-2xl font-black text-rose-600 mb-2">وصول غير مصرح به</h2>
+                    <p className="text-slate-600">عذراً، ليس لديك الصلاحيات الكافية للوصول إلى لوحة التحكم.</p>
                 </div>
             </div>
         );
@@ -932,19 +932,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const purchaseBalancePreview = Math.max(0, Math.ceil(parseFloat(newPurchaseCost) || 0) - Math.ceil(parseFloat(newPurchasePaid) || 0));
 
     return (
-        <div className="flex-1 app-bg text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
+        <div className="flex-1 app-bg text-ink flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
             {/* In-app Pay Purchase Modal */}
             {payModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-right" dir="rtl">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-3">
-                            <span className="text-emerald-400">{<icons.card size={14} className="inline" />}</span> سداد متبقي عملية شراء
+                    <div className="bg-surface-1 border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-right" dir="rtl">
+                        <h3 className="text-lg font-bold text-ink flex items-center gap-2 mb-3">
+                            <span className="text-emerald-700">{<icons.card size={14} className="inline" />}</span> سداد متبقي عملية شراء
                         </h3>
-                        <p className="text-sm text-slate-300 mb-4">
-                            {payModal.itemName} — المتبقي: <span className="font-bold text-amber-400">{Math.ceil(payModal.remaining)} جنية</span>
+                        <p className="text-sm text-slate-600 mb-4">
+                            {payModal.itemName} — المتبقي: <span className="font-bold text-amber-700">{Math.ceil(payModal.remaining)} جنية</span>
                         </p>
-                        <label className="block text-xs font-bold text-slate-300 mb-1.5">المبلغ المسدد (جنية)</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-1.5">المبلغ المسدد (جنية)</label>
                         <input
                             type="number"
                             step="1"
@@ -952,12 +952,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             max={Math.ceil(payModal.remaining)}
                             value={payAmountInput}
                             onChange={(e) => setPayAmountInput(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center mb-4"
+                            className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center mb-4"
                         />
                         <div className="flex gap-3 justify-end">
                             <button
                                 onClick={() => { setPayModal(null); setPayAmountInput(''); }}
-                                className="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm transition cursor-pointer"
+                                className="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-sm transition cursor-pointer"
                             >
                                 إلغاء
                             </button>
@@ -974,21 +974,21 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             {/* 1. Header & Title Banner */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-100 flex items-center gap-2 tracking-tight">
-                        <span className="text-emerald-400 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20"><icons.gauge size={20} /></span>
+                    <h2 className="text-3xl font-black text-ink flex items-center gap-2 tracking-tight">
+                        <span className="text-emerald-700 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20"><icons.gauge size={20} /></span>
                         لوحة الإشراف وإدارة النظام
                     </h2>
-                    <p className="text-slate-400 text-sm mt-1">تحليل ومراقبة الأصناف، مستويات المواد الخام في المخازن، ومستحقات الكادر الوظيفي.</p>
+                    <p className="text-slate-600 text-sm mt-1">تحليل ومراقبة الأصناف، مستويات المواد الخام في المخازن، ومستحقات الكادر الوظيفي.</p>
                 </div>
                 
                 {/* View Toggles */}
-                <div className="flex bg-slate-800 p-1.5 rounded-2xl border border-slate-700/80 shadow-md">
+                <div className="flex bg-surface-1 p-1.5 rounded-2xl border border-slate-200/80 shadow-md">
                     <button
                         onClick={() => setActiveTab('menu')}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'menu'
-                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-surface-3 text-emerald-700 shadow-sm'
+                                : 'text-slate-600 hover:text-ink'
                         }`}
                     >
                         <icons.menu size={16} className="inline" /> إدارة القائمة
@@ -997,8 +997,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={() => setActiveTab('inventory')}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'inventory'
-                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-surface-3 text-emerald-700 shadow-sm'
+                                : 'text-slate-600 hover:text-ink'
                         }`}
                     >
                         <icons.package size={16} className="inline" /> تتبع المخزون
@@ -1007,8 +1007,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={() => setActiveTab('salaries')}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'salaries'
-                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-surface-3 text-emerald-700 shadow-sm'
+                                : 'text-slate-600 hover:text-ink'
                         }`}
                     >
                         <icons.wallet size={16} className="inline" /> رواتب الموظفين
@@ -1017,8 +1017,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={handleSelectReportsTab}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'reports'
-                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-surface-3 text-emerald-700 shadow-sm'
+                                : 'text-slate-600 hover:text-ink'
                         }`}
                     >
                         <icons.clipboard size={16} className="inline" /> سجل الفواتير والتقارير
@@ -1029,35 +1029,35 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             {/* 2. Top Metrics Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
                 {/* Metric 1 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-surface-1 to-surface-2 border border-slate-200/60 p-5 rounded-2xl shadow-lg shadow-slate-900/10 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">أصناف القائمة النشطة</span>
-                        <span className="text-3xl font-extrabold text-white">{totalMenuItems}</span>
+                        <span className="text-xs text-slate-600 font-bold block mb-1">أصناف القائمة النشطة</span>
+                        <span className="text-3xl font-extrabold text-ink">{totalMenuItems}</span>
                     </div>
-                    <span className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><icons.menu size={28} /></span>
+                    <span className="p-3 bg-emerald-500/10 rounded-xl text-emerald-700"><icons.menu size={28} /></span>
                 </div>
 
                 {/* Metric 2 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-surface-1 to-surface-2 border border-slate-200/60 p-5 rounded-2xl shadow-lg shadow-slate-900/10 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">نقص في المخزون (تنبيه)</span>
-                        <span className={`text-3xl font-extrabold ${lowStockItemsCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        <span className="text-xs text-slate-600 font-bold block mb-1">نقص في المخزون (تنبيه)</span>
+                        <span className={`text-3xl font-extrabold ${lowStockItemsCount > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
                             {lowStockItemsCount}
                         </span>
                     </div>
-                    <span className={`p-3 rounded-xl ${lowStockItemsCount > 0 ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-700/55 text-slate-400'}`}>
+                    <span className={`p-3 rounded-xl ${lowStockItemsCount > 0 ? 'bg-amber-500/10 text-amber-700' : 'bg-surface-3 text-slate-600'}`}>
                             <icons.warning size={28} />
                         </span>
                 </div>
 
                 {/* Metric 3 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-surface-1 to-surface-2 border border-slate-200/60 p-5 rounded-2xl shadow-lg shadow-slate-900/10 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">
+                        <span className="text-xs text-slate-600 font-bold block mb-1">
                             إيرادات الفترة المحددة
                         </span>
-                        <span className={`text-3xl font-extrabold font-mono ${netRevenue < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                            {netRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-400">جنية</span>
+                        <span className={`text-3xl font-extrabold font-mono ${netRevenue < 0 ? 'text-rose-600' : 'text-emerald-700'}`}>
+                            {netRevenue.toFixed(2)} <span className="text-xs font-normal text-slate-600">جنية</span>
                         </span>
                         {totalPaidSalariesInPeriod > 0 && (
                             <span className="text-xs text-slate-500 block mt-1">بعد خصم رواتب الفترة: {totalPaidSalariesInPeriod.toFixed(2)}</span>
@@ -1066,30 +1066,30 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             <span className="text-xs text-slate-500 block mt-1">بعد خصم مشتريات المخزن: {totalPurchasesPaidInPeriod.toFixed(2)}</span>
                         )}
                     </div>
-                    <span className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400"><icons.trending size={28} /></span>
+                    <span className="p-3 bg-emerald-500/10 rounded-xl text-emerald-700"><icons.trending size={28} /></span>
                 </div>
 
                 {/* Metric 4 */}
-                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/60 p-5 rounded-2xl shadow-lg shadow-slate-950/20 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-surface-1 to-surface-2 border border-slate-200/60 p-5 rounded-2xl shadow-lg shadow-slate-900/10 hover:border-emerald-500/40 transition-all duration-200 flex items-center justify-between">
                     <div>
-                        <span className="text-xs text-slate-400 font-bold block mb-1">
+                        <span className="text-xs text-slate-600 font-bold block mb-1">
                             فواتير الفترة المحددة
                         </span>
-                        <span className="text-3xl font-extrabold text-white font-mono">{totalOrdersCount}</span>
+                        <span className="text-3xl font-extrabold text-ink font-mono">{totalOrdersCount}</span>
                     </div>
                     <span className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400"><icons.receipt size={28} /></span>
                 </div>
             </div>
 
             {/* 3. Tab Sub-Views Content Area */}
-            <div className="flex-1 bg-slate-800/40 border border-slate-700/55 rounded-2xl p-6 shadow-xl backdrop-blur-md">
+            <div className="flex-1 bg-surface-1/40 border border-slate-200/55 rounded-2xl p-6 shadow-xl backdrop-blur-md">
                 
                 {/* ==================== TAB 1: MENU MANAGEMENT ==================== */}
                 {activeTab === 'menu' && (
                     <div className="space-y-6 animate-fadeIn">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/60 pb-4">
-                            <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                <span className="text-emerald-400"><icons.menu size={18} /></span> إدارة قائمة المأكولات والمشروبات
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 pb-4">
+                            <h3 className="text-xl font-bold text-ink flex items-center gap-2">
+                                <span className="text-emerald-700"><icons.menu size={18} /></span> إدارة قائمة المأكولات والمشروبات
                             </h3>
                             {/* Search bar */}
                             <input
@@ -1097,30 +1097,30 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 placeholder="ابحث عن صنف معين..."
                                 value={menuSearch}
                                 onChange={(e) => setMenuSearch(e.target.value)}
-                                className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right w-full sm:w-64"
+                                className="bg-surface-2 border border-slate-200 rounded-xl px-4 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right w-full sm:w-64"
                             />
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                             
                             {/* Form: Add Menu Item */}
-                            <div className="bg-slate-800 border border-slate-700/60 rounded-xl p-5 shadow-sm space-y-4">
-                                <h4 className="font-bold text-lg text-emerald-400 border-b border-slate-700 pb-2">إضافة صنف جديد</h4>
+                            <div className="bg-surface-1 border border-slate-200/60 rounded-xl p-5 shadow-sm space-y-4">
+                                <h4 className="font-bold text-lg text-emerald-700 border-b border-slate-200 pb-2">إضافة صنف جديد</h4>
                                 <form onSubmit={handleAddMenuItem} className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم الصنف</label>
+                                        <label className="block text-xs font-bold text-slate-600 mb-1.5">اسم الصنف</label>
                                         <input
                                             type="text"
                                             required
                                             value={newItemName}
                                             onChange={(e) => setNewItemName(e.target.value)}
                                             placeholder="مثال: شاورما لحم دبل"
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                            className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">السعر (جنية)</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">السعر (جنية)</label>
                                             <input
                                                 type="number"
                                                 required
@@ -1129,16 +1129,16 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 value={newItemPrice}
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                                 placeholder="65.00"
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">الفئة</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">الفئة</label>
                                             <select
                                                 value={newItemCategory}
                                                 onChange={(e) => setNewItemCategory(e.target.value)}
                                                 required
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                             >
                                                 {categories.length === 0 && (
                                                     <option value="" disabled>-- أضف فئة أولاً --</option>
@@ -1152,26 +1152,26 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     <button
                                         type="submit"
                                         disabled={categories.length === 0}
-                                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition shadow shadow-emerald-950/50 cursor-pointer"
+                                        className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-ink font-bold py-2.5 rounded-lg transition shadow shadow-emerald-900/50 cursor-pointer"
                                     >
                                         إدراج في القائمة +
                                     </button>
                                 </form>
 
                                 {/* --- Category Management Section --- */}
-                                <div className="border-t border-slate-700 pt-4 space-y-3">
-                                    <h4 className="font-bold text-sm text-slate-300 flex items-center gap-1.5"><icons.boxes size={14} className="inline" /> إدارة الفئات</h4>
+                                <div className="border-t border-slate-200 pt-4 space-y-3">
+                                    <h4 className="font-bold text-sm text-slate-600 flex items-center gap-1.5"><icons.boxes size={14} className="inline" /> إدارة الفئات</h4>
                                     <form onSubmit={handleAddCategory} className="flex gap-2">
                                         <input
                                             type="text"
                                             value={newCategoryName}
                                             onChange={(e) => setNewCategoryName(e.target.value)}
                                             placeholder="اسم الفئة الجديدة..."
-                                            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                            className="flex-1 bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                         />
                                         <button
                                             type="submit"
-                                            className="bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-2 rounded-lg transition text-xs cursor-pointer border border-slate-600 whitespace-nowrap"
+                                            className="bg-surface-3 hover:bg-surface-4 text-emerald-700 font-bold px-3 py-2 rounded-lg transition text-xs cursor-pointer border border-slate-200 whitespace-nowrap"
                                         >
                                             + إضافة
                                         </button>
@@ -1181,11 +1181,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <p className="text-xs text-slate-500 text-center py-2">لا توجد فئات. أضف فئة جديدة.</p>
                                         )}
                                         {categories.map(cat => (
-                                            <div key={cat.id} className="flex items-center justify-between bg-slate-900/60 border border-slate-700/50 rounded-lg px-3 py-1.5">
-                                                <span className="text-sm text-slate-200 font-semibold">{cat.name}</span>
+                                            <div key={cat.id} className="flex items-center justify-between bg-surface-2/60 border border-slate-200/50 rounded-lg px-3 py-1.5">
+                                                <span className="text-sm text-ink font-semibold">{cat.name}</span>
                                                 <button
                                                     onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                                    className="text-rose-400 hover:text-rose-300 text-xs font-bold cursor-pointer transition px-2 py-0.5 hover:bg-rose-500/10 rounded"
+                                                    className="text-rose-600 hover:text-rose-300 text-xs font-bold cursor-pointer transition px-2 py-0.5 hover:bg-rose-500/10 rounded"
                                                 >
                                                     حذف
                                                 </button>
@@ -1196,38 +1196,38 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </div>
 
                             {/* Table: Menu List */}
-                            <div className="lg:col-span-2 bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="lg:col-span-2 bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-right border-collapse">
                                         <thead>
-                                            <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                            <tr className="bg-surface-3/60 text-slate-600 border-b border-slate-200 text-sm">
                                                 <th className="p-3.5 font-bold">اسم الوجبة/الصنف</th>
                                                 <th className="p-3.5 font-bold text-center">الفئة</th>
                                                 <th className="p-3.5 font-bold text-center">السعر</th>
                                                 <th className="p-3.5 font-bold text-center">الإجراءات</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-700/40 text-sm">
+                                        <tbody className="divide-y divide-slate-200/70 text-sm">
                                             {menu
                                                 .filter(item => item.name.toLowerCase().includes(menuSearch.toLowerCase()))
                                                 .map((item) => (
                                                     <Fragment key={item.id}>
                                                         <tr className="hover:bg-surface-3/30 transition-colors">
-                                                            <td className="p-3.5 font-bold text-white">{item.name}</td>
+                                                            <td className="p-3.5 font-bold text-ink">{item.name}</td>
                                                             <td className="p-3.5 text-center">
-                                                                <span className="bg-slate-900/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 border border-slate-700/50">
+                                                                <span className="bg-surface-2/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-600 border border-slate-200/50">
                                                                     {item.category}
                                                                 </span>
                                                             </td>
-                                                            <td className="p-3.5 text-center font-extrabold text-emerald-400">{item.price.toFixed(2)} جنية</td>
+                                                            <td className="p-3.5 text-center font-extrabold text-emerald-700">{item.price.toFixed(2)} جنية</td>
                                                             <td className="p-3.5 text-center">
                                                                 <div className="flex flex-wrap items-center justify-center gap-2">
                                                                     <button
                                                                         onClick={() => toggleComponents(item)}
                                                                         className={`px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer border ${
                                                                             expandedComponentsId === item.id
-                                                                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                                                                                : 'bg-slate-900/60 border-slate-600 text-slate-300 hover:bg-slate-800'
+                                                                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700'
+                                                                                : 'bg-surface-2/60 border-slate-200 text-slate-600 hover:bg-surface-1'
                                                                         }`}
                                                                         title="ربط المواد الخام المستهلكة لهذا الصنف"
                                                                     >
@@ -1235,7 +1235,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteMenuItem(item.id)}
-                                                                        className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
+                                                                        className="text-rose-600 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
                                                                     >
                                                                         حذف {<icons.trash size={14} className="inline" />}
                                                                     </button>
@@ -1243,11 +1243,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             </td>
                                                         </tr>
                                                         {expandedComponentsId === item.id && (
-                                                            <tr className="bg-slate-900/60 border-t border-slate-700/40">
+                                                            <tr className="bg-surface-2/60 border-t border-slate-200/40">
                                                                 <td colSpan="4" className="p-4">
-                                                                    <div className="bg-surface-1 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                                                                    <div className="bg-surface-1 border border-slate-200/60 rounded-xl p-4 space-y-3">
                                                                         <div className="flex flex-wrap items-center justify-between gap-3">
-                                                                            <h5 className="font-bold text-sm text-emerald-400 flex items-center gap-2">
+                                                                            <h5 className="font-bold text-sm text-emerald-700 flex items-center gap-2">
                                                                                 {<icons.settings size={14} className="inline" />} مكونات: {item.name}
                                                                             </h5>
                                                                             <div className="flex items-center gap-2">
@@ -1259,7 +1259,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={() => toggleComponents(item)}
-                                                                                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-lg transition text-xs cursor-pointer border border-slate-600"
+                                                                                    className="bg-surface-1 hover:bg-surface-4 text-slate-600 font-bold px-3 py-1.5 rounded-lg transition text-xs cursor-pointer border border-slate-200"
                                                                                 >
                                                                                     إغلاق ✕
                                                                                 </button>
@@ -1272,11 +1272,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                         </p>
 
                                                                         {loadingComponents && (
-                                                                            <p className="text-xs text-slate-400">جاري تحميل المكونات...</p>
+                                                                            <p className="text-xs text-slate-600">جاري تحميل المكونات...</p>
                                                                         )}
 
                                                                         {!loadingComponents && componentRows.length === 0 && (
-                                                                            <p className="text-xs text-slate-500 bg-slate-900/40 border border-slate-700/40 rounded-lg px-3 py-2">
+                                                                            <p className="text-xs text-slate-500 bg-surface-2/40 border border-slate-200/40 rounded-lg px-3 py-2">
                                                                                 لا توجد مكونات مرتبطة بهذا الصنف — أضف مكونات من الأسفل.
                                                                             </p>
                                                                         )}
@@ -1286,10 +1286,10 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                 {componentRows.map(row => {
                                                                                     const info = resolveComponentInfo(row);
                                                                                     return (
-                                                                                        <div key={row.key} className="flex items-center justify-between gap-2 bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-xs">
+                                                                                        <div key={row.key} className="flex items-center justify-between gap-2 bg-surface-2/50 border border-slate-200/50 rounded-lg px-3 py-2 text-xs">
                                                                                             <div className="flex flex-wrap items-center gap-2">
-                                                                                                <span className="font-bold text-slate-200">{info.name}</span>
-                                                                                                <span className="text-emerald-400 font-mono font-bold">
+                                                                                                <span className="font-bold text-ink">{info.name}</span>
+                                                                                                <span className="text-emerald-700 font-mono font-bold">
                                                                                                     {row.usage_qty} {row.usage_unit}
                                                                                                 </span>
                                                                                                 <span className="text-[10px] text-slate-500">لكل وحدة مباعة</span>
@@ -1298,15 +1298,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                                 {info.stock !== null && (
                                                                                                     <span className={`px-2 py-0.5 rounded font-mono font-bold border ${
                                                                                                         info.low
-                                                                                                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
-                                                                                                            : 'bg-slate-800 border-slate-600 text-slate-300'
+                                                                                                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-600'
+                                                                                                            : 'bg-surface-1 border-slate-200 text-slate-600'
                                                                                                     }`}>
                                                                                                         {info.low && <icons.warning size={12} className="inline" />}المخزون: {info.stock} {info.unit}
                                                                                                     </span>
                                                                                                 )}
                                                                                                 <button
                                                                                                     onClick={() => removeComponentRow(row.key)}
-                                                                                                    className="text-rose-400 hover:text-rose-300 px-1.5 py-0.5 rounded hover:bg-rose-500/10 cursor-pointer"
+                                                                                                    className="text-rose-600 hover:text-rose-300 px-1.5 py-0.5 rounded hover:bg-rose-500/10 cursor-pointer"
                                                                                                     title="إزالة المكون"
                                                                                                 >
                                                                                                     ✕
@@ -1319,25 +1319,25 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                         )}
 
                                                                         {/* Add Component Form */}
-                                                                        <form onSubmit={addComponentRow} className="grid grid-cols-2 md:grid-cols-5 gap-2 items-end pt-1 border-t border-slate-700/40">
+                                                                        <form onSubmit={addComponentRow} className="grid grid-cols-2 md:grid-cols-5 gap-2 items-end pt-1 border-t border-slate-200/40">
                                                                             <div>
-                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">النوع</label>
+                                                                                <label className="block text-[11px] font-bold text-slate-600 mb-1">النوع</label>
                                                                                 <select
                                                                                     value={newCompType}
                                                                                     onChange={(e) => { setNewCompType(e.target.value); setNewCompItem(''); }}
-                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                                                    className="w-full bg-surface-2 border border-slate-200 rounded-lg px-2.5 py-2 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                                                                 >
                                                                                     <option value="inventory">من المخزن</option>
                                                                                     <option value="menu">من القائمة</option>
                                                                                 </select>
                                                                             </div>
                                                                             <div>
-                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">الصنف</label>
+                                                                                <label className="block text-[11px] font-bold text-slate-600 mb-1">الصنف</label>
                                                                                 <select
                                                                                     required
                                                                                     value={newCompItem}
                                                                                     onChange={(e) => setNewCompItem(e.target.value)}
-                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                                                    className="w-full bg-surface-2 border border-slate-200 rounded-lg px-2.5 py-2 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                                                                 >
                                                                                     <option value="">-- اختر --</option>
                                                                                     {(newCompType === 'inventory' ? inventory : menu.filter(m => m.id !== item.id)).map(opt => (
@@ -1346,7 +1346,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                 </select>
                                                                             </div>
                                                                             <div>
-                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">الكمية المستخدمة</label>
+                                                                                <label className="block text-[11px] font-bold text-slate-600 mb-1">الكمية المستخدمة</label>
                                                                                 <input
                                                                                     type="number"
                                                                                     required
@@ -1355,15 +1355,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                     value={newCompQty}
                                                                                     onChange={(e) => setNewCompQty(e.target.value)}
                                                                                     placeholder="1"
-                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                                                    className="w-full bg-surface-2 border border-slate-200 rounded-lg px-2.5 py-2 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                                                                 />
                                                                             </div>
                                                                             <div>
-                                                                                <label className="block text-[11px] font-bold text-slate-400 mb-1">الوحدة</label>
+                                                                                <label className="block text-[11px] font-bold text-slate-600 mb-1">الوحدة</label>
                                                                                 <select
                                                                                     value={newCompUnit}
                                                                                     onChange={(e) => setNewCompUnit(e.target.value)}
-                                                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                                                    className="w-full bg-surface-2 border border-slate-200 rounded-lg px-2.5 py-2 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                                                                 >
                                                                                     {COMPONENT_UNITS.map(u => (
                                                                                         <option key={u} value={u}>{u}</option>
@@ -1372,7 +1372,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                             </div>
                                                                             <button
                                                                                 type="submit"
-                                                                                className="bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-2 rounded-lg transition text-xs cursor-pointer border border-slate-600 whitespace-nowrap"
+                                                                                className="bg-surface-3 hover:bg-surface-4 text-emerald-700 font-bold px-3 py-2 rounded-lg transition text-xs cursor-pointer border border-slate-200 whitespace-nowrap"
                                                                             >
                                                                                 + إضافة مكون
                                                                             </button>
@@ -1399,16 +1399,16 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 {/* ==================== TAB 2: INVENTORY TRACKING ==================== */}
                 {activeTab === 'inventory' && (
                     <div className="space-y-6 animate-fadeIn">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/60 pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 pb-4">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                    <span className="text-emerald-400"><icons.package size={18} /></span> مراقبة مستويات المخزون والمواد الأولية
+                                <h3 className="text-xl font-bold text-ink flex items-center gap-2">
+                                    <span className="text-emerald-700"><icons.package size={18} /></span> مراقبة مستويات المخزون والمواد الأولية
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-1">تتبع استهلاك المواد الأساسية للطهي والتنبيه عند انخفاضها للطلب الفوري.</p>
+                                <p className="text-xs text-slate-600 mt-1">تتبع استهلاك المواد الأساسية للطهي والتنبيه عند انخفاضها للطلب الفوري.</p>
                             </div>
                             <button
                                 onClick={() => setShowAddInvForm(!showAddInvForm)}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-900/40"
                             >
                                 {showAddInvForm ? 'إغلاق النموذج' : 'إضافة مادة أولية جديدة +'}
                             </button>
@@ -1416,21 +1416,21 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Add Inventory Item Form */}
                         {showAddInvForm && (
-                            <form onSubmit={handleAddInventory} className="bg-surface-1 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
+                            <form onSubmit={handleAddInventory} className="bg-surface-1 border border-slate-200/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم المادة الخام</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">اسم المادة الخام</label>
                                     <input
                                         type="text"
                                         required
                                         value={newInvName}
                                         onChange={(e) => setNewInvName(e.target.value)}
                                         placeholder="مثال: ثوم مفروم"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-300 mb-1.5">الكمية الحالية</label>
+                                        <label className="block text-xs font-bold text-slate-600 mb-1.5">الكمية الحالية</label>
                                         <input
                                             type="number"
                                             required
@@ -1438,15 +1438,15 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             value={newInvQty}
                                             onChange={(e) => setNewInvQty(e.target.value)}
                                             placeholder="50"
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                            className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-300 mb-1.5">الوحدة</label>
+                                        <label className="block text-xs font-bold text-slate-600 mb-1.5">الوحدة</label>
                                         <select
                                             value={newInvUnit}
                                             onChange={(e) => setNewInvUnit(e.target.value)}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                            className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                         >
                                             <option value="كجم">كجم</option>
                                             <option value="قطعة">قطعة</option>
@@ -1456,7 +1456,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">حد التنبيه بالانخفاض</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">حد التنبيه بالانخفاض</label>
                                     <input
                                         type="number"
                                         required
@@ -1464,12 +1464,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         value={newInvThreshold}
                                         onChange={(e) => setNewInvThreshold(e.target.value)}
                                         placeholder="10"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-900/40"
                                 >
                                     حفظ المادة الخام
                                 </button>
@@ -1477,11 +1477,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         )}
 
                         {/* Inventory Table */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-right border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                        <tr className="bg-surface-3/60 text-slate-600 border-b border-slate-200 text-sm">
                                             <th className="p-3.5 font-bold">اسم المادة الخام</th>
                                             <th className="p-3.5 font-bold text-center">الكمية المتوفرة</th>
                                             <th className="p-3.5 font-bold text-center">الحد الأدنى للتنبيه</th>
@@ -1490,25 +1490,25 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <th className="p-3.5 font-bold text-center">إجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className="divide-y divide-slate-200/70 text-sm">
                                         {inventory.map((item) => {
                                             const isOutOfStock = item.quantity <= 0;
                                             const isLowStock = item.quantity <= item.lowThreshold;
                                             
                                             let statusBadge = (
-                                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold">
+                                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">
                                                     كافٍ
                                                 </span>
                                             );
                                             if (isOutOfStock) {
                                                 statusBadge = (
-                                                    <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 px-3 py-1 rounded-full text-xs font-bold">
+                                                    <span className="bg-rose-500/15 border border-rose-500/30 text-rose-600 px-3 py-1 rounded-full text-xs font-bold">
                                                         نفذ بالكامل
                                                     </span>
                                                 );
                                             } else if (isLowStock) {
                                                 statusBadge = (
-                                                    <span className="bg-amber-500/15 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-bold">
+                                                    <span className="bg-amber-500/15 border border-amber-500/30 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">
                                                         مخزون منخفض {<icons.warning size={15} className="inline" />}
                                                     </span>
                                                 );
@@ -1516,11 +1516,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                                             return (
                                                 <tr key={item.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5 font-bold text-white">{item.name}</td>
+                                                    <td className="p-3.5 font-bold text-ink">{item.name}</td>
                                                     <td className="p-3.5 text-center font-mono text-base font-black">
                                                         {item.quantity} {item.unit}
                                                     </td>
-                                                    <td className="p-3.5 text-center text-slate-400">
+                                                    <td className="p-3.5 text-center text-slate-600">
                                                         {item.lowThreshold} {item.unit}
                                                     </td>
                                                     <td className="p-3.5 text-center">
@@ -1530,28 +1530,28 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                         <div className="flex justify-center items-center gap-1.5">
                                                             <button
                                                                 onClick={() => adjustStock(item.id, -5)}
-                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-surface-3 hover:bg-surface-4 text-slate-600 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="استهلاك 5 وحدات"
                                                             >
                                                                 -5
                                                             </button>
                                                             <button
                                                                 onClick={() => adjustStock(item.id, -1)}
-                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-surface-3 hover:bg-surface-4 text-slate-600 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="استهلاك وحدة واحدة"
                                                             >
                                                                 -1
                                                             </button>
                                                             <button
                                                                 onClick={() => adjustStock(item.id, 1)}
-                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-surface-3 hover:bg-surface-4 text-slate-600 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="توريد وحدة واحدة"
                                                             >
                                                                 +1
                                                             </button>
                                                             <button
                                                                 onClick={() => adjustStock(item.id, 5)}
-                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-surface-3 hover:bg-surface-4 text-slate-600 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="توريد 5 وحدات"
                                                             >
                                                                 +5
@@ -1561,7 +1561,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                     <td className="p-3.5 text-center">
                                                         <button
                                                             onClick={() => deleteInventoryItem(item.id)}
-                                                            className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1 rounded-lg text-xs transition font-bold cursor-pointer"
+                                                            className="text-rose-600 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1 rounded-lg text-xs transition font-bold cursor-pointer"
                                                         >
                                                             إزالة {<icons.trash size={14} className="inline" />}
                                                         </button>
@@ -1575,17 +1575,17 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         </div>
 
                         {/* ==================== PURCHASES: مشتريات المخزن ==================== */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-700/60 px-5 py-4">
+                        <div className="bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-200/60 px-5 py-4">
                                 <div>
-                                    <h4 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                                        <span className="text-emerald-400"><icons.cart size={18} /></span> مشتريات المخزن
+                                    <h4 className="text-lg font-bold text-ink flex items-center gap-2">
+                                        <span className="text-emerald-700"><icons.cart size={18} /></span> مشتريات المخزن
                                     </h4>
-                                    <p className="text-xs text-slate-400 mt-1">تسجيل شراء المواد الخام: يضيف الكمية للمخزن، يخصم المدفوع من الإيرادات، ويتتبع المتبقي للمورد.</p>
+                                    <p className="text-xs text-slate-600 mt-1">تسجيل شراء المواد الخام: يضيف الكمية للمخزن، يخصم المدفوع من الإيرادات، ويتتبع المتبقي للمورد.</p>
                                 </div>
                                 <button
                                     onClick={() => setShowAddPurchaseForm(!showAddPurchaseForm)}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-900/40"
                                 >
                                     {showAddPurchaseForm ? 'إغلاق النموذج' : 'تسجيل عملية شراء +'}
                                 </button>
@@ -1593,14 +1593,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                             {/* Add Purchase Form */}
                             {showAddPurchaseForm && (
-                                <form onSubmit={handleAddPurchase} className="bg-surface-1 border-b border-slate-700/60 p-5 space-y-4 animate-fadeIn">
+                                <form onSubmit={handleAddPurchase} className="bg-surface-1 border-b border-slate-200/60 p-5 space-y-4 animate-fadeIn">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className={newPurchaseItemId === 'new' ? '' : 'md:col-span-2'}>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">الصنف المشترى</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">الصنف المشترى</label>
                                             <select
                                                 value={newPurchaseItemId}
                                                 onChange={(e) => setNewPurchaseItemId(e.target.value)}
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             >
                                                 <option value="">-- اختر من المخزن أو أضف جديد --</option>
                                                 {inventory.map(i => (
@@ -1612,22 +1612,22 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         {newPurchaseItemId === 'new' && (
                                             <>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم الصنف الجديد</label>
+                                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">اسم الصنف الجديد</label>
                                                     <input
                                                         type="text"
                                                         required
                                                         value={newPurchaseName}
                                                         onChange={(e) => setNewPurchaseName(e.target.value)}
                                                         placeholder="مثال: بطاطس بلدي"
-                                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">الوحدة</label>
+                                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">الوحدة</label>
                                                     <select
                                                         value={newPurchaseUnit}
                                                         onChange={(e) => setNewPurchaseUnit(e.target.value)}
-                                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                                     >
                                                         <option value="كجم">كجم</option>
                                                         <option value="قطعة">قطعة</option>
@@ -1641,7 +1641,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">الكمية المشتراة</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">الكمية المشتراة</label>
                                             <input
                                                 type="number"
                                                 required
@@ -1650,11 +1650,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 value={newPurchaseQty}
                                                 onChange={(e) => setNewPurchaseQty(e.target.value)}
                                                 placeholder="7"
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">التكلفة الإجمالية (جنية)</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">التكلفة الإجمالية (جنية)</label>
                                             <input
                                                 type="number"
                                                 required
@@ -1663,11 +1663,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 value={newPurchaseCost}
                                                 onChange={(e) => setNewPurchaseCost(e.target.value)}
                                                 placeholder="5000"
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">المدفوع الآن (جنية)</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">المدفوع الآن (جنية)</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -1675,31 +1675,31 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 value={newPurchasePaid}
                                                 onChange={(e) => setNewPurchasePaid(e.target.value)}
                                                 placeholder="1000"
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-300 mb-1.5">ملاحظات (اختياري)</label>
+                                            <label className="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات (اختياري)</label>
                                             <input
                                                 type="text"
                                                 value={newPurchaseNotes}
                                                 onChange={(e) => setNewPurchaseNotes(e.target.value)}
                                                 placeholder="المورد / رقم الفاتورة..."
-                                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                                className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="flex flex-wrap items-center justify-between gap-3">
-                                        <div className="bg-slate-900/60 border border-slate-700/50 rounded-lg px-3 py-2 text-xs">
-                                            <span className="text-slate-400">المتبقي بعد الدفع: </span>
-                                            <span className="font-bold font-mono text-amber-400">
+                                        <div className="bg-surface-2/60 border border-slate-200/50 rounded-lg px-3 py-2 text-xs">
+                                            <span className="text-slate-600">المتبقي بعد الدفع: </span>
+                                            <span className="font-bold font-mono text-amber-700">
                                                 {purchaseBalancePreview.toFixed(2)} جنية
                                             </span>
                                         </div>
                                         <button
                                             type="submit"
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-900/40"
                                         >
                                             {<icons.save size={14} className="inline" />} تسجيل عملية الشراء
                                         </button>
@@ -1710,7 +1710,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             {/* Outstanding debt banner + visibility toggle */}
                             {globalPurchasesBalance > 0 && (
                                 <div className="bg-amber-500/10 border border-amber-500/30 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
-                                    <p className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                    <p className="text-sm font-bold text-amber-700 flex items-center gap-2">
                                         <span className="text-lg">{<icons.warning size={15} className="inline" />}</span>
                                         لديك {Math.ceil(globalPurchasesBalance)} جنية مستحقة للموردين
                                         {showDebtsOnly ? '' : ` (${unpaidAllPurchases.length} عملية غير مسددة)`}.
@@ -1719,7 +1719,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         type="button"
                                         onClick={() => setShowDebtsOnly(v => !v)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                                            showDebtsOnly ? 'bg-amber-500/20 border-amber-500 text-amber-300' : 'bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700'
+                                            showDebtsOnly ? 'bg-amber-500/20 border-amber-500 text-amber-700' : 'bg-surface-1 border-slate-200 text-ink hover:bg-surface-4'
                                         }`}
                                     >
                                         {showDebtsOnly ? 'إغلاق و عرض كل المشتريات' : 'عرض الديون المستحقة فقط'}
@@ -1728,19 +1728,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             )}
 
                             {!showDebtsOnly ? (
-                            <div className="border-b border-slate-700/60 px-5 py-4 space-y-3">
+                            <div className="border-b border-slate-200/60 px-5 py-4 space-y-3">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     <input
                                         type="text"
                                         placeholder="ابحث عن صنف أو مورد..."
                                         value={purchasesSearch}
                                         onChange={(e) => setPurchasesSearch(e.target.value)}
-                                        className="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="bg-surface-2 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     />
                                     <select
                                         value={purchasesStatus}
                                         onChange={(e) => setPurchasesStatus(e.target.value)}
-                                        className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                        className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
                                     >
                                         <option value="all">كل الحالات</option>
                                         <option value="paid">مدفوع</option>
@@ -1752,8 +1752,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             onClick={() => { setPurchasesFilterMode('year-month'); setPurchasesDateFrom(''); setPurchasesDateTo(''); }}
                                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
                                                 purchasesFilterMode === 'year-month'
-                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
+                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700'
+                                                    : 'bg-surface-1 border-slate-200 text-slate-600 hover:bg-surface-3'
                                             }`}
                                         >
                                             📅 بالشهر
@@ -1763,8 +1763,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             onClick={() => setPurchasesFilterMode('range')}
                                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
                                                 purchasesFilterMode === 'range'
-                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
+                                                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-700'
+                                                    : 'bg-surface-1 border-slate-200 text-slate-600 hover:bg-surface-3'
                                             }`}
                                         >
                                             📆 بفترة
@@ -1774,11 +1774,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                                 {purchasesFilterMode === 'year-month' ? (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-400">الفترة:</span>
+                                        <span className="text-xs font-bold text-slate-600">الفترة:</span>
                                         <select
                                             value={purchasesYear}
                                             onChange={(e) => setPurchasesYear(Number(e.target.value))}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
                                         >
                                             {availablePurchaseYears.map(year => (
                                                 <option key={year} value={year}>{year}</option>
@@ -1787,7 +1787,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         <select
                                             value={purchasesMonth}
                                             onChange={(e) => setPurchasesMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
                                         >
                                             <option value="all">كل الشهور</option>
                                             {ARABIC_MONTH_LABELS.map((label, idx) => (
@@ -1797,51 +1797,51 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </div>
                                 ) : (
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-400">من:</span>
+                                        <span className="text-xs font-bold text-slate-600">من:</span>
                                         <input
                                             type="date"
                                             value={purchasesDateFrom}
                                             onChange={(e) => setPurchasesDateFrom(e.target.value)}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] text-slate-200"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] text-ink"
                                         />
                                         <span className="text-xs text-slate-500">إلى:</span>
                                         <input
                                             type="date"
                                             value={purchasesDateTo}
                                             onChange={(e) => setPurchasesDateTo(e.target.value)}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] text-slate-200"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center [color-scheme:dark] text-ink"
                                         />
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <div className="border-b border-slate-700/60 px-5 py-4 flex items-center gap-2 text-sm text-slate-300">
-                                عرض: <span className="font-bold text-amber-400">الديون المستحقة فقط</span> — كل المشتريات غير المسددة من كل الفترات (يتم تجاهل الفترة الزمنية).
+                            <div className="border-b border-slate-200/60 px-5 py-4 flex items-center gap-2 text-sm text-slate-600">
+                                عرض: <span className="font-bold text-amber-700">الديون المستحقة فقط</span> — كل المشتريات غير المسددة من كل الفترات (يتم تجاهل الفترة الزمنية).
                             </div>
                         )}
 
                             {/* Summary Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-5 py-4">
-                                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
+                                <div className="bg-surface-2/60 border border-slate-200/50 rounded-xl p-4 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-slate-400 font-bold">إجمالي المشتريات</p>
-                                        <h4 className="text-xl font-black text-white font-mono mt-1">{Math.ceil(purchasesTotalCost)}</h4>
+                                        <p className="text-xs text-slate-600 font-bold">إجمالي المشتريات</p>
+                                        <h4 className="text-xl font-black text-ink font-mono mt-1">{Math.ceil(purchasesTotalCost)}</h4>
                                         <p className="text-[10px] text-slate-500">جنية</p>
                                     </div>
                                     <span className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-lg">{<icons.receipt size={20} className="inline" />}</span>
                                 </div>
-                                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
+                                <div className="bg-surface-2/60 border border-slate-200/50 rounded-xl p-4 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-slate-400 font-bold">المدفوع فعلياً</p>
-                                        <h4 className="text-xl font-black text-emerald-400 font-mono mt-1">{Math.ceil(purchasesTotalPaid)}</h4>
+                                        <p className="text-xs text-slate-600 font-bold">المدفوع فعلياً</p>
+                                        <h4 className="text-xl font-black text-emerald-700 font-mono mt-1">{Math.ceil(purchasesTotalPaid)}</h4>
                                         <p className="text-[10px] text-slate-500">جنية (مخصوم من الإيرادات)</p>
                                     </div>
                                     <span className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-lg">{<icons.cash size={20} className="inline" />}</span>
                                 </div>
-                                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex items-center justify-between">
+                                <div className="bg-surface-2/60 border border-slate-200/50 rounded-xl p-4 flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-slate-400 font-bold">المتبقي مستحق للمورد</p>
-                                        <h4 className="text-xl font-black text-amber-400 font-mono mt-1">{Math.ceil(globalPurchasesBalance)}</h4>
+                                        <p className="text-xs text-slate-600 font-bold">المتبقي مستحق للمورد</p>
+                                        <h4 className="text-xl font-black text-amber-700 font-mono mt-1">{Math.ceil(globalPurchasesBalance)}</h4>
                                         <p className="text-[10px] text-slate-500">جنية (كل الفترات — لم يُخصم بعد)</p>
                                     </div>
                                     <span className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg">{<icons.clock size={15} className="inline" />}</span>
@@ -1852,7 +1852,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             <div className="overflow-x-auto">
                                 <table className="w-full text-right border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-700/50 text-slate-300 border-t border-slate-700 text-sm">
+                                        <tr className="bg-surface-3/60 text-slate-600 border-t border-slate-200 text-sm">
                                             <th className="p-3.5 font-bold">الصنف</th>
                                             <th className="p-3.5 font-bold text-center">الكمية</th>
                                             <th className="p-3.5 font-bold text-center">التكلفة</th>
@@ -1863,22 +1863,22 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <th className="p-3.5 font-bold text-center">إجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className="divide-y divide-slate-200/70 text-sm">
                                         {displayedPurchases.map(p => {
                                             const isPaid = p.status === 'paid' || p.balance_due <= 0;
                                             return (
                                                 <tr key={p.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5 font-bold text-white">{p.item_name}</td>
-                                                    <td className="p-3.5 text-center font-mono text-slate-300">{p.quantity} {p.unit}</td>
-                                                    <td className="p-3.5 text-center font-mono text-slate-300">{Math.ceil(p.total_cost)} جنية</td>
-                                                    <td className="p-3.5 text-center font-mono text-emerald-400">{Math.ceil(p.paid_amount || 0)} جنية</td>
-                                                    <td className="p-3.5 text-center font-mono font-bold text-amber-400">{Math.ceil(p.balance_due || 0)} جنية</td>
-                                                    <td className="p-3.5 text-center text-slate-400">{formatPaymentDate(p.purchase_date)}</td>
+                                                    <td className="p-3.5 font-bold text-ink">{p.item_name}</td>
+                                                    <td className="p-3.5 text-center font-mono text-slate-600">{p.quantity} {p.unit}</td>
+                                                    <td className="p-3.5 text-center font-mono text-slate-600">{Math.ceil(p.total_cost)} جنية</td>
+                                                    <td className="p-3.5 text-center font-mono text-emerald-700">{Math.ceil(p.paid_amount || 0)} جنية</td>
+                                                    <td className="p-3.5 text-center font-mono font-bold text-amber-700">{Math.ceil(p.balance_due || 0)} جنية</td>
+                                                    <td className="p-3.5 text-center text-slate-600">{formatPaymentDate(p.purchase_date)}</td>
                                                     <td className="p-3.5 text-center">
                                                         {isPaid ? (
-                                                            <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold">مدفوع {<icons.check size={13} className="inline" />}</span>
+                                                            <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">مدفوع {<icons.check size={13} className="inline" />}</span>
                                                         ) : (
-                                                            <span className="bg-amber-500/15 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-bold">مستحق {<icons.warning size={15} className="inline" />}</span>
+                                                            <span className="bg-amber-500/15 border border-amber-500/30 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">مستحق {<icons.warning size={15} className="inline" />}</span>
                                                         )}
                                                     </td>
                                                     <td className="p-3.5 text-center">
@@ -1886,14 +1886,14 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             {!isPaid && (
                                                                 <button
                                                                     onClick={() => { setPayModal({ purchaseId: p.id, itemName: p.item_name, remaining: p.balance_due }); setPayAmountInput(String(Math.ceil(p.balance_due))); }}
-                                                                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer"
+                                                                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer"
                                                                 >
                                                                     {<icons.card size={14} className="inline" />} سداد
                                                                 </button>
                                                             )}
                                                             <button
                                                                 onClick={() => handleDeletePurchase(p)}
-                                                                className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
+                                                                className="text-rose-600 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition text-xs font-bold cursor-pointer"
                                                             >
                                                                 حذف {<icons.trash size={14} className="inline" />}
                                                             </button>
@@ -1923,23 +1923,23 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 {/* ==================== TAB 3: EMPLOYEE SALARY MANAGEMENT ==================== */}
                 {activeTab === 'salaries' && (
                     <div className="space-y-6 animate-fadeIn">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/60 pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 pb-4">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                    <span className="text-emerald-400"><icons.wallet size={18} /></span> إدارة مستحقات الكادر الوظيفي والرواتب
+                                <h3 className="text-xl font-bold text-ink flex items-center gap-2">
+                                    <span className="text-emerald-700"><icons.wallet size={18} /></span> إدارة مستحقات الكادر الوظيفي والرواتب
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-1">تحديد وحساب الحوافز الشهرية، الخصومات التأديبية، واعتماد تسليم الراتب.</p>
+                                <p className="text-xs text-slate-600 mt-1">تحديد وحساب الحوافز الشهرية، الخصومات التأديبية، واعتماد تسليم الراتب.</p>
                             </div>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => { setShowAddUserForm(!showAddUserForm); setShowAddEmpForm(false); }}
-                                    className="bg-surface-3 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-slate-950/40"
+                                    className="bg-surface-3 hover:bg-surface-4 text-ink border border-slate-200 font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-slate-900/10"
                                 >
                                     {showAddUserForm ? 'إغلاق نموذج الحسابات' : 'تسجيل حساب مستخدم'}
                                 </button>
                                 <button
                                     onClick={() => { setShowAddEmpForm(!showAddEmpForm); setShowAddUserForm(false); }}
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-900/40"
                                 >
                                     {showAddEmpForm ? 'إغلاق نموذج الموظفين' : 'تسجيل موظف جديد +'}
                                 </button>
@@ -1948,46 +1948,46 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Add User Account Form */}
                         {showAddUserForm && (
-                            <form onSubmit={handleAddUser} className="bg-surface-1 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fadeIn">
+                            <form onSubmit={handleAddUser} className="bg-surface-1 border border-slate-200/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fadeIn">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم مستخدم الحساب</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">اسم مستخدم الحساب</label>
                                     <input
                                         type="text"
                                         required
                                         value={regUsername}
                                         onChange={(e) => setRegUsername(e.target.value)}
                                         placeholder="مثال: ahmed_pos"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">كلمة مرور الحساب</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">كلمة مرور الحساب</label>
                                     <input
                                         type="password"
                                         required
                                         value={regPassword}
                                         onChange={(e) => setRegPassword(e.target.value)}
                                         placeholder="••••••••"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">صلاحية الحساب</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">صلاحية الحساب</label>
                                     <select
                                         value={regRole}
                                         onChange={(e) => setRegRole(e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                     >
                                         <option value="employee">موظف مبيعات (كاشير)</option>
                                         <option value="admin">مدير النظام (مسؤول)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">سؤال الأمان</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">سؤال الأمان</label>
                                     <select
                                         value={regQuestion}
                                         onChange={(e) => setRegQuestion(e.target.value)}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     >
                                         <option value="ما هو اسم أول مدرسة درست بها؟">ما هو اسم أول مدرسة درست بها؟</option>
                                         <option value="ما هو اسم المدينة التي ولدت بها؟">ما هو اسم المدينة التي ولدت بها؟</option>
@@ -1996,7 +1996,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">إجابة سؤال الأمان</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">إجابة سؤال الأمان</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
@@ -2004,7 +2004,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             value={regAnswer}
                                             onChange={(e) => setRegAnswer(e.target.value)}
                                             placeholder="اكتب الإجابة بدقة"
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                            className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                         />
                                         <button
                                             type="submit"
@@ -2019,31 +2019,31 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Add Employee Form */}
                         {showAddEmpForm && (
-                            <form onSubmit={handleAddEmployee} className="bg-surface-1 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
+                            <form onSubmit={handleAddEmployee} className="bg-surface-1 border border-slate-200/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">الاسم الكامل للموظف</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">الاسم الكامل للموظف</label>
                                     <input
                                         type="text"
                                         required
                                         value={newEmpName}
                                         onChange={(e) => setNewEmpName(e.target.value)}
                                         placeholder="مثال: خالد وليد القحطاني"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">المسمى الوظيفي</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">المسمى الوظيفي</label>
                                     <input
                                         type="text"
                                         required
                                         value={newEmpRole}
                                         onChange={(e) => setNewEmpRole(e.target.value)}
                                         placeholder="مثال: مساعد شيف تحضير"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-300 mb-1.5">الراتب الأساسي (جنية)</label>
+                                    <label className="block text-xs font-bold text-slate-600 mb-1.5">الراتب الأساسي (جنية)</label>
                                     <input
                                         type="number"
                                         required
@@ -2051,12 +2051,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         value={newEmpBase}
                                         onChange={(e) => setNewEmpBase(e.target.value)}
                                         placeholder="4000"
-                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
+                                        className="w-full bg-surface-2 border border-slate-200 rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-center"
                                     />
                                 </div>
                                 <button
                                     type="submit"
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition text-sm cursor-pointer shadow shadow-emerald-900/40"
                                 >
                                     حفظ وتعيين الموظف
                                 </button>
@@ -2064,12 +2064,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         )}
 
                         {/* ===== User Accounts Management ===== */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 border-b border-slate-700/60 bg-slate-800">
+                        <div className="bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 border-b border-slate-200/60 bg-surface-1">
                                 <div className="flex items-center gap-2.5">
-                                    <span className="text-slate-200"><icons.user size={20} /></span>
-                                    <span className="font-bold text-slate-100">حسابات المستخدمين (الكاشير)</span>
-                                    <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">
+                                    <span className="text-ink"><icons.user size={20} /></span>
+                                    <span className="font-bold text-ink">حسابات المستخدمين (الكاشير)</span>
+                                    <span className="text-xs bg-surface-3 text-slate-600 px-2 py-0.5 rounded-full font-bold">
                                         {userAccounts.length} حساب
                                     </span>
                                 </div>
@@ -2078,18 +2078,18 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             <div className="overflow-x-auto">
                                 <table className="w-full text-right border-collapse whitespace-nowrap">
                                     <thead>
-                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                        <tr className="bg-surface-3/60 text-slate-600 border-b border-slate-200 text-sm">
                                             <th className="p-3.5 font-bold">اسم المستخدم</th>
                                             <th className="p-3.5 font-bold text-center">الصلاحية</th>
                                             <th className="p-3.5 font-bold text-center">الإجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className="divide-y divide-slate-200/70 text-sm">
                                         {userAccounts.map(acc => {
                                             const isSelf = acc.username === user.username;
                                             return (
                                                 <tr key={acc.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5 font-bold text-white">
+                                                    <td className="p-3.5 font-bold text-ink">
                                                         {acc.username}
                                                         {isSelf && (
                                                             <span className="mr-2 text-[10px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-bold">أنت</span>
@@ -2098,8 +2098,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                     <td className="p-3.5 text-center">
                                                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                                                             acc.role === 'admin'
-                                                                ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                                                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                                                ? 'bg-amber-500/15 border-amber-500/30 text-amber-700'
+                                                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700'
                                                         }`}>
                                                             {acc.role === 'admin' ? 'مدير النظام' : 'موظف مبيعات (كاشير)'}
                                                         </span>
@@ -2111,7 +2111,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             className={`${
                                                                 isSelf
                                                                     ? 'text-slate-600 cursor-not-allowed'
-                                                                    : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer'
+                                                                    : 'text-rose-600 hover:text-rose-300 hover:bg-rose-500/10 cursor-pointer'
                                                             } px-3 py-1.5 rounded-lg text-xs transition font-bold`}
                                                             title={isSelf ? 'لا يمكنك حذف حسابك الحالي' : 'حذف الحساب (بدون حذف الفواتير)'}
                                                         >
@@ -2132,11 +2132,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         </div>
 
                         {/* Employees Salary Table */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-right border-collapse whitespace-nowrap">
                                     <thead>
-                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                        <tr className="bg-surface-3/60 text-slate-600 border-b border-slate-200 text-sm">
                                             <th className="p-3.5 font-bold">اسم الموظف / الدور</th>
                                             <th className="p-3.5 font-bold text-center">الراتب الأساسي</th>
                                             <th className="p-3.5 font-bold text-center">المكافآت والحوافز</th>
@@ -2147,16 +2147,16 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <th className="p-3.5 font-bold text-center">الإجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className="divide-y divide-slate-200/70 text-sm">
                                         {employees.map((emp) => {
                                             const netPay = calculateNetPay(emp);
                                             return (
                                                 <tr key={emp.id} className="hover:bg-surface-3/30 transition-colors">
                                                     <td className="p-3.5">
-                                                        <div className="font-bold text-white">{emp.name}</div>
-                                                        <div className="text-xs text-slate-400 mt-0.5">{emp.role}</div>
+                                                        <div className="font-bold text-ink">{emp.name}</div>
+                                                        <div className="text-xs text-slate-600 mt-0.5">{emp.role}</div>
                                                     </td>
-                                                    <td className="p-3.5 text-center font-mono font-bold text-slate-200">
+                                                    <td className="p-3.5 text-center font-mono font-bold text-ink">
                                                         {emp.baseSalary}
                                                     </td>
                                                     <td className="p-3.5 text-center">
@@ -2166,9 +2166,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                 min="0"
                                                                 value={emp.bonuses}
                                                                 onChange={(e) => updateSalaryParams(emp.id, 'bonuses', e.target.value)}
-                                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs w-16 text-center text-emerald-400 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                                                                className="bg-surface-2 border border-slate-200 rounded-lg px-2 py-1 text-xs w-16 text-center text-emerald-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                                                             />
-                                                            <span className="text-xs text-slate-400">جنية</span>
+                                                            <span className="text-xs text-slate-600">جنية</span>
                                                         </div>
                                                     </td>
                                                     <td className="p-3.5 text-center">
@@ -2178,20 +2178,20 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                 min="0"
                                                                 value={emp.deductions}
                                                                 onChange={(e) => updateSalaryParams(emp.id, 'deductions', e.target.value)}
-                                                                className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs w-16 text-center text-rose-400 font-bold focus:outline-none focus:ring-1 focus:ring-rose-500/50"
+                                                                className="bg-surface-2 border border-slate-200 rounded-lg px-2 py-1 text-xs w-16 text-center text-rose-600 font-bold focus:outline-none focus:ring-1 focus:ring-rose-500/50"
                                                             />
-                                                            <span className="text-xs text-slate-400">جنية</span>
+                                                            <span className="text-xs text-slate-600">جنية</span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3.5 text-center font-extrabold text-white text-base">
-                                                        {netPay} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                                    <td className="p-3.5 text-center font-extrabold text-ink text-base">
+                                                        {netPay} <span className="text-xs text-slate-600 font-normal">جنية</span>
                                                     </td>
                                                     <td className="p-3.5 text-center">
                                                         {emp.paymentStatus === 'paid' ? (
                                                             <button
                                                                 disabled
                                                                 title="تم صرف راتب هذا الموظف لهذا الشهر. احذف الدفعة من سجل المدفوعات لإعادة الحالة إلى معلق."
-                                                                className="px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-not-allowed border bg-emerald-500/10 border-emerald-500/35 text-emerald-400 opacity-70"
+                                                                className="px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-not-allowed border bg-emerald-500/10 border-emerald-500/35 text-emerald-700 opacity-70"
                                                             >
                                                                 تم الصرف هذا الشهر {<icons.check size={13} className="inline" />}
                                                             </button>
@@ -2199,19 +2199,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             <button
                                                                 onClick={() => togglePaymentStatus(emp.id)}
                                                                 title="اعتماد صرف الراتب وتسجيله في سجل المدفوعات"
-                                                                className="px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border bg-amber-500/10 border-amber-500/35 text-amber-400 hover:bg-amber-500/20"
+                                                                className="px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border bg-amber-500/10 border-amber-500/35 text-amber-700 hover:bg-amber-500/20"
                                                             >
                                                                 اعتماد الراتب {<icons.clock size={15} className="inline" />}
                                                             </button>
                                                         )}
                                                     </td>
-                                                    <td className="p-3.5 text-center font-mono text-xs text-slate-400">
+                                                    <td className="p-3.5 text-center font-mono text-xs text-slate-600">
                                                         {emp.lastPaymentDate}
                                                     </td>
                                                     <td className="p-3.5 text-center">
                                                         <button
                                                             onClick={() => deleteEmployee(emp.id)}
-                                                            className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer"
+                                                            className="text-rose-600 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer"
                                                         >
                                                             إنهاء الخدمة {<icons.trash size={14} className="inline" />}
                                                         </button>
@@ -2230,19 +2230,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         </div>
 
                         {/* ===== Salary Payments History Section ===== */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                             <button
                                 onClick={() => setShowSalaryHistory(!showSalaryHistory)}
                                 className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 hover:bg-surface-3/40 transition text-right cursor-pointer"
                             >
                                 <div className="flex items-center gap-2.5">
-                                    <span className="text-emerald-400"><icons.history size={20} /></span>
-                                    <span className="font-bold text-slate-100">سجل مدفوعات الرواتب</span>
-                                    <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full font-bold">
+                                    <span className="text-emerald-700"><icons.history size={20} /></span>
+                                    <span className="font-bold text-ink">سجل مدفوعات الرواتب</span>
+                                    <span className="text-xs bg-surface-3 text-slate-600 px-2 py-0.5 rounded-full font-bold">
                                         {salaryPayments.length} عملية مسجلة
                                     </span>
                                 </div>
-                                <span className="text-slate-400 text-xs font-bold">
+                                <span className="text-slate-600 text-xs font-bold">
                                     {showSalaryHistory
                                         ? <>إخفاء السجل <icons.chevronUp size={14} className="inline" /></>
                                         : <>عرض السجل <icons.chevronDown size={14} className="inline" /></>}
@@ -2250,7 +2250,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </button>
 
                             {showSalaryHistory && (
-                                <div className="border-t border-slate-700/60 p-4 space-y-4 animate-fadeIn">
+                                <div className="border-t border-slate-200/60 p-4 space-y-4 animate-fadeIn">
                                     {/* Filters */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <input
@@ -2258,12 +2258,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             placeholder="ابحث باسم الموظف..."
                                             value={salaryHistorySearch}
                                             onChange={(e) => setSalaryHistorySearch(e.target.value)}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right"
                                         />
                                         <select
                                             value={salaryHistoryYear}
                                             onChange={(e) => setSalaryHistoryYear(e.target.value)}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
                                         >
                                             <option value="all">كل السنوات</option>
                                             {availableSalaryYears.map(year => (
@@ -2273,7 +2273,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         <select
                                             value={salaryHistoryMonth}
                                             onChange={(e) => setSalaryHistoryMonth(e.target.value)}
-                                            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
+                                            className="bg-surface-2 border border-slate-200 rounded-xl px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer text-center"
                                         >
                                             <option value="all">كل الشهور</option>
                                             {ARABIC_MONTH_LABELS.map((label, idx) => (
@@ -2283,16 +2283,16 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </div>
 
                                     {/* Summary strip */}
-                                    <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
-                                        <div className="flex items-center gap-2 text-slate-300 font-semibold">
+                                    <div className="bg-surface-2/80 border border-slate-200/50 rounded-xl px-4 py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                                        <div className="flex items-center gap-2 text-slate-600 font-semibold">
                                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                             <span>إجمالي المدفوعات:</span>
-                                            <span className="font-mono font-black text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                                                {salaryHistoryTotal.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                            <span className="font-mono font-black text-emerald-700 bg-surface-1 px-2 py-0.5 rounded border border-slate-200">
+                                                {salaryHistoryTotal.toFixed(2)} <span className="text-xs text-slate-600 font-normal">جنية</span>
                                             </span>
                                         </div>
-                                        <div className="text-slate-400 font-semibold">
-                                            عدد العمليات: <span className="font-mono font-bold text-white">{filteredSalaryHistory.length}</span>
+                                        <div className="text-slate-600 font-semibold">
+                                            عدد العمليات: <span className="font-mono font-bold text-ink">{filteredSalaryHistory.length}</span>
                                         </div>
                                     </div>
 
@@ -2300,7 +2300,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-right border-collapse whitespace-nowrap">
                                             <thead>
-                                                <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                                <tr className="bg-surface-3/60 text-slate-600 border-b border-slate-200 text-sm">
                                                     <th className="p-3.5 font-bold">اسم الموظف</th>
                                                     <th className="p-3.5 font-bold">الدور</th>
                                                     <th className="p-3.5 font-bold text-center">شهر الدفع</th>
@@ -2312,23 +2312,23 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                     <th className="p-3.5 font-bold text-center">الإجراءات</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-700/40 text-sm">
+                                            <tbody className="divide-y divide-slate-200/70 text-sm">
                                                 {filteredSalaryHistory.map(p => (
                                                     <tr key={p.id} className="hover:bg-surface-3/30 transition-colors">
-                                                        <td className="p-3.5 font-bold text-white">{p.employee_name}</td>
-                                                        <td className="p-3.5 text-slate-400">{p.employee_role || '—'}</td>
-                                                        <td className="p-3.5 text-center font-semibold text-slate-300">{p.month_label}</td>
-                                                        <td className="p-3.5 text-center font-mono text-slate-200">{Number(p.base_salary).toFixed(2)}</td>
-                                                        <td className="p-3.5 text-center font-mono text-emerald-400">{Number(p.bonuses).toFixed(2)}</td>
-                                                        <td className="p-3.5 text-center font-mono text-rose-400">{Number(p.deductions).toFixed(2)}</td>
-                                                        <td className="p-3.5 text-center font-extrabold text-white">
-                                                            {Number(p.net_pay).toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                                        <td className="p-3.5 font-bold text-ink">{p.employee_name}</td>
+                                                        <td className="p-3.5 text-slate-600">{p.employee_role || '—'}</td>
+                                                        <td className="p-3.5 text-center font-semibold text-slate-600">{p.month_label}</td>
+                                                        <td className="p-3.5 text-center font-mono text-ink">{Number(p.base_salary).toFixed(2)}</td>
+                                                        <td className="p-3.5 text-center font-mono text-emerald-700">{Number(p.bonuses).toFixed(2)}</td>
+                                                        <td className="p-3.5 text-center font-mono text-rose-600">{Number(p.deductions).toFixed(2)}</td>
+                                                        <td className="p-3.5 text-center font-extrabold text-ink">
+                                                            {Number(p.net_pay).toFixed(2)} <span className="text-xs text-slate-600 font-normal">جنية</span>
                                                         </td>
-                                                        <td className="p-3.5 text-center font-mono text-xs text-slate-400">{formatPaymentDate(p.payment_date)}</td>
+                                                        <td className="p-3.5 text-center font-mono text-xs text-slate-600">{formatPaymentDate(p.payment_date)}</td>
                                                         <td className="p-3.5 text-center">
                                                             <button
                                                                 onClick={() => deleteSalaryPayment(p)}
-                                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
+                                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
                                                                 title="حذف الدفعة"
                                                             >
                                                                 <span>{<icons.trash size={14} className="inline" />}</span>
@@ -2356,19 +2356,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 {/* ==================== TAB 4: SALES REPORTS & LOGS ==================== */}
                 {activeTab === 'reports' && (
                     <div className="space-y-6 animate-fadeIn">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/60 pb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 pb-4">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                                    <span className="text-emerald-400"><icons.gauge size={18} /></span> سجل الفواتير والمبيعات التفصيلي
+                                <h3 className="text-xl font-bold text-ink flex items-center gap-2">
+                                    <span className="text-emerald-700"><icons.gauge size={18} /></span> سجل الفواتير والمبيعات التفصيلي
                                 </h3>
-                                <p className="text-xs text-slate-400 mt-1">عرض وتحليل الفواتير المصدرة والبحث عن العمليات المحفوظة في قاعدة البيانات.</p>
+                                <p className="text-xs text-slate-600 mt-1">عرض وتحليل الفواتير المصدرة والبحث عن العمليات المحفوظة في قاعدة البيانات.</p>
                             </div>
                             <input
                                 type="text"
                                 placeholder="ابحث باسم الكاشير أو رقم الفاتورة..."
                                 value={reportsSearch}
                                 onChange={(e) => setReportsSearch(e.target.value)}
-                                className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right w-full sm:w-64"
+                                className="bg-surface-2 border border-slate-200 rounded-xl px-4 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right w-full sm:w-64"
                             />
                         </div>
 
@@ -2400,22 +2400,22 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             const filteredTotal = visibleOrders.reduce((sum, o) => sum + (o.total || 0), 0);
                             return (
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
+                                    <div className="bg-surface-1/80 border border-slate-200/60 rounded-2xl p-4 flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-slate-400 font-bold">
+                                            <p className="text-xs text-slate-600 font-bold">
                                                 {reportsSearch.trim() ? `فواتير "${reportsSearch.trim()}"` : 'إجمالي الفواتير'}
                                             </p>
-                                            <h4 className="text-2xl font-black text-white font-mono mt-1">{visibleOrders.length}</h4>
+                                            <h4 className="text-2xl font-black text-ink font-mono mt-1">{visibleOrders.length}</h4>
                                         </div>
                                         <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl">📄</div>
                                     </div>
-                                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
+                                    <div className="bg-surface-1/80 border border-slate-200/60 rounded-2xl p-4 flex items-center justify-between">
                                         <div>
-                                            <p className="text-xs text-slate-400 font-bold">
+                                            <p className="text-xs text-slate-600 font-bold">
                                                 {reportsSearch.trim() ? `مجموع مبيعات "${reportsSearch.trim()}"` : 'إجمالي المبيعات'}
                                             </p>
-                                            <h4 className="text-2xl font-black text-emerald-400 font-mono mt-1">
-                                                {filteredTotal.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
+                                            <h4 className="text-2xl font-black text-emerald-700 font-mono mt-1">
+                                                {filteredTotal.toFixed(2)} <span className="text-xs text-slate-600 font-normal">جنية</span>
                                             </h4>
                                         </div>
                                         <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xl">{<icons.cash size={20} className="inline" />}</div>
@@ -2425,11 +2425,11 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         })()}
 
                         {/* Orders Table */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
+                        <div className="bg-surface-1 border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-right border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
+                                        <tr className="bg-surface-3/60 text-slate-600 border-b border-slate-200 text-sm">
                                             <th className="p-3.5 font-bold">#</th>
                                             <th className="p-3.5 font-bold">الكاشير المسؤول</th>
                                             <th className="p-3.5 font-bold text-center">التاريخ والوقت</th>
@@ -2438,7 +2438,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <th className="p-3.5 font-bold text-center">الإجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className="divide-y divide-slate-200/70 text-sm">
                                         {periodFilteredOrders
                                             .filter(order => {
                                                 const searchLower = reportsSearch.toLowerCase();
@@ -2450,31 +2450,31 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 const displayIndex = index + 1;
                                                 return (
                                                     <tr key={order.id} className="hover:bg-surface-3/30 transition-colors">
-                                                        <td className="p-3.5 font-bold text-white font-mono">#{displayIndex}</td>
-                                                        <td className="p-3.5 font-bold text-slate-300">{order.cashier}</td>
-                                                        <td className="p-3.5 text-center font-mono text-slate-400">
+                                                        <td className="p-3.5 font-bold text-ink font-mono">#{displayIndex}</td>
+                                                        <td className="p-3.5 font-bold text-slate-600">{order.cashier}</td>
+                                                        <td className="p-3.5 text-center font-mono text-slate-600">
                                                             {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
                                                         </td>
-                                                        <td className="p-3.5 text-center font-extrabold text-emerald-400 font-mono">
+                                                        <td className="p-3.5 text-center font-extrabold text-emerald-700 font-mono">
                                                             {order.total.toFixed(2)} جنية
                                                         </td>
                                                         <td className="p-3.5 text-center">
                                                             <div className="flex flex-col gap-2">
                                                                 <button
                                                                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                                                                    className="text-emerald-400 hover:text-emerald-350 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer mx-auto"
+                                                                    className="text-emerald-700 hover:text-emerald-350 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer mx-auto"
                                                                 >
                                                                     {isExpanded
                                                                     ? <>إخفاء التفاصيل <icons.chevronUp size={14} className="inline" /></>
                                                                     : <>عرض الأصناف <icons.chevronDown size={14} className="inline" /></>}
                                                                 </button>
                                                                 {isExpanded && (
-                                                                    <div className="bg-slate-900 border border-slate-700/70 rounded-xl p-3 mt-2 text-right text-xs space-y-2 animate-fadeIn max-w-sm mx-auto">
-                                                                        <div className="font-bold border-b border-slate-700 pb-1 text-slate-300">أصناف الفاتورة:</div>
+                                                                    <div className="bg-surface-2 border border-slate-200/70 rounded-xl p-3 mt-2 text-right text-xs space-y-2 animate-fadeIn max-w-sm mx-auto">
+                                                                        <div className="font-bold border-b border-slate-200 pb-1 text-slate-600">أصناف الفاتورة:</div>
                                                                         {order.items?.map((item, idx) => (
-                                                                            <div key={idx} className="flex justify-between text-slate-400 gap-4">
+                                                                            <div key={idx} className="flex justify-between text-slate-600 gap-4">
                                                                                 <span>{item.item_name} × {item.quantity}</span>
-                                                                                <span className="font-mono text-slate-300">{(item.price * item.quantity).toFixed(2)} جنية</span>
+                                                                                <span className="font-mono text-slate-600">{(item.price * item.quantity).toFixed(2)} جنية</span>
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -2484,7 +2484,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                         <td className="p-3.5 text-center">
                                                             <button
                                                                 onClick={() => deleteOrder(order, displayIndex)}
-                                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
+                                                                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
                                                                 title="حذف الفاتورة"
                                                             >
                                                                 <span>{<icons.trash size={14} className="inline" />}</span>

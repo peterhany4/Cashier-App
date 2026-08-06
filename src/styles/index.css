@@ -4,17 +4,22 @@
     /* --- Typography --- */
     --font-sans: "Cairo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-    /* --- Surface elevation scale ---
-       surface-0  → page background
-       surface-1  → panels / cards
-       surface-2  → fields & inputs (raised over panel)
-       surface-3  → headers / raised surfaces
-       surface-4  → active / hover raised surfaces                      */
-    --color-surface-0: #0f172a; /* slate-900 */
-    --color-surface-1: #1e293b; /* slate-800 */
-    --color-surface-2: #0f172a; /* slate-900 (dark field) */
-    --color-surface-3: #334155; /* slate-700 */
-    --color-surface-4: #475569; /* slate-600 */
+    /* --- Surface elevation scale (warm light theme) ---
+       surface-0  → page background (warm off-white)
+       surface-1  → panels / cards (white)
+       surface-2  → fields, inset surfaces
+       surface-3  → headers / raised / borders
+       surface-4  → stronger raised / hover                        */
+    --color-surface-0: #f4f2ec;
+    --color-surface-1: #ffffff;
+    --color-surface-2: #eef0ea;
+    --color-surface-3: #e4e4da;
+    --color-surface-4: #d6d6ca;
+
+    /* --- High-contrast text on light surfaces --- */
+    --color-ink: #1f2533;
+    --color-ink-soft: #4b5565;
+    --color-ink-faint: #8a8f98;
 
     /* --- Semantic accents (mapped to Tailwind's built-in scales) --- */
     --color-brand-50:  #ecfdf5;
@@ -89,18 +94,18 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Layered app backdrop — subtle depth/glow instead of a flat dark page */
+/* Layered app backdrop — subtle depth/glow (warm light) */
 .app-bg {
     background:
         radial-gradient(1000px 520px at 12% -12%, rgba(16, 185, 129, 0.10), transparent 60%),
-        radial-gradient(900px 480px at 88% -4%, rgba(56, 189, 248, 0.06), transparent 55%),
-        linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+        radial-gradient(900px 480px at 88% -4%, rgba(14, 165, 233, 0.05), transparent 55%),
+        linear-gradient(180deg, #faf8f2 0%, #f1efe7 100%);
 }
 
 /* Global subtle scrollbar — thin rounded capsule, desktop feel (not a heavy webpage bar) */
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(16, 185, 129, 0.65) rgba(15, 23, 42, 0.5);
+    scrollbar-color: #10b981 rgba(15, 23, 42, 0.06);
 }
 
 *::-webkit-scrollbar {
@@ -109,12 +114,12 @@ body {
 }
 
 *::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(15, 23, 42, 0.06);
     border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb {
-    background: rgba(16, 185, 129, 0.55);
+    background: #10b981;
     border-radius: 9999px;
     border: 3px solid transparent;
     background-clip: content-box;

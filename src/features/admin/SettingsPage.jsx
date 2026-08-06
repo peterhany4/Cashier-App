@@ -64,33 +64,33 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="flex-1 min-h-0 w-full app-bg text-slate-100 p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
+        <div className="flex-1 min-h-0 w-full app-bg text-ink p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
 
             <div className="flex justify-center">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full max-w-5xl items-start">
                 {/* ===== Backup / Restore ===== */}
-                <div className="bg-slate-800/40 border border-slate-700/55 rounded-2xl p-6 shadow-xl backdrop-blur-md">
-                    <h3 className="text-xl font-black text-slate-100 flex items-center gap-2 mb-1">
+                <div className="bg-surface-1/40 border border-slate-200/55 rounded-2xl p-6 shadow-xl backdrop-blur-md">
+                    <h3 className="text-xl font-black text-ink flex items-center gap-2 mb-1">
                         <span className="text-emerald-400 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20"><icons.archive size={18} /></span>
                         النسخ الاحتياطي للبيانات
                     </h3>
-                    <p className="text-slate-400 text-sm mb-5">
+                    <p className="text-slate-600 text-sm mb-5">
                         احفظ نسخة من قاعدة البيانات على جهازك، أو استعدها لاحقاً للحماية من فقدان البيانات.
                     </p>
 
                     {/* Backup */}
-                    <div className="bg-slate-900/50 border border-slate-700/60 rounded-xl p-4 mb-4">
+                    <div className="bg-surface-2/50 border border-slate-200/60 rounded-xl p-4 mb-4">
                         <div className="flex items-start gap-3">
                             <span className="text-2xl"><icons.upload size={28} /></span>
                             <div className="flex-1">
-                                <h4 className="font-bold text-slate-100 mb-1">إنشاء نسخة احتياطية</h4>
-                                <p className="text-xs text-slate-400 mb-3">
+                                <h4 className="font-bold text-ink mb-1">إنشاء نسخة احتياطية</h4>
+                                <p className="text-xs text-slate-600 mb-3">
                                     يفتح نافذة الحفظ لتسمية الملف واختيار مكانه على الجهاز.
                                 </p>
                                 <button
                                     onClick={handleBackup}
                                     disabled={busy}
-                                    className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
+                                    className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-900/20"
                                 >
                                     {busy ? 'جاري...' : <> <icons.save size={16} className="inline" /> نسخ احتياطي</>}
                                 </button>
@@ -99,37 +99,37 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Restore */}
-                    <div className="bg-slate-900/50 border border-amber-500/30 rounded-xl p-4">
+                    <div className="bg-surface-2/50 border border-amber-500/30 rounded-xl p-4">
                         <div className="flex items-start gap-3">
                             <span className="text-2xl"><icons.download size={28} /></span>
                             <div className="flex-1">
-                                <h4 className="font-bold text-slate-100 mb-1">استعادة نسخة احتياطية</h4>
-                                <p className="text-xs text-slate-400 mb-3">
+                                <h4 className="font-bold text-ink mb-1">استعادة نسخة احتياطية</h4>
+                                <p className="text-xs text-slate-600 mb-3">
                                     يفتح نافذة لاختيار ملف قاعدة البيانات (.db) لاستبدال كل البيانات الحالية.
                                 </p>
                                 <button
                                     onClick={handleRestore}
                                     disabled={busy}
-                                    className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-amber-950/40"
+                                    className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-amber-900/20"
                                 >
                                     {busy ? 'جاري...' : <> <icons.restore size={16} className="inline" /> استعادة نسخة</>}
                                 </button>
-                                <span className="text-[11px] text-amber-400/80 mt-3 flex items-center gap-1.5"><icons.warning size={13} /> تحذير: الاستعادة ستستبدل كل بيانات المخزن والرواتب والفواتير الحالية.</span>
+                                <span className="text-[11px] text-amber-700/80 mt-3 flex items-center gap-1.5"><icons.warning size={13} /> تحذير: الاستعادة ستستبدل كل بيانات المخزن والرواتب والفواتير الحالية.</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* ===== Printer Settings (Feature 10 placeholder) ===== */}
-                <div className="bg-slate-800/40 border border-dashed border-slate-600/60 rounded-2xl p-6 shadow-xl backdrop-blur-md">
-                    <h3 className="text-xl font-black text-slate-100 flex items-center gap-2 mb-1">
+                <div className="bg-surface-1/40 border border-dashed border-surface-3/60 rounded-2xl p-6 shadow-xl backdrop-blur-md">
+                    <h3 className="text-xl font-black text-ink flex items-center gap-2 mb-1">
                         <span className="text-indigo-400 bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/20"><icons.printer size={18} /></span>
                         إعدادات الطباعة
                     </h3>
-                    <p className="text-slate-400 text-sm mb-5">
+                    <p className="text-slate-600 text-sm mb-5">
                         تكوين الطابعات للفواتير (قيد الإعداد — ميزة قادمة).
                     </p>
-                    <div className="bg-slate-900/50 border border-slate-700/60 rounded-xl p-5 text-center text-slate-500 text-sm">
+                    <div className="bg-surface-2/50 border border-slate-200/60 rounded-xl p-5 text-center text-slate-500 text-sm">
                         سيتم إتاحة خيارات اختيار الطابعات للفواتير (العملاء + المطبخ) هنا في ميزة قادمة.
                     </div>
                 </div>

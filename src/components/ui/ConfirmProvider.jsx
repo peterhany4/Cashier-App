@@ -45,10 +45,10 @@ export default function ConfirmProvider({ children }) {
                     <div className="p-6">
                         <div className="flex items-center gap-3 text-warning-500 mb-3">
                             {state.icon ? state.icon : <AlertTriangle size={22} />}
-                            <h3 className="text-lg font-bold text-white">{state.title || 'تأكيد'}</h3>
+                            <h3 className="text-lg font-bold text-ink">{state.title || 'تأكيد'}</h3>
                         </div>
                         {state.message && (
-                            <p className="text-slate-300 text-sm leading-relaxed mb-6">{state.message}</p>
+                            <p className="text-slate-600 text-sm leading-relaxed mb-6">{state.message}</p>
                         )}
                         <div className="flex gap-3 justify-end">
                             <Button variant="secondary" onClick={() => close(false)}>

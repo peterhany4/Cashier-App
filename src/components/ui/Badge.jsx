@@ -1,11 +1,11 @@
 import { cx } from './utils';
 
 const VARIANTS = {
-    neutral: 'bg-surface-3/60 text-slate-300 border-surface-4/40',
-    success: 'bg-brand-500/10 text-brand-400 border-brand-500/25',
-    warning: 'bg-warning-500/15 text-warning-500 border-warning-600/30',
-    danger: 'bg-danger-500/10 text-danger-400 border-danger-500/25',
-    info: 'bg-info-500/10 text-info-400 border-info-500/25',
+    neutral: 'bg-surface-3/60 text-slate-600 border-surface-4/50',
+    success: 'bg-brand-500/10 text-brand-700 border-brand-500/30',
+    warning: 'bg-warning-500/15 text-warning-700 border-warning-600/30',
+    danger: 'bg-danger-500/10 text-danger-700 border-danger-500/30',
+    info: 'bg-info-500/10 text-info-700 border-info-500/30',
 };
 
 const SIZES = {
