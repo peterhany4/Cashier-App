@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import icons from '../../components/icons';
+import { useToast, useConfirm } from '../../components/ui';
 
 export default function CashierReceiptsPage({ user }) {
     const [orders, setOrders] = useState([]);
@@ -7,18 +8,10 @@ export default function CashierReceiptsPage({ user }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedOrder, setExpandedOrder] = useState(null);
 
-    // Toast state
-    const [toast, setToast] = useState(null);
-    const toastTimer = useRef(null);
-    const showToast = (msg, type = 'error') => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToast({ msg, type });
-        toastTimer.current = setTimeout(() => setToast(null), 3500);
-    };
-
-    // Confirm Modal state
-    const [confirmModal, setConfirmModal] = useState(null);
-    const showConfirm = (msg, onConfirm) => setConfirmModal({ msg, onConfirm });
+    // Shared in-app toast + confirm
+    const toast = useToast();
+    const showToast = useCallback((message, type = 'danger') => toast(message, type), [toast]);
+    const confirm = useConfirm();
 
     // Load cashier's orders for today only (resets clean every midnight)
     useEffect(() => {
@@ -49,21 +42,25 @@ export default function CashierReceiptsPage({ user }) {
 
         fetchOrders();
         return () => { isMounted = false; };
-    }, [user?.username]);
+    }, [user?.username, showToast]);
 
-    const handleDeleteOrder = (order, displayIndex) => {
-        showConfirm(`هل أنت متأكد من حذف الفاتورة رقم #${displayIndex} (بقيمة ${order.total.toFixed(2)} جنية)؟ لا يمكن التراجع عن هذا الإجراء.`, async () => {
-            try {
-                if (window.api && window.api.db) {
-                    await window.api.db.deleteOrder(order.id);
-                }
-                setOrders(prev => prev.filter(o => o.id !== order.id));
-                showToast(`تم حذف الفاتورة رقم #${displayIndex} بنجاح ✓`, 'success');
-            } catch (err) {
-                console.error('Error deleting order:', err);
-                showToast('حدث خطأ أثناء حذف الفاتورة: ' + err.message);
-            }
+    const handleDeleteOrder = async (order, displayIndex) => {
+        const ok = await confirm({
+            title: 'تأكيد الحذف',
+            message: `هل أنت متأكد من حذف الفاتورة رقم #${displayIndex} (بقيمة ${order.total.toFixed(2)} جنية)؟ لا يمكن التراجع عن هذا الإجراء.`,
+            confirmLabel: 'نعم، حذف الفاتورة',
         });
+        if (!ok) return;
+        try {
+            if (window.api && window.api.db) {
+                await window.api.db.deleteOrder(order.id);
+            }
+            setOrders(prev => prev.filter(o => o.id !== order.id));
+            showToast(`تم حذف الفاتورة رقم #${displayIndex} بنجاح`, 'success');
+        } catch (err) {
+            console.error('Error deleting order:', err);
+            showToast('حدث خطأ أثناء حذف الفاتورة: ' + err.message);
+        }
     };
 
     // Filtered orders based on search query
@@ -82,44 +79,6 @@ export default function CashierReceiptsPage({ user }) {
 
     return (
         <div className="flex-1 p-6 overflow-y-auto scrollbar-right bg-slate-900 text-white relative" dir="rtl">
-            {/* In-App Toast */}
-            {toast && (
-                <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white transition-all ${
-                    toast.type === 'success' ? 'bg-emerald-600 border border-emerald-500' : 'bg-rose-600 border border-rose-500'
-                }`}>
-                    {toast.msg}
-                </div>
-            )}
-
-            {/* In-App Confirm Modal */}
-            {confirmModal && (
-                <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleUp">
-                        <div className="flex items-center gap-3 text-amber-400">
-                            <span className="text-2xl"><icons.warning size={24} /></span>
-                            <h3 className="text-lg font-bold text-white">تأكيد الحذف</h3>
-                        </div>
-                        <p className="text-slate-300 text-sm leading-relaxed">{confirmModal.msg}</p>
-                        <div className="flex justify-end gap-3 pt-2">
-                            <button
-                                onClick={() => setConfirmModal(null)}
-                                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-surface-4 text-slate-300 font-bold text-sm transition cursor-pointer"
-                            >
-                                إلغاء
-                            </button>
-                            <button
-                                onClick={() => {
-                                    confirmModal.onConfirm();
-                                    setConfirmModal(null);
-                                }}
-                                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition cursor-pointer shadow shadow-rose-950/40"
-                            >
-                                نعم، حذف الفاتورة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Header & Stats Strip */}
             <div className="space-y-6">

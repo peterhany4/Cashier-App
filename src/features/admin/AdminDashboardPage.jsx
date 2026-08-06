@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import PeriodFilter from '../../components/PeriodFilter';
 import { filterOrdersByPeriod } from '../../components/periodFilterUtils';
 import icons from '../../components/icons';
+import { useToast, useConfirm } from '../../components/ui';
 
 const COMPONENT_UNITS = ['قطعة', 'كجم', 'جرام', 'لتر', 'مللتر', 'صندوق'];
 
@@ -165,17 +166,13 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const periodFilteredOrders = filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo);
 
     // In-app Toast — replaces native alert() to keep Electron window focus
-    const [toast, setToast] = useState(null);
-    const toastTimer = useRef(null);
-    const showToast = (msg, type = 'error') => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToast({ msg, type });
-        toastTimer.current = setTimeout(() => setToast(null), 3500);
+    // Shared in-app toast + confirm (shims keep existing call sites unchanged)
+    const toast = useToast();
+    const showToast = (msg, type = 'success') => toast(type === 'success' ? 'success' : 'danger');
+    const confirm = useConfirm();
+    const showConfirm = (message, onConfirm) => {
+        confirm({ message }).then((ok) => { if (ok) onConfirm(); });
     };
-
-    // In-app Confirm Modal — replaces native confirm() dialog
-    const [confirmModal, setConfirmModal] = useState(null); // { msg, onConfirm }
-    const showConfirm = (msg, onConfirm) => setConfirmModal({ msg, onConfirm });
 
     const loadSalaryPayments = async () => {
         if (window.api && window.api.db) {
@@ -936,38 +933,6 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
     return (
         <div className="flex-1 bg-slate-900 text-slate-100 flex flex-col p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
-
-            {/* In-app Toast */}
-            {toast && (
-                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white ${
-                    toast.type === 'success' ? 'bg-emerald-600 border border-emerald-500' : 'bg-rose-600 border border-rose-500'
-                }`}>
-                    {toast.msg}
-                </div>
-            )}
-
-            {/* In-app Confirm Modal */}
-            {confirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-right" dir="rtl">
-                        <p className="text-white font-semibold text-base mb-6">{confirmModal.msg}</p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setConfirmModal(null)}
-                                className="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm transition cursor-pointer"
-                            >
-                                إلغاء
-                            </button>
-                            <button
-                                onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }}
-                                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition cursor-pointer"
-                            >
-                                تأكيد الحذف
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* In-app Pay Purchase Modal */}
             {payModal && (

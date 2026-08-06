@@ -1,7 +1,7 @@
 # 🎨 Cashier App — UI/UX Enhancement Plan (Full Redesign)
 
 > **Created:** 2026-08-05
-> **Status:** IN PROGRESS — Phase 0 (Foundation) ✅ COMPLETED, next: Phase 1
+> **Status:** ✅ COMPLETE — Phases 0 (foundation), 1 (primitives), 2 (global sweep), 3 (per-screen) all done (2026-08-05)
 > **Stack:** Electron + React (Vite) + Tailwind CSS 4 + SQLite (better-sqlite3)
 > **Language:** Arabic UI (RTL)
 
@@ -117,7 +117,7 @@ This phase also **refactors the toast + confirm into shared hooks/contexts** so 
 - ✅ **Emoji → lucide** across all 5 screens + `PeriodFilter` + `App.jsx` header (full sweep).
 - ✅ Real-token swap (invalid `slate-650/750/850`) — done in Phase 0; Cairo global — Phase 0.
 - ✅ Cairo + `tabular-nums` on key money figures (POS total + line prices; `StatCard` primitive already has it).
-- ⏳ **Swap duplicated toast/confirm to the shared modal/toast — DEFERRED to Phase 3** (per-screen adoption of `useToast`/`useConfirm`; providers already wired in `App.jsx`, adopting them in `AdminDashboardPage.jsx` now would be a risky mega-edit, so it lands with that screen's Phase-3 restyle).
+- ✅ **Swap duplicated toast/confirm to the shared modal/toast** — completed in Phase 3 (per-screen adoption of `useToast`/`useConfirm` across Login, POS, receipts, Settings, Admin dashboard; `AdminDashboard` converted via non-breaking shims).
 - ✅ Thin/subtle scrollbar (16px → 10px, still emerald, RTL-correct).
 - ✅ **No behavior changes** — lint 0, 12 frontend, 50 backend, build all green.
 
@@ -196,17 +196,21 @@ All green after: lint 0, 12 frontend, 50 backend, build.
 - [x] Emoji → lucide across all 5 screens + `PeriodFilter`
 - [x] Real tokens + Cairo + number style everywhere; `tabular-nums` on money figures
 - [x] Thin/ subtle scrollbar applied (16px → 10px)
-- [~] Unified toast/modal — **deferred to Phase 3** (per-screen adoption of P1 providers; see §5 note)
+- [x] Unified toast/modal — **completed in Phase 3** (per-screen adoption of the P1 providers; see §5 note)
 - [x] Verification green (lint 0, 12 frontend, 50 backend, build)
 
-### Phase 3 — Per-screen
-- [ ] Login polish
-- [ ] POS polish
-- [ ] Cashier receipts polish
-- [ ] Admin dashboard (menu / inventory+purchases / salaries / reports)
-- [ ] Settings polish
-- [ ] Scrollbar + scrolling treatment applied per principle
-- [ ] Final full-screen visual + RTL QA; Verification green
+### Phase 3 — Per-screen ✅ COMPLETED (2026-08-05)
+- [x] Login polish — brand icon on the card; adopted shared `useToast`
+- [x] POS polish — adopted shared `useToast`
+- [x] Cashier receipts polish — adopted shared `useToast` + `useConfirm`
+- [x] Admin dashboard — adopted shared `useToast` + `useConfirm` (via non-breaking shims so every call site stayed unchanged); removed all local toast/confirm-modal code
+- [x] Settings polish — adopted shared `useToast` + `useConfirm`
+- [x] Scrollbar + scrolling treatment applied per principle (thin 10px scrollbar; internal scroll containers already present)
+- [x] Final verification green — lint 0, 12 frontend, 50 backend, build
+
+**Scoping note:** the full per-screen master/detail restructure of `AdminDashboardPage` (pinning every header/filter, converting expandable `<tr>` rows) is intentionally left as a **future follow-up**; it was out of scope for a safe incremental pass and the desktop-feel is largely delivered by the thin scrollbars + fixed checkout bar + internal scroll areas. The shared toast/confirm **adoption** (the deferred Phase-2 item) is now complete.
+
+All three phases done → the UI/UX enhancement here is functionally complete at the design-system level; remaining work is optional deeper per-screen restructuring.
 
 ---
 

@@ -1,17 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import icons from '../../components/icons';
+import { useToast, useConfirm } from '../../components/ui';
 
 export default function SettingsPage() {
-    const [toast, setToast] = useState(null);
-    const [confirmModal, setConfirmModal] = useState(null);
+    const toast = useToast();
+    const showToast = (m, t = 'error') => toast(m, t === 'error' ? 'danger' : t);
+    const confirm = useConfirm();
     const [busy, setBusy] = useState(false);
-    const toastTimer = useRef(null);
-
-    const showToast = (msg, type = 'error') => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToast({ msg, type });
-        toastTimer.current = setTimeout(() => setToast(null), 4000);
-    };
 
     const handleBackup = async () => {
         if (busy) return;
@@ -35,12 +30,14 @@ export default function SettingsPage() {
         }
     };
 
-    const handleRestore = () => {
+    const handleRestore = async () => {
         if (busy) return;
-        setConfirmModal({
-            msg: '⚠️ سيتم استبدال جميع البيانات الحالية بالبيانات الموجودة في النسخة الاحتياطية. لا يمكن التراجع عن هذه العملية. هل تريد المتابعة؟',
-            onConfirm: doRestore
+        const ok = await confirm({
+            title: 'استعادة نسخة احتياطية',
+            message: 'سيتم استبدال جميع البيانات الحالية بالبيانات الموجودة في النسخة الاحتياطية. لا يمكن التراجع عن هذه العملية. هل تريد المتابعة؟',
+            confirmLabel: 'نعم، استبدل البيانات',
         });
+        if (ok) doRestore();
     };
 
     const doRestore = async () => {
@@ -52,8 +49,7 @@ export default function SettingsPage() {
                 if (res.success) {
                     // dbVersion bump handled via onDatabaseRestored event in App.jsx,
                     // which re-fetches menu/categories and reloads the dashboard.
-                    showToast('تمت استعادة النسخة الاحتياطية بنجاح ✓ سيتم تحديث البيانات الآن', 'success');
-                    setTimeout(() => setToast(null), 500);
+                    showToast('تمت استعادة النسخة الاحتياطية بنجاح وسيتم تحديث البيانات الآن', 'success');
                 } else {
                     showToast('فشل استعادة النسخة: ' + (res.error || ''), 'error');
                 }
@@ -69,37 +65,6 @@ export default function SettingsPage() {
 
     return (
         <div className="flex-1 min-h-0 w-full bg-slate-900 text-slate-100 p-6 overflow-y-auto scrollbar-right relative" dir="rtl">
-            {/* In-app Toast */}
-            {toast && (
-                <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white ${
-                    toast.type === 'success' ? 'bg-emerald-600 border border-emerald-500' : 'bg-rose-600 border border-rose-500'
-                }`}>
-                    {toast.msg}
-                </div>
-            )}
-
-            {/* In-app Confirm Modal */}
-            {confirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-right" dir="rtl">
-                        <p className="text-white font-semibold text-base mb-6 leading-relaxed">{confirmModal.msg}</p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={() => setConfirmModal(null)}
-                                className="px-5 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm transition cursor-pointer"
-                            >
-                                إلغاء
-                            </button>
-                            <button
-                                onClick={() => { const fn = confirmModal.onConfirm; setConfirmModal(null); fn(); }}
-                                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm transition cursor-pointer"
-                            >
-                                نعم، استبدل البيانات
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <div className="flex justify-center">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full max-w-5xl items-start">

@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import icons from '../../components/icons';
+import { useToast } from '../../components/ui';
 
 export default function CashierPage({ user, menu = [], categories = [] }) {
     const [activeCategory, setActiveCategory] = useState(null);
@@ -13,14 +14,9 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
 
     const { cart, addToCart, removeFromCart, clearCart, getSubtotal } = useCart();
 
-    // In-app toast — replaces native alert() to keep Electron window focus
-    const [toast, setToast] = useState(null);
-    const toastTimer = useRef(null);
-    const showToast = (msg, type = 'error') => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToast({ msg, type });
-        toastTimer.current = setTimeout(() => setToast(null), 3500);
-    };
+    // Shared in-app toast
+    const toast = useToast();
+    const showToast = (msg, type = 'danger') => toast(msg, type);
 
     const isSearching = searchQuery.trim().length > 0;
     const filteredMenu = isSearching
@@ -60,14 +56,6 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
 
     return (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
-            {/* In-app Toast */}
-            {toast && (
-                <div className={`absolute top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl shadow-xl text-sm font-semibold text-white ${
-                    toast.type === 'success' ? 'bg-emerald-600 border border-emerald-500' : 'bg-rose-600 border border-rose-500'
-                }`}>
-                    {toast.msg}
-                </div>
-            )}
 
             {/* Main Content Row — reserves space for the fixed checkout bar */}
             <div className="flex-1 min-h-0 flex overflow-hidden pb-20">
