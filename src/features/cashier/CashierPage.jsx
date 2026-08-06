@@ -189,8 +189,8 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                 </div>
             </div>
 
-            {/* FIXED BOTTOM CHECKOUT BAR — always glued to the bottom of the window, never scrolled away */}
-            <div className="fixed bottom-0 inset-x-0 z-30 bg-slate-800/85 backdrop-blur-xl border-t border-slate-700/70 px-5 py-3 flex items-center justify-between gap-4 shadow-2xl shadow-slate-950/40">
+            {/* FIXED BOTTOM CHECKOUT BAR — glued to the bottom of the content area (not under the side rail), never scrolled away */}
+            <div className="absolute bottom-0 left-0 right-0 z-30 bg-slate-800/85 backdrop-blur-xl border-t border-slate-700/70 px-5 py-3 flex items-center justify-between gap-4 shadow-2xl shadow-slate-950/40">
                 <div>
                     <div className="text-xs text-slate-400 font-bold">
                         الإجمالي الكلي {cart.length > 0 ? `(${cart.reduce((n, it) => n + it.quantity, 0)} صنف)` : ''}
