@@ -3,6 +3,10 @@ import PeriodFilter from '../../components/PeriodFilter';
 import { filterOrdersByPeriod } from '../../components/periodFilterUtils';
 import icons from '../../components/icons';
 import { useToast, useConfirm } from '../../components/ui';
+import EmptyState from '../../components/ui/EmptyState';
+import { tableWrap, theadClass, thClass, tbodyClass, rowClass, tdClass } from '../../components/ui/Table';
+import { cx } from '../../components/ui/utils';
+import { PackageX, Package, Boxes, Users, ReceiptText, SearchX } from 'lucide-react';
 
 const COMPONENT_UNITS = ['قطعة', 'كجم', 'جرام', 'لتر', 'مللتر', 'صندوق'];
 
@@ -1178,7 +1182,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </form>
                                     <div className="space-y-1.5 max-h-48 overflow-y-auto scrollbar-right">
                                         {categories.length === 0 && (
-                                            <p className="text-xs text-slate-500 text-center py-2">لا توجد فئات. أضف فئة جديدة.</p>
+                                            <EmptyState icon={Boxes} title="لا توجد فئات" message="لا توجد فئات. أضف فئة جديدة." />
                                         )}
                                         {categories.map(cat => (
                                             <div key={cat.id} className="flex items-center justify-between bg-slate-900/60 border border-slate-700/50 rounded-lg px-3 py-1.5">
@@ -1197,30 +1201,30 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                             {/* Table: Menu List */}
                             <div className="lg:col-span-2 bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
+                                <div className={tableWrap}>
                                     <table className="w-full text-right border-collapse">
-                                        <thead>
+                                        <thead className={theadClass}>
                                             <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                                <th className="p-3.5 font-bold">اسم الوجبة/الصنف</th>
-                                                <th className="p-3.5 font-bold text-center">الفئة</th>
-                                                <th className="p-3.5 font-bold text-center">السعر</th>
-                                                <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                                <th className={thClass}>اسم الوجبة/الصنف</th>
+                                                <th className={cx(thClass, 'text-center')}>الفئة</th>
+                                                <th className={cx(thClass, 'text-center')}>السعر</th>
+                                                <th className={cx(thClass, 'text-center')}>الإجراءات</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-700/40 text-sm">
+                                        <tbody className={tbodyClass}>
                                             {menu
                                                 .filter(item => item.name.toLowerCase().includes(menuSearch.toLowerCase()))
                                                 .map((item) => (
                                                     <Fragment key={item.id}>
-                                                        <tr className="hover:bg-surface-3/30 transition-colors">
-                                                            <td className="p-3.5 font-bold text-white">{item.name}</td>
-                                                            <td className="p-3.5 text-center">
+                                                        <tr className={rowClass}>
+                                                            <td className={cx(tdClass, 'font-bold text-white')}>{item.name}</td>
+                                                            <td className={cx(tdClass, 'text-center')}>
                                                                 <span className="bg-slate-900/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 border border-slate-700/50">
                                                                     {item.category}
                                                                 </span>
                                                             </td>
-                                                            <td className="p-3.5 text-center font-extrabold text-emerald-400">{item.price.toFixed(2)} جنية</td>
-                                                            <td className="p-3.5 text-center">
+                                                            <td className={cx(tdClass, 'text-center font-extrabold text-emerald-400')}>{item.price.toFixed(2)} جنية</td>
+                                                            <td className={cx(tdClass, 'text-center')}>
                                                                 <div className="flex flex-wrap items-center justify-center gap-2">
                                                                     <button
                                                                         onClick={() => toggleComponents(item)}
@@ -1385,7 +1389,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 ))}
                                             {menu.length === 0 && (
                                                 <tr>
-                                                    <td colSpan="4" className="text-center p-8 text-slate-500">لا يوجد أصناف في القائمة حالياً.</td>
+                                                    <td colSpan="4" className="p-0">
+                                                        <EmptyState icon={PackageX} title="لا توجد أصناف" message="لا يوجد أصناف في القائمة حالياً." />
+                                                    </td>
                                                 </tr>
                                             )}
                                         </tbody>
@@ -1478,19 +1484,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Inventory Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
+                            <div className={tableWrap}>
                                 <table className="w-full text-right border-collapse">
-                                    <thead>
+                                    <thead className={theadClass}>
                                         <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                            <th className="p-3.5 font-bold">اسم المادة الخام</th>
-                                            <th className="p-3.5 font-bold text-center">الكمية المتوفرة</th>
-                                            <th className="p-3.5 font-bold text-center">الحد الأدنى للتنبيه</th>
-                                            <th className="p-3.5 font-bold text-center">حالة المخزون</th>
-                                            <th className="p-3.5 font-bold text-center">تحديث سريع للرصيد</th>
-                                            <th className="p-3.5 font-bold text-center">إجراءات</th>
+                                            <th className={thClass}>اسم المادة الخام</th>
+                                            <th className={cx(thClass, 'text-center')}>الكمية المتوفرة</th>
+                                            <th className={cx(thClass, 'text-center')}>الحد الأدنى للتنبيه</th>
+                                            <th className={cx(thClass, 'text-center')}>حالة المخزون</th>
+                                            <th className={cx(thClass, 'text-center')}>تحديث سريع للرصيد</th>
+                                            <th className={cx(thClass, 'text-center')}>إجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className={tbodyClass}>
                                         {inventory.map((item) => {
                                             const isOutOfStock = item.quantity <= 0;
                                             const isLowStock = item.quantity <= item.lowThreshold;
@@ -1515,18 +1521,18 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             }
 
                                             return (
-                                                <tr key={item.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5 font-bold text-white">{item.name}</td>
-                                                    <td className="p-3.5 text-center font-mono text-base font-black">
+                                                <tr key={item.id} className={rowClass}>
+                                                    <td className={cx(tdClass, 'font-bold text-white')}>{item.name}</td>
+                                                    <td className={cx(tdClass, 'text-center font-mono text-base font-black')}>
                                                         {item.quantity} {item.unit}
                                                     </td>
-                                                    <td className="p-3.5 text-center text-slate-400">
+                                                    <td className={cx(tdClass, 'text-center text-slate-400')}>
                                                         {item.lowThreshold} {item.unit}
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         {statusBadge}
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <div className="flex justify-center items-center gap-1.5">
                                                             <button
                                                                 onClick={() => adjustStock(item.id, -5)}
@@ -1558,7 +1564,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             </button>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <button
                                                             onClick={() => deleteInventoryItem(item.id)}
                                                             className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1 rounded-lg text-xs transition font-bold cursor-pointer"
@@ -1849,39 +1855,39 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </div>
 
                             {/* Purchases Table */}
-                            <div className="overflow-x-auto">
+                            <div className={tableWrap}>
                                 <table className="w-full text-right border-collapse">
-                                    <thead>
+                                    <thead className={theadClass}>
                                         <tr className="bg-slate-700/50 text-slate-300 border-t border-slate-700 text-sm">
-                                            <th className="p-3.5 font-bold">الصنف</th>
-                                            <th className="p-3.5 font-bold text-center">الكمية</th>
-                                            <th className="p-3.5 font-bold text-center">التكلفة</th>
-                                            <th className="p-3.5 font-bold text-center">المدفوع</th>
-                                            <th className="p-3.5 font-bold text-center">المتبقي</th>
-                                            <th className="p-3.5 font-bold text-center">التاريخ</th>
-                                            <th className="p-3.5 font-bold text-center">الحالة</th>
-                                            <th className="p-3.5 font-bold text-center">إجراءات</th>
+                                            <th className={thClass}>الصنف</th>
+                                            <th className={cx(thClass, 'text-center')}>الكمية</th>
+                                            <th className={cx(thClass, 'text-center')}>التكلفة</th>
+                                            <th className={cx(thClass, 'text-center')}>المدفوع</th>
+                                            <th className={cx(thClass, 'text-center')}>المتبقي</th>
+                                            <th className={cx(thClass, 'text-center')}>التاريخ</th>
+                                            <th className={cx(thClass, 'text-center')}>الحالة</th>
+                                            <th className={cx(thClass, 'text-center')}>إجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className={tbodyClass}>
                                         {displayedPurchases.map(p => {
                                             const isPaid = p.status === 'paid' || p.balance_due <= 0;
                                             return (
-                                                <tr key={p.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5 font-bold text-white">{p.item_name}</td>
-                                                    <td className="p-3.5 text-center font-mono text-slate-300">{p.quantity} {p.unit}</td>
-                                                    <td className="p-3.5 text-center font-mono text-slate-300">{Math.ceil(p.total_cost)} جنية</td>
-                                                    <td className="p-3.5 text-center font-mono text-emerald-400">{Math.ceil(p.paid_amount || 0)} جنية</td>
-                                                    <td className="p-3.5 text-center font-mono font-bold text-amber-400">{Math.ceil(p.balance_due || 0)} جنية</td>
-                                                    <td className="p-3.5 text-center text-slate-400">{formatPaymentDate(p.purchase_date)}</td>
-                                                    <td className="p-3.5 text-center">
+                                                <tr key={p.id} className={rowClass}>
+                                                    <td className={cx(tdClass, 'font-bold text-white')}>{p.item_name}</td>
+                                                    <td className={cx(tdClass, 'text-center font-mono text-slate-300')}>{p.quantity} {p.unit}</td>
+                                                    <td className={cx(tdClass, 'text-center font-mono text-slate-300')}>{Math.ceil(p.total_cost)} جنية</td>
+                                                    <td className={cx(tdClass, 'text-center font-mono text-emerald-400')}>{Math.ceil(p.paid_amount || 0)} جنية</td>
+                                                    <td className={cx(tdClass, 'text-center font-mono font-bold text-amber-400')}>{Math.ceil(p.balance_due || 0)} جنية</td>
+                                                    <td className={cx(tdClass, 'text-center text-slate-400')}>{formatPaymentDate(p.purchase_date)}</td>
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         {isPaid ? (
                                                             <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold">مدفوع {<icons.check size={13} className="inline" />}</span>
                                                         ) : (
                                                             <span className="bg-amber-500/15 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full text-xs font-bold">مستحق {<icons.warning size={15} className="inline" />}</span>
                                                         )}
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <div className="flex items-center justify-center gap-2">
                                                             {!isPaid && (
                                                                 <button
@@ -1904,12 +1910,12 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         })}
                                         {displayedPurchases.length === 0 && (
                                             <tr>
-                                                <td colSpan="8" className="text-center p-8 text-slate-500">
+                                                <td colSpan="8" className="p-0">
                                                     {showDebtsOnly
-                                                        ? '🎉 لا توجد ديون مستحقة — كل الموردين مسددون.'
+                                                        ? <div className="text-center p-8 text-slate-500">🎉 لا توجد ديون مستحقة — كل الموردين مسددون.</div>
                                                         : purchases.length === 0
-                                                            ? 'لا توجد مشتريات مسجلة بعد.'
-                                                            : 'لا توجد مشتريات تطابق الفلترة أو البحث الحالي.'}
+                                                            ? <EmptyState icon={Package} title="لا توجد مشتريات" message="لا توجد مشتريات مسجلة بعد." />
+                                                            : <EmptyState icon={SearchX} title="لا توجد نتائج" message="لا توجد مشتريات تطابق الفلترة أو البحث الحالي." />}
                                                 </td>
                                             </tr>
                                         )}
@@ -2075,27 +2081,27 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                 </div>
                                 <p className="text-xs text-slate-500">حذف الحساب لا يحذف فواتير الكاشير وسجلاته المحفوظة.</p>
                             </div>
-                            <div className="overflow-x-auto">
+                            <div className={tableWrap}>
                                 <table className="w-full text-right border-collapse whitespace-nowrap">
-                                    <thead>
+                                    <thead className={theadClass}>
                                         <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                            <th className="p-3.5 font-bold">اسم المستخدم</th>
-                                            <th className="p-3.5 font-bold text-center">الصلاحية</th>
-                                            <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                            <th className={thClass}>اسم المستخدم</th>
+                                            <th className={cx(thClass, 'text-center')}>الصلاحية</th>
+                                            <th className={cx(thClass, 'text-center')}>الإجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className={tbodyClass}>
                                         {userAccounts.map(acc => {
                                             const isSelf = acc.username === user.username;
                                             return (
-                                                <tr key={acc.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5 font-bold text-white">
+                                                <tr key={acc.id} className={rowClass}>
+                                                    <td className={cx(tdClass, 'font-bold text-white')}>
                                                         {acc.username}
                                                         {isSelf && (
                                                             <span className="mr-2 text-[10px] bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded-full font-bold">أنت</span>
                                                         )}
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                                                             acc.role === 'admin'
                                                                 ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
@@ -2104,7 +2110,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             {acc.role === 'admin' ? 'مدير النظام' : 'موظف مبيعات (كاشير)'}
                                                         </span>
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <button
                                                             onClick={() => deleteUserAccount(acc)}
                                                             disabled={isSelf}
@@ -2123,7 +2129,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         })}
                                         {userAccounts.length === 0 && (
                                             <tr>
-                                                <td colSpan="3" className="text-center p-8 text-slate-500">لا توجد حسابات مسجلة حالياً.</td>
+                                                <td colSpan="3" className="p-0">
+                                                    <EmptyState icon={Users} title="لا توجد حسابات" message="لا توجد حسابات مسجلة حالياً." />
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -2133,33 +2141,33 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Employees Salary Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
+                            <div className={tableWrap}>
                                 <table className="w-full text-right border-collapse whitespace-nowrap">
-                                    <thead>
+                                    <thead className={theadClass}>
                                         <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                            <th className="p-3.5 font-bold">اسم الموظف / الدور</th>
-                                            <th className="p-3.5 font-bold text-center">الراتب الأساسي</th>
-                                            <th className="p-3.5 font-bold text-center">المكافآت والحوافز</th>
-                                            <th className="p-3.5 font-bold text-center">الاستقطاعات والخصم</th>
-                                            <th className="p-3.5 font-bold text-center">الصافي الكلي</th>
-                                            <th className="p-3.5 font-bold text-center">حالة الصرف</th>
-                                            <th className="p-3.5 font-bold text-center">تاريخ التحويل</th>
-                                            <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                            <th className={thClass}>اسم الموظف / الدور</th>
+                                            <th className={cx(thClass, 'text-center')}>الراتب الأساسي</th>
+                                            <th className={cx(thClass, 'text-center')}>المكافآت والحوافز</th>
+                                            <th className={cx(thClass, 'text-center')}>الاستقطاعات والخصم</th>
+                                            <th className={cx(thClass, 'text-center')}>الصافي الكلي</th>
+                                            <th className={cx(thClass, 'text-center')}>حالة الصرف</th>
+                                            <th className={cx(thClass, 'text-center')}>تاريخ التحويل</th>
+                                            <th className={cx(thClass, 'text-center')}>الإجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className={tbodyClass}>
                                         {employees.map((emp) => {
                                             const netPay = calculateNetPay(emp);
                                             return (
-                                                <tr key={emp.id} className="hover:bg-surface-3/30 transition-colors">
-                                                    <td className="p-3.5">
+                                                <tr key={emp.id} className={rowClass}>
+                                                    <td className={cx(tdClass)}>
                                                         <div className="font-bold text-white">{emp.name}</div>
                                                         <div className="text-xs text-slate-400 mt-0.5">{emp.role}</div>
                                                     </td>
-                                                    <td className="p-3.5 text-center font-mono font-bold text-slate-200">
+                                                    <td className={cx(tdClass, 'text-center font-mono font-bold text-slate-200')}>
                                                         {emp.baseSalary}
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <div className="flex justify-center items-center gap-1">
                                                             <input
                                                                 type="number"
@@ -2171,7 +2179,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             <span className="text-xs text-slate-400">جنية</span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <div className="flex justify-center items-center gap-1">
                                                             <input
                                                                 type="number"
@@ -2183,10 +2191,10 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             <span className="text-xs text-slate-400">جنية</span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3.5 text-center font-extrabold text-white text-base">
+                                                    <td className={cx(tdClass, 'text-center font-extrabold text-white text-base')}>
                                                         {netPay} <span className="text-xs text-slate-400 font-normal">جنية</span>
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         {emp.paymentStatus === 'paid' ? (
                                                             <button
                                                                 disabled
@@ -2205,10 +2213,10 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                             </button>
                                                         )}
                                                     </td>
-                                                    <td className="p-3.5 text-center font-mono text-xs text-slate-400">
+                                                    <td className={cx(tdClass, 'text-center font-mono text-xs text-slate-400')}>
                                                         {emp.lastPaymentDate}
                                                     </td>
-                                                    <td className="p-3.5 text-center">
+                                                    <td className={cx(tdClass, 'text-center')}>
                                                         <button
                                                             onClick={() => deleteEmployee(emp.id)}
                                                             className="text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer"
@@ -2221,7 +2229,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         })}
                                         {employees.length === 0 && (
                                             <tr>
-                                                <td colSpan="8" className="text-center p-8 text-slate-500">لا يوجد موظفين مسجلين حالياً.</td>
+                                                <td colSpan="8" className="p-0">
+                                                    <EmptyState icon={Users} title="لا يوجد موظفين" message="لا يوجد موظفين مسجلين حالياً." />
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -2297,35 +2307,35 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                     </div>
 
                                     {/* History table */}
-                                    <div className="overflow-x-auto">
+                                    <div className={tableWrap}>
                                         <table className="w-full text-right border-collapse whitespace-nowrap">
-                                            <thead>
+                                            <thead className={theadClass}>
                                                 <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                                    <th className="p-3.5 font-bold">اسم الموظف</th>
-                                                    <th className="p-3.5 font-bold">الدور</th>
-                                                    <th className="p-3.5 font-bold text-center">شهر الدفع</th>
-                                                    <th className="p-3.5 font-bold text-center">الراتب الأساسي</th>
-                                                    <th className="p-3.5 font-bold text-center">المكافآت</th>
-                                                    <th className="p-3.5 font-bold text-center">الاستقطاعات</th>
-                                                    <th className="p-3.5 font-bold text-center">الصافي المدفوع</th>
-                                                    <th className="p-3.5 font-bold text-center">تاريخ الدفع</th>
-                                                    <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                                    <th className={thClass}>اسم الموظف</th>
+                                                    <th className={thClass}>الدور</th>
+                                                    <th className={cx(thClass, 'text-center')}>شهر الدفع</th>
+                                                    <th className={cx(thClass, 'text-center')}>الراتب الأساسي</th>
+                                                    <th className={cx(thClass, 'text-center')}>المكافآت</th>
+                                                    <th className={cx(thClass, 'text-center')}>الاستقطاعات</th>
+                                                    <th className={cx(thClass, 'text-center')}>الصافي المدفوع</th>
+                                                    <th className={cx(thClass, 'text-center')}>تاريخ الدفع</th>
+                                                    <th className={cx(thClass, 'text-center')}>الإجراءات</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-700/40 text-sm">
+                                            <tbody className={tbodyClass}>
                                                 {filteredSalaryHistory.map(p => (
-                                                    <tr key={p.id} className="hover:bg-surface-3/30 transition-colors">
-                                                        <td className="p-3.5 font-bold text-white">{p.employee_name}</td>
-                                                        <td className="p-3.5 text-slate-400">{p.employee_role || '—'}</td>
-                                                        <td className="p-3.5 text-center font-semibold text-slate-300">{p.month_label}</td>
-                                                        <td className="p-3.5 text-center font-mono text-slate-200">{Number(p.base_salary).toFixed(2)}</td>
-                                                        <td className="p-3.5 text-center font-mono text-emerald-400">{Number(p.bonuses).toFixed(2)}</td>
-                                                        <td className="p-3.5 text-center font-mono text-rose-400">{Number(p.deductions).toFixed(2)}</td>
-                                                        <td className="p-3.5 text-center font-extrabold text-white">
+                                                    <tr key={p.id} className={rowClass}>
+                                                        <td className={cx(tdClass, 'font-bold text-white')}>{p.employee_name}</td>
+                                                        <td className={cx(tdClass, 'text-slate-400')}>{p.employee_role || '—'}</td>
+                                                        <td className={cx(tdClass, 'text-center font-semibold text-slate-300')}>{p.month_label}</td>
+                                                        <td className={cx(tdClass, 'text-center font-mono text-slate-200')}>{Number(p.base_salary).toFixed(2)}</td>
+                                                        <td className={cx(tdClass, 'text-center font-mono text-emerald-400')}>{Number(p.bonuses).toFixed(2)}</td>
+                                                        <td className={cx(tdClass, 'text-center font-mono text-rose-400')}>{Number(p.deductions).toFixed(2)}</td>
+                                                        <td className={cx(tdClass, 'text-center font-extrabold text-white')}>
                                                             {Number(p.net_pay).toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
                                                         </td>
-                                                        <td className="p-3.5 text-center font-mono text-xs text-slate-400">{formatPaymentDate(p.payment_date)}</td>
-                                                        <td className="p-3.5 text-center">
+                                                        <td className={cx(tdClass, 'text-center font-mono text-xs text-slate-400')}>{formatPaymentDate(p.payment_date)}</td>
+                                                        <td className={cx(tdClass, 'text-center')}>
                                                             <button
                                                                 onClick={() => deleteSalaryPayment(p)}
                                                                 className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
@@ -2339,8 +2349,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 ))}
                                                 {filteredSalaryHistory.length === 0 && (
                                                     <tr>
-                                                        <td colSpan="9" className="text-center p-8 text-slate-500">
-                                                            لا توجد دفعات رواتب مسجلة تطابق الفلاتر المحددة.
+                                                        <td colSpan="9" className="p-0">
+                                                            <EmptyState icon={ReceiptText} title="لا توجد دفعات رواتب" message="لا توجد دفعات رواتب مسجلة تطابق الفلاتر المحددة." />
                                                         </td>
                                                     </tr>
                                                 )}
@@ -2426,19 +2436,19 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Orders Table */}
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
+                            <div className={tableWrap}>
                                 <table className="w-full text-right border-collapse">
-                                    <thead>
+                                    <thead className={theadClass}>
                                         <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
-                                            <th className="p-3.5 font-bold">#</th>
-                                            <th className="p-3.5 font-bold">الكاشير المسؤول</th>
-                                            <th className="p-3.5 font-bold text-center">التاريخ والوقت</th>
-                                            <th className="p-3.5 font-bold text-center">إجمالي الفاتورة</th>
-                                            <th className="p-3.5 font-bold text-center">التفاصيل</th>
-                                            <th className="p-3.5 font-bold text-center">الإجراءات</th>
+                                            <th className={thClass}>#</th>
+                                            <th className={thClass}>الكاشير المسؤول</th>
+                                            <th className={cx(thClass, 'text-center')}>التاريخ والوقت</th>
+                                            <th className={cx(thClass, 'text-center')}>إجمالي الفاتورة</th>
+                                            <th className={cx(thClass, 'text-center')}>التفاصيل</th>
+                                            <th className={cx(thClass, 'text-center')}>الإجراءات</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-700/40 text-sm">
+                                    <tbody className={tbodyClass}>
                                         {periodFilteredOrders
                                             .filter(order => {
                                                 const searchLower = reportsSearch.toLowerCase();
@@ -2449,16 +2459,16 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 const isExpanded = expandedOrder === order.id;
                                                 const displayIndex = index + 1;
                                                 return (
-                                                    <tr key={order.id} className="hover:bg-surface-3/30 transition-colors">
-                                                        <td className="p-3.5 font-bold text-white font-mono">#{displayIndex}</td>
-                                                        <td className="p-3.5 font-bold text-slate-300">{order.cashier}</td>
-                                                        <td className="p-3.5 text-center font-mono text-slate-400">
+                                                    <tr key={order.id} className={rowClass}>
+                                                        <td className={cx(tdClass, 'font-bold text-white font-mono')}>#{displayIndex}</td>
+                                                        <td className={cx(tdClass, 'font-bold text-slate-300')}>{order.cashier}</td>
+                                                        <td className={cx(tdClass, 'text-center font-mono text-slate-400')}>
                                                             {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
                                                         </td>
-                                                        <td className="p-3.5 text-center font-extrabold text-emerald-400 font-mono">
+                                                        <td className={cx(tdClass, 'text-center font-extrabold text-emerald-400 font-mono')}>
                                                             {order.total.toFixed(2)} جنية
                                                         </td>
-                                                        <td className="p-3.5 text-center">
+                                                        <td className={cx(tdClass, 'text-center')}>
                                                             <div className="flex flex-col gap-2">
                                                                 <button
                                                                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
@@ -2481,7 +2491,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                 )}
                                                             </div>
                                                         </td>
-                                                        <td className="p-3.5 text-center">
+                                                        <td className={cx(tdClass, 'text-center')}>
                                                             <button
                                                                 onClick={() => deleteOrder(order, displayIndex)}
                                                                 className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
@@ -2496,8 +2506,10 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             })}
                                         {periodFilteredOrders.length === 0 && (
                                             <tr>
-                                                <td colSpan="6" className="text-center p-8 text-slate-500">
-                                                    {orders.length === 0 ? 'لا يوجد فواتير مسجلة في النظام حالياً.' : 'لا توجد فواتير تطابق الفترة المحددة أو البحث.'}
+                                                <td colSpan="6" className="p-0">
+                                                    {orders.length === 0
+                                                        ? <EmptyState icon={ReceiptText} title="لا توجد فواتير" message="لا يوجد فواتير مسجلة في النظام حالياً." />
+                                                        : <EmptyState icon={SearchX} title="لا توجد نتائج" message="لا توجد فواتير تطابق الفترة المحددة أو البحث." />}
                                                 </td>
                                             </tr>
                                         )}

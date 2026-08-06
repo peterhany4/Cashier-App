@@ -245,9 +245,9 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 | Login: elevated card + depth | ✅ |
 | POS: refined item cards + cart panel + checkout | ✅ |
 | Admin: metric cards depth + section polish | ✅ metric depth; section polish partial |
-| Tables: consistent header/badges | ▢ IN PROGRESS |
-| Empty states replace plain text | ▢ |
-| Verify lint, tests, build green | ✅ lint 0, 12 frontend, build |
+| Tables: consistent header/badges | ✅ shared `theadClass`/`thClass`/`rowClass`/`tdClass` applied to all 8 tables (receipts + 7 admin); empty `td` states → shared `EmptyState` |
+| Empty states replace plain text | ✅ EmptyState adopted across receipts + all admin tables/lists |
+| Verify lint, tests, build green | ✅ lint 0, 50 backend, 12 frontend, build |
 
 ### Forward direction — LAYOUT (the user's main dislike, 2026-08-07)
 The user reverted the light theme and clarified that **layout, not color**, is what feels off. Direction picked by the user: **Option 3 — persistent side rail**, placed on the **RIGHT (RTL)**. Keeping dark + emerald and behavior unchanged. Progress:

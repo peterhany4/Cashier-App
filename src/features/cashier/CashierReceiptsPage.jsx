@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import icons from '../../components/icons';
 import { useToast, useConfirm } from '../../components/ui';
+import EmptyState from '../../components/ui/EmptyState';
+import { tableWrap, theadClass, thClass, tbodyClass, rowClass, tdClass } from '../../components/ui/Table';
+import { cx } from '../../components/ui/utils';
+import { ReceiptText, SearchX } from 'lucide-react';
 
 export default function CashierReceiptsPage({ user }) {
     const [orders, setOrders] = useState([]);
@@ -124,18 +128,18 @@ export default function CashierReceiptsPage({ user }) {
 
                 {/* Receipts Table */}
                 <div className="bg-slate-800 border border-slate-700/60 rounded-2xl overflow-hidden shadow-md">
-                    <div className="overflow-x-auto">
+                    <div className={tableWrap}>
                         <table className="w-full text-right border-collapse">
-                            <thead>
+                            <thead className={theadClass}>
                                 <tr className="bg-surface-3 text-slate-300 border-b border-slate-700 text-sm">
-                                    <th className="p-4 font-bold">#</th>
-                                    <th className="p-4 font-bold text-center">التاريخ والوقت</th>
-                                    <th className="p-4 font-bold text-center">الإجمالي</th>
-                                    <th className="p-4 font-bold text-center">الأصناف</th>
-                                    <th className="p-4 font-bold text-center">الإجراءات</th>
+                                    <th className={thClass}>#</th>
+                                    <th className={cx(thClass, 'text-center')}>التاريخ والوقت</th>
+                                    <th className={cx(thClass, 'text-center')}>الإجمالي</th>
+                                    <th className={cx(thClass, 'text-center')}>الأصناف</th>
+                                    <th className={cx(thClass, 'text-center')}>الإجراءات</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-700/40 text-sm">
+                            <tbody className={cx(tbodyClass, 'divide-slate-700/40')}>
                                 {loading ? (
                                     <tr>
                                         <td colSpan="5" className="text-center p-8 text-slate-400">جاري تحميل الفواتير...</td>
@@ -144,15 +148,15 @@ export default function CashierReceiptsPage({ user }) {
                                     const isExpanded = expandedOrder === order.id;
                                     const displayIndex = index + 1;
                                     return (
-                                        <tr key={order.id} className="hover:bg-surface-3/40 transition-colors">
-                                            <td className="p-4 font-bold text-white font-mono">#{displayIndex}</td>
-                                            <td className="p-4 text-center font-mono text-slate-400 text-xs">
+                                        <tr key={order.id} className={rowClass}>
+                                            <td className={cx(tdClass, 'font-bold text-white font-mono')}>#{displayIndex}</td>
+                                            <td className={cx(tdClass, 'text-center font-mono text-slate-400 text-xs')}>
                                                 {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}
                                             </td>
-                                            <td className="p-4 text-center font-extrabold text-emerald-400 font-mono text-base">
+                                            <td className={cx(tdClass, 'text-center font-extrabold text-emerald-400 font-mono text-base')}>
                                                 {order.total.toFixed(2)} جنية
                                             </td>
-                                            <td className="p-4 text-center">
+                                            <td className={cx(tdClass, 'text-center')}>
                                                 <button
                                                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
                                                     className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer"
@@ -174,7 +178,7 @@ export default function CashierReceiptsPage({ user }) {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="p-4 text-center">
+                                            <td className={cx(tdClass, 'text-center')}>
                                                 <button
                                                     onClick={() => handleDeleteOrder(order, displayIndex)}
                                                     className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
@@ -190,8 +194,12 @@ export default function CashierReceiptsPage({ user }) {
 
                                 {!loading && filteredOrders.length === 0 && (
                                     <tr>
-                                        <td colSpan="5" className="text-center p-8 text-slate-500">
-                                            {orders.length === 0 ? 'لم تقم بإصدار أي فواتير حتى الآن.' : 'لا توجد فواتير تطابق بحثك.'}
+                                        <td colSpan="5" className="p-0">
+                                            <EmptyState
+                                                icon={orders.length === 0 ? ReceiptText : SearchX}
+                                                title={orders.length === 0 ? 'لا توجد فواتير بعد' : 'لا توجد نتائج'}
+                                                message={orders.length === 0 ? 'لم تقم بإصدار أي فواتير حتى الآن. ' : 'لا توجد فواتير تطابق بحثك.'}
+                                            />
                                         </td>
                                     </tr>
                                 )}
