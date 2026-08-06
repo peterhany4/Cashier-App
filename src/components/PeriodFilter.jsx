@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { filterOrdersByPeriod } from './periodFilterUtils';
 
 const ARABIC_MONTHS = [
     { value: 0, label: 'يناير' },
@@ -14,60 +15,6 @@ const ARABIC_MONTHS = [
     { value: 10, label: 'نوفمبر' },
     { value: 11, label: 'ديسمبر' },
 ];
-
-function toLocalDateStr(d) {
-    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-export function filterOrdersByPeriod(orders, filterMode, selectedYear, selectedMonth, selectedDate, dateFrom, dateTo) {
-    if (!orders || !Array.isArray(orders)) return [];
-    const now = new Date();
-
-    return orders.filter(order => {
-        if (!order || !order.timestamp) return false;
-        const d = new Date(order.timestamp);
-        if (isNaN(d.getTime())) return false;
-
-        if (filterMode === 'today') {
-            return (
-                d.getFullYear() === now.getFullYear() &&
-                d.getMonth() === now.getMonth() &&
-                d.getDate() === now.getDate()
-            );
-        }
-
-        if (filterMode === 'week') {
-            // Start of week (Sunday 00:00:00)
-            const dayOfWeek = now.getDay();
-            const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 0, 0, 0, 0);
-            return d >= startOfWeek && d <= now;
-        }
-
-        if (filterMode === 'year-month') {
-            if (d.getFullYear() !== Number(selectedYear)) return false;
-            if (selectedMonth === null || selectedMonth === undefined || selectedMonth === 'all') return true;
-            return d.getMonth() === Number(selectedMonth);
-        }
-
-        if (filterMode === 'date') {
-            const dayStr = toLocalDateStr(d);
-            return Boolean(dayStr && selectedDate && dayStr === selectedDate);
-        }
-
-        if (filterMode === 'range') {
-            const dayStr = toLocalDateStr(d);
-            if (!dayStr) return false;
-            if (dateFrom && dayStr < dateFrom) return false;
-            if (dateTo && dayStr > dateTo) return false;
-            return true;
-        }
-
-        // 'all' or default
-        return true;
-    });
-}
 
 export default function PeriodFilter({
     orders = [],
@@ -241,7 +188,7 @@ export default function PeriodFilter({
     };
 
     return (
-        <div className="bg-slate-850 border border-slate-700/70 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg backdrop-blur-md">
+        <div className="bg-surface-1 border border-slate-700/70 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg backdrop-blur-md">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 
                 {/* 1. Quick Shortcuts */}
@@ -255,7 +202,7 @@ export default function PeriodFilter({
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             filterMode === 'today'
                                 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                         }`}
                     >
                         📅 اليوم
@@ -266,7 +213,7 @@ export default function PeriodFilter({
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             filterMode === 'week'
                                 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                         }`}
                     >
                         🗓️ هذا الأسبوع
@@ -277,7 +224,7 @@ export default function PeriodFilter({
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             filterMode === 'all'
                                 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                         }`}
                     >
                         ♾️ كل الأوقات

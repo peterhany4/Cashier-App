@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import PeriodFilter, { filterOrdersByPeriod } from './PeriodFilter';
+import PeriodFilter from './PeriodFilter';
+import { filterOrdersByPeriod } from './periodFilterUtils';
 
 const order = (y, m, d, total = 10) =>
     ({ id: `${y}-${m}-${d}`, timestamp: new Date(y, m, d, 12, 0, 0).toISOString(), total });

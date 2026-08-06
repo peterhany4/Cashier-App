@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef, Fragment } from 'react';
-import PeriodFilter, { filterOrdersByPeriod } from '../../components/PeriodFilter';
+import PeriodFilter from '../../components/PeriodFilter';
+import { filterOrdersByPeriod } from '../../components/periodFilterUtils';
 
 const COMPONENT_UNITS = ['قطعة', 'كجم', 'جرام', 'لتر', 'مللتر', 'صندوق'];
+
+// Sequential ids for preview-mode (no-DB) fallback objects only
+let demoId = 0;
 
 const ARABIC_MONTH_LABELS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
@@ -215,11 +219,9 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     };
 
     // Sync default category selection when categories list arrives
-    useEffect(() => {
-        if (categories.length > 0 && !newItemCategory) {
-            setNewItemCategory(categories[0].name);
-        }
-    }, [categories]);
+    if (categories.length > 0 && !newItemCategory) {
+        setNewItemCategory(categories[0].name);
+    }
 
     // Load initial SQLite data on mount, and re-load whenever dbVersion changes
     // (dbVersion is bumped by App.jsx after a database restore so the UI refreshes).
@@ -257,7 +259,6 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             }
         };
         loadDbData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dbVersion]);
 
     // 1. Auth Guard Checklist
@@ -283,7 +284,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 setMenu([...menu, added]);
             } else {
                 const newItem = {
-                    id: Date.now(),
+                    id: ++demoId,
                     name: newItemName,
                     price: parseFloat(newItemPrice),
                     category: newItemCategory
@@ -417,7 +418,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                     showToast('فشل إضافة الفئة: ' + res.error);
                 }
             } else {
-                const newCat = { id: Date.now(), name: newCategoryName.trim() };
+                const newCat = { id: ++demoId, name: newCategoryName.trim() };
                 setCategories([...categories, newCat]);
                 if (!newItemCategory) setNewItemCategory(newCat.name);
                 setNewCategoryName('');
@@ -462,7 +463,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 }]);
             } else {
                 const newItem = {
-                    id: Date.now(),
+                    id: ++demoId,
                     name: newInvName,
                     quantity: parseFloat(newInvQty),
                     unit: newInvUnit,
@@ -633,7 +634,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 }]);
             } else {
                 const newEmp = {
-                    id: Date.now(),
+                    id: ++demoId,
                     name: newEmpName,
                     role: newEmpRole,
                     baseSalary: parseFloat(newEmpBase),
@@ -1020,7 +1021,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={() => setActiveTab('menu')}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'menu'
-                                ? 'bg-slate-700 text-emerald-400 shadow-sm animate-pulse'
+                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
                                 : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
@@ -1030,7 +1031,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={() => setActiveTab('inventory')}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'inventory'
-                                ? 'bg-slate-700 text-emerald-400 shadow-sm animate-pulse'
+                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
                                 : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
@@ -1040,7 +1041,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={() => setActiveTab('salaries')}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'salaries'
-                                ? 'bg-slate-700 text-emerald-400 shadow-sm animate-pulse'
+                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
                                 : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
@@ -1050,7 +1051,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         onClick={handleSelectReportsTab}
                         className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 cursor-pointer ${
                             activeTab === 'reports'
-                                ? 'bg-slate-700 text-emerald-400 shadow-sm animate-pulse'
+                                ? 'bg-surface-3 text-emerald-400 shadow-sm'
                                 : 'text-slate-400 hover:text-slate-200'
                         }`}
                     >
@@ -1062,7 +1063,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
             {/* 2. Top Metrics Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
                 {/* Metric 1 */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">أصناف القائمة النشطة</span>
                         <span className="text-3xl font-extrabold text-white">{totalMenuItems}</span>
@@ -1071,7 +1072,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 </div>
 
                 {/* Metric 2 */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">نقص في المخزون (تنبيه)</span>
                         <span className={`text-3xl font-extrabold ${lowStockItemsCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -1084,7 +1085,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 </div>
 
                 {/* Metric 3 */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">
                             إيرادات الفترة المحددة
@@ -1103,7 +1104,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                 </div>
 
                 {/* Metric 4 */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-850 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
+                <div className="bg-gradient-to-br from-slate-800 to-surface-2 border border-slate-700/50 p-5 rounded-2xl shadow flex items-center justify-between">
                     <div>
                         <span className="text-xs text-slate-400 font-bold block mb-1">
                             فواتير الفترة المحددة
@@ -1245,7 +1246,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 .filter(item => item.name.toLowerCase().includes(menuSearch.toLowerCase()))
                                                 .map((item) => (
                                                     <Fragment key={item.id}>
-                                                        <tr className="hover:bg-slate-750/30 transition-colors">
+                                                        <tr className="hover:bg-surface-3/30 transition-colors">
                                                             <td className="p-3.5 font-bold text-white">{item.name}</td>
                                                             <td className="p-3.5 text-center">
                                                                 <span className="bg-slate-900/60 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 border border-slate-700/50">
@@ -1278,7 +1279,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                         {expandedComponentsId === item.id && (
                                                             <tr className="bg-slate-900/60 border-t border-slate-700/40">
                                                                 <td colSpan="4" className="p-4">
-                                                                    <div className="bg-slate-850 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                                                                    <div className="bg-surface-1 border border-slate-700/60 rounded-xl p-4 space-y-3">
                                                                         <div className="flex flex-wrap items-center justify-between gap-3">
                                                                             <h5 className="font-bold text-sm text-emerald-400 flex items-center gap-2">
                                                                                 ⚙️ مكونات: {item.name}
@@ -1449,7 +1450,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Add Inventory Item Form */}
                         {showAddInvForm && (
-                            <form onSubmit={handleAddInventory} className="bg-slate-850 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
+                            <form onSubmit={handleAddInventory} className="bg-surface-1 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم المادة الخام</label>
                                     <input
@@ -1548,7 +1549,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             }
 
                                             return (
-                                                <tr key={item.id} className="hover:bg-slate-750/30 transition-colors">
+                                                <tr key={item.id} className="hover:bg-surface-3/30 transition-colors">
                                                     <td className="p-3.5 font-bold text-white">{item.name}</td>
                                                     <td className="p-3.5 text-center font-mono text-base font-black">
                                                         {item.quantity} {item.unit}
@@ -1563,28 +1564,28 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                         <div className="flex justify-center items-center gap-1.5">
                                                             <button
                                                                 onClick={() => adjustStock(item.id, -5)}
-                                                                className="bg-slate-700 hover:bg-slate-650 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="استهلاك 5 وحدات"
                                                             >
                                                                 -5
                                                             </button>
                                                             <button
                                                                 onClick={() => adjustStock(item.id, -1)}
-                                                                className="bg-slate-700 hover:bg-slate-650 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="استهلاك وحدة واحدة"
                                                             >
                                                                 -1
                                                             </button>
                                                             <button
                                                                 onClick={() => adjustStock(item.id, 1)}
-                                                                className="bg-slate-700 hover:bg-slate-650 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="توريد وحدة واحدة"
                                                             >
                                                                 +1
                                                             </button>
                                                             <button
                                                                 onClick={() => adjustStock(item.id, 5)}
-                                                                className="bg-slate-700 hover:bg-slate-650 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
+                                                                className="bg-slate-700 hover:bg-surface-4 text-slate-300 w-8 h-8 rounded-lg font-bold flex items-center justify-center transition cursor-pointer text-xs"
                                                                 title="توريد 5 وحدات"
                                                             >
                                                                 +5
@@ -1626,7 +1627,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                             {/* Add Purchase Form */}
                             {showAddPurchaseForm && (
-                                <form onSubmit={handleAddPurchase} className="bg-slate-850 border-b border-slate-700/60 p-5 space-y-4 animate-fadeIn">
+                                <form onSubmit={handleAddPurchase} className="bg-surface-1 border-b border-slate-700/60 p-5 space-y-4 animate-fadeIn">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className={newPurchaseItemId === 'new' ? '' : 'md:col-span-2'}>
                                             <label className="block text-xs font-bold text-slate-300 mb-1.5">الصنف المشترى</label>
@@ -1786,7 +1787,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
                                                 purchasesFilterMode === 'year-month'
                                                     ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                                             }`}
                                         >
                                             📅 بالشهر
@@ -1797,7 +1798,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
                                                 purchasesFilterMode === 'range'
                                                     ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                                                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                                             }`}
                                         >
                                             📆 بفترة
@@ -1900,7 +1901,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         {displayedPurchases.map(p => {
                                             const isPaid = p.status === 'paid' || p.balance_due <= 0;
                                             return (
-                                                <tr key={p.id} className="hover:bg-slate-750/30 transition-colors">
+                                                <tr key={p.id} className="hover:bg-surface-3/30 transition-colors">
                                                     <td className="p-3.5 font-bold text-white">{p.item_name}</td>
                                                     <td className="p-3.5 text-center font-mono text-slate-300">{p.quantity} {p.unit}</td>
                                                     <td className="p-3.5 text-center font-mono text-slate-300">{Math.ceil(p.total_cost)} جنية</td>
@@ -1966,7 +1967,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => { setShowAddUserForm(!showAddUserForm); setShowAddEmpForm(false); }}
-                                    className="bg-slate-750 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-slate-950/40"
+                                    className="bg-surface-3 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-2 px-4 rounded-xl transition text-sm cursor-pointer shadow shadow-slate-950/40"
                                 >
                                     {showAddUserForm ? 'إغلاق نموذج الحسابات' : 'تسجيل حساب مستخدم 👤'}
                                 </button>
@@ -1981,7 +1982,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Add User Account Form */}
                         {showAddUserForm && (
-                            <form onSubmit={handleAddUser} className="bg-slate-850 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fadeIn">
+                            <form onSubmit={handleAddUser} className="bg-surface-1 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fadeIn">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-300 mb-1.5">اسم مستخدم الحساب</label>
                                     <input
@@ -2052,7 +2053,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
 
                         {/* Add Employee Form */}
                         {showAddEmpForm && (
-                            <form onSubmit={handleAddEmployee} className="bg-slate-850 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
+                            <form onSubmit={handleAddEmployee} className="bg-surface-1 border border-slate-700/65 rounded-xl p-5 shadow-inner grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fadeIn">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-300 mb-1.5">الاسم الكامل للموظف</label>
                                     <input
@@ -2121,7 +2122,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         {userAccounts.map(acc => {
                                             const isSelf = acc.username === user.username;
                                             return (
-                                                <tr key={acc.id} className="hover:bg-slate-750/30 transition-colors">
+                                                <tr key={acc.id} className="hover:bg-surface-3/30 transition-colors">
                                                     <td className="p-3.5 font-bold text-white">
                                                         {acc.username}
                                                         {isSelf && (
@@ -2184,7 +2185,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         {employees.map((emp) => {
                                             const netPay = calculateNetPay(emp);
                                             return (
-                                                <tr key={emp.id} className="hover:bg-slate-750/30 transition-colors">
+                                                <tr key={emp.id} className="hover:bg-surface-3/30 transition-colors">
                                                     <td className="p-3.5">
                                                         <div className="font-bold text-white">{emp.name}</div>
                                                         <div className="text-xs text-slate-400 mt-0.5">{emp.role}</div>
@@ -2266,7 +2267,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
                             <button
                                 onClick={() => setShowSalaryHistory(!showSalaryHistory)}
-                                className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 hover:bg-slate-750/40 transition text-right cursor-pointer"
+                                className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 px-5 py-4 hover:bg-surface-3/40 transition text-right cursor-pointer"
                             >
                                 <div className="flex items-center gap-2.5">
                                     <span className="text-emerald-400 text-lg">📜</span>
@@ -2345,7 +2346,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             </thead>
                                             <tbody className="divide-y divide-slate-700/40 text-sm">
                                                 {filteredSalaryHistory.map(p => (
-                                                    <tr key={p.id} className="hover:bg-slate-750/30 transition-colors">
+                                                    <tr key={p.id} className="hover:bg-surface-3/30 transition-colors">
                                                         <td className="p-3.5 font-bold text-white">{p.employee_name}</td>
                                                         <td className="p-3.5 text-slate-400">{p.employee_role || '—'}</td>
                                                         <td className="p-3.5 text-center font-semibold text-slate-300">{p.month_label}</td>
@@ -2480,7 +2481,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 const isExpanded = expandedOrder === order.id;
                                                 const displayIndex = index + 1;
                                                 return (
-                                                    <tr key={order.id} className="hover:bg-slate-750/30 transition-colors">
+                                                    <tr key={order.id} className="hover:bg-surface-3/30 transition-colors">
                                                         <td className="p-3.5 font-bold text-white font-mono">#{displayIndex}</td>
                                                         <td className="p-3.5 font-bold text-slate-300">{order.cashier}</td>
                                                         <td className="p-3.5 text-center font-mono text-slate-400">

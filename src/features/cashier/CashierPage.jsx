@@ -1,16 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useCart } from '../../context/CartContext';
 
 export default function CashierPage({ user, menu = [], categories = [] }) {
     const [activeCategory, setActiveCategory] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Sync active category when categories load
-    useEffect(() => {
-        if (categories.length > 0 && activeCategory === null) {
-            setActiveCategory(categories[0].name);
-        }
-    }, [categories]);
+    // Sync active category to the first category once the list arrives
+    if (activeCategory === null && categories.length > 0) {
+        setActiveCategory(categories[0].name);
+    }
 
     const { cart, addToCart, removeFromCart, clearCart, getSubtotal } = useCart();
 
@@ -156,7 +154,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                 </div>
 
                 {/* LEFT SIDE: Active Order Receipt Panel (Takes up 35% space) */}
-                <div className="w-[35%] bg-slate-850 border-r border-slate-700 flex flex-col shadow-2xl">
+                <div className="w-[35%] bg-surface-1 border-r border-slate-700 flex flex-col shadow-2xl">
                     <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                         <h2 className="text-lg font-black text-slate-200">الطلب الحالي</h2>
                         {cart.length > 0 && (

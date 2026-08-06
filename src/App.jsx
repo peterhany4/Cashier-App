@@ -49,7 +49,6 @@ export default function App() {
       });
       return () => { if (window.api.db.onDatabaseRestored) unsubscribe(); };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const handleLoginSuccess = (user) => {

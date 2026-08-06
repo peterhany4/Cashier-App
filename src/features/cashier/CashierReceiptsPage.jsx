@@ -102,7 +102,7 @@ export default function CashierReceiptsPage({ user }) {
                         <div className="flex justify-end gap-3 pt-2">
                             <button
                                 onClick={() => setConfirmModal(null)}
-                                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-650 text-slate-300 font-bold text-sm transition cursor-pointer"
+                                className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-surface-4 text-slate-300 font-bold text-sm transition cursor-pointer"
                             >
                                 إلغاء
                             </button>
@@ -171,7 +171,7 @@ export default function CashierReceiptsPage({ user }) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-right border-collapse">
                             <thead>
-                                <tr className="bg-slate-750 text-slate-300 border-b border-slate-700 text-sm">
+                                <tr className="bg-surface-3 text-slate-300 border-b border-slate-700 text-sm">
                                     <th className="p-4 font-bold">#</th>
                                     <th className="p-4 font-bold text-center">التاريخ والوقت</th>
                                     <th className="p-4 font-bold text-center">الإجمالي</th>
@@ -188,7 +188,7 @@ export default function CashierReceiptsPage({ user }) {
                                     const isExpanded = expandedOrder === order.id;
                                     const displayIndex = index + 1;
                                     return (
-                                        <tr key={order.id} className="hover:bg-slate-750/40 transition-colors">
+                                        <tr key={order.id} className="hover:bg-surface-3/40 transition-colors">
                                             <td className="p-4 font-bold text-white font-mono">#{displayIndex}</td>
                                             <td className="p-4 text-center font-mono text-slate-400 text-xs">
                                                 {new Date(order.timestamp).toLocaleString('ar-EG', { hour12: true })}

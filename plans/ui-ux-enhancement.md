@@ -1,7 +1,7 @@
 # 🎨 Cashier App — UI/UX Enhancement Plan (Full Redesign)
 
 > **Created:** 2026-08-05
-> **Status:** APPROVED — sequential phases, starting tomorrow
+> **Status:** IN PROGRESS — Phase 0 (Foundation) ✅ COMPLETED, next: Phase 1
 > **Stack:** Electron + React (Vite) + Tailwind CSS 4 + SQLite (better-sqlite3)
 > **Language:** Arabic UI (RTL)
 
@@ -169,13 +169,21 @@ Each screen: restyle on the shared system, apply the **desktop-over-webpage** sc
 - [ ] `npm run build` passes
 - [ ] Visual + RTL sanity check in `npm run electron:dev`
 
-### Phase 0 — Foundation
-- [ ] Add `lucide-react` + `@fontsource/cairo` deps
-- [ ] Define `@theme` tokens (surfaces + semantic accents) + register Cairo + number style
-- [ ] Define `animate-fadeIn` / `animate-scaleUp`; resolve `animate-pulse` on active tabs
-- [ ] Create `src/components/icons.jsx` icon map
-- [ ] Replace invalid `slate-650/750/850` with real tokens
-- [ ] Verification green
+### Phase 0 — Foundation ✅ COMPLETED (2026-08-05)
+- [x] Add `lucide-react` + `@fontsource/cairo` deps
+- [x] Define `@theme` tokens (surfaces + semantic accents) + register Cairo + number style
+- [x] Define `animate-fadeIn` / `animate-scaleUp`; resolve `animate-pulse` on active tabs
+- [x] Create `src/components/icons.jsx` icon map
+- [x] Replace invalid `slate-650/750/850` with real tokens
+- [x] Verification green — 50 backend tests, 12 frontend tests, build ✅ (lint back to pre-existing baseline, 0 new issues)
+
+#### Lint cleanup addendum (done with Phase 0)
+Fixed the **6 pre-existing lint errors** + 4 warnings so lint is now fully clean (`npm run lint` exit 0):
+- CashierPage.jsx — `setState` inside `useEffect` → render-time adjust; dropped unused `useEffect` import.
+- AdminDashboardPage.jsx — category-sync `setState` in effect → render-time adjust; replaced 3× `Date.now()` (preview-mode ids) with a module counter; removed unused `eslint-disable`.
+- App.jsx — removed unused `eslint-disable`.
+- PeriodFilter.jsx — split `filterOrdersByPeriod` + `toLocalDateStr` out into **`src/components/periodFilterUtils.js`** (the react-refresh "only-export-components" rule). Named distinctly (`periodFilterUtils`, NOT `periodFilter`) to avoid a case-only filename collision on Windows' case-insensitive filesystem — `PeriodFilter.jsx` vs `periodFilter.js` clashed. Updated imports in `PeriodFilter.jsx`, `AdminDashboardPage.jsx`, `PeriodFilter.test.jsx`.
+All green after: lint 0, 12 frontend, 50 backend, build.
 
 ### Phase 1 — Primitives
 - [ ] Build `Button, Input, Select, TextArea, Card, Table, Badge, Modal, Toast, StatCard, EmptyState`
