@@ -250,12 +250,13 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 | Verify lint, tests, build green | ✅ lint 0, 12 frontend, build |
 
 ### Forward direction — LAYOUT (the user's main dislike, 2026-08-07)
-The user reverted the light theme and clarified that **layout, not color**, is what feels off. Continue toward Option 3 (different layout) incrementally and safely, keeping dark + emerald and behavior unchanged. Kill-list of "webpage" layout smells to address, most impactful first:
-1. **Admin `MenuTab` tall column** — split "add form + table + components editor" so headers/forms pin and only the table scrolls; component editor as a contained panel instead of a giant expanding `<tr>`.
-2. **Left/right navigation** — consider a persistent side rail (or better groomed top tabs) so each screen isn't one long scrolling document.
-3. **Receipts order-details** — master/detail contained panel instead of pushing the whole page down.
-4. **Category tabs active state** — replace jarring `animate-pulse` with a clean static active treatment.
-5. **Consistent table headers/badges** + **empty states** (the two open to-do rows).
+The user reverted the light theme and clarified that **layout, not color**, is what feels off. Direction picked by the user: **Option 3 — persistent side rail**, placed on the **RIGHT (RTL)**. Keeping dark + emerald and behavior unchanged. Progress:
+1. ✅ **Right-hand side rail nav** — brand + user + nav + logout moved from the top header into a persistent dark rail; POS checkout bar constrained to the content area (was full-viewport `fixed`). `1c025e2`.
+2. ▢ Decide whether the rail should collapse to icons-only on narrow windows (touchscreen friendliness).
+3. ▢ Admin `MenuTab` tall column — split "add form + table + components editor" so headers/forms pin and only the table scrolls; component editor as a contained panel instead of a giant expanding `<tr>`.
+4. ▢ Receipts order-details — master/detail contained panel instead of pushing the whole page down.
+5. ▢ Category tabs active state — replace jarring `animate-pulse` with a clean static active treatment.
+6. ▢ Consistent table headers/badges + empty states (the two open to-do rows, above).
 
 ---
 
