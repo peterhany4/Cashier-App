@@ -110,17 +110,16 @@ This phase also **refactors the toast + confirm into shared hooks/contexts** so 
 
 ---
 
-## 🧹 Section 5 — Phase 2: Global Sweep
+## 🧹 Section 5 — Phase 2: Global Sweep ✅ COMPLETED (2026-08-05)
 
 > Goal: apply foundation everywhere; unify duplicated UI atoms.
 
-- Replace all **emoji → lucide** across the 5 screens (`LoginPage`, `CashierPage`, `CashierReceiptsPage`, `AdminDashboardPage`, `SettingsPage`) + `PeriodFilter`.
-- Replace invalid `bg-slate-650/750/850` with real surface tokens; add missing animation definitions.
-- Apply Cairo + the shared number style everywhere.
-- Swap duplicated toast/confirm to the shared modal/toast.
-- Update custom scrollbar in `index.css` to the thin+subtle design (still emerald-branded, RTL-correct).
-- Update `README.md`/plan if needed (do **not** touch data logic).
-- **No behavior changes** — confirm all tests still pass.
+- ✅ **Emoji → lucide** across all 5 screens + `PeriodFilter` + `App.jsx` header (full sweep).
+- ✅ Real-token swap (invalid `slate-650/750/850`) — done in Phase 0; Cairo global — Phase 0.
+- ✅ Cairo + `tabular-nums` on key money figures (POS total + line prices; `StatCard` primitive already has it).
+- ⏳ **Swap duplicated toast/confirm to the shared modal/toast — DEFERRED to Phase 3** (per-screen adoption of `useToast`/`useConfirm`; providers already wired in `App.jsx`, adopting them in `AdminDashboardPage.jsx` now would be a risky mega-edit, so it lands with that screen's Phase-3 restyle).
+- ✅ Thin/subtle scrollbar (16px → 10px, still emerald, RTL-correct).
+- ✅ **No behavior changes** — lint 0, 12 frontend, 50 backend, build all green.
 
 ---
 
@@ -193,12 +192,12 @@ All green after: lint 0, 12 frontend, 50 backend, build.
 
 **Built:** `src/components/ui/{utils,Field,Button,Input,Select,TextArea,Card,Badge,StatCard,EmptyState,Table,Modal,ConfirmProvider,ToastProvider,index}.js`. All styled on Phase-0 tokens (surface + brand/warning/danger/info). `ToastProvider`/`useToast` and `ConfirmProvider`/`useConfirm` wired into `App.jsx` as providers (live scaffolding; screens adopt them in Phase 2). `fieldBase`/`fieldSize` live in `utils.js` (not exported from components) to satisfy `react-refresh/only-export-components`. Lint 0, 12 frontend tests, 50 backend, build ✅.
 
-### Phase 2 — Global sweep
-- [ ] Emoji → lucide across all 5 screens + `PeriodFilter`
-- [ ] Real tokens + Cairo + number style everywhere
-- [ ] Unified toast/modal usage replaces duplicated implementations
-- [ ] Thin/ subtle scrollbar applied
-- [ ] Verification green
+### Phase 2 — Global sweep ✅ COMPLETED (2026-08-05)
+- [x] Emoji → lucide across all 5 screens + `PeriodFilter`
+- [x] Real tokens + Cairo + number style everywhere; `tabular-nums` on money figures
+- [x] Thin/ subtle scrollbar applied (16px → 10px)
+- [~] Unified toast/modal — **deferred to Phase 3** (per-screen adoption of P1 providers; see §5 note)
+- [x] Verification green (lint 0, 12 frontend, 50 backend, build)
 
 ### Phase 3 — Per-screen
 - [ ] Login polish

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import icons from '../../components/icons';
 
 export default function CashierReceiptsPage({ user }) {
     const [orders, setOrders] = useState([]);
@@ -95,7 +96,7 @@ export default function CashierReceiptsPage({ user }) {
                 <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleUp">
                         <div className="flex items-center gap-3 text-amber-400">
-                            <span className="text-2xl">⚠️</span>
+                            <span className="text-2xl"><icons.warning size={24} /></span>
                             <h3 className="text-lg font-bold text-white">تأكيد الحذف</h3>
                         </div>
                         <p className="text-slate-300 text-sm leading-relaxed">{confirmModal.msg}</p>
@@ -125,7 +126,7 @@ export default function CashierReceiptsPage({ user }) {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
                     <div>
                         <h2 className="text-2xl font-black text-slate-100 flex items-center gap-2">
-                            <span className="text-emerald-400">🧾</span> سجل فواتيري (اليوم)
+                            <span className="text-emerald-400"><icons.receipt size={22} /></span> سجل فواتيري (اليوم)
                         </h2>
                         <p className="text-xs text-slate-400 mt-1">
                             استعراض وإدارة الفواتير التي قمت بإصدارها اليوم باسم ({user?.username})
@@ -148,9 +149,7 @@ export default function CashierReceiptsPage({ user }) {
                             <p className="text-xs text-slate-400 font-bold">فواتيرك اليوم</p>
                             <h4 className="text-2xl font-black text-white font-mono mt-1">{orders.length}</h4>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl font-bold">
-                            📄
-                        </div>
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl font-bold"><icons.clipboard size={24} /></div>
                     </div>
 
                     <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex items-center justify-between">
@@ -160,9 +159,7 @@ export default function CashierReceiptsPage({ user }) {
                                 {totalRevenue.toFixed(2)} <span className="text-xs text-slate-400 font-normal">جنية</span>
                             </h4>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl font-bold">
-                            💰
-                        </div>
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl font-bold"><icons.cash size={24} /></div>
                     </div>
                 </div>
 
@@ -201,7 +198,9 @@ export default function CashierReceiptsPage({ user }) {
                                                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
                                                     className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs transition font-bold cursor-pointer"
                                                 >
-                                                    {isExpanded ? 'إخفاء التفاصيل ⬆️' : 'عرض الأصناف ⬇️'}
+                                                    {isExpanded
+                                                        ? <>إخفاء التفاصيل <icons.chevronUp size={14} className="inline" /></>
+                                                        : <>عرض الأصناف <icons.chevronDown size={14} className="inline" /></>}
                                                 </button>
 
                                                 {isExpanded && (
@@ -222,7 +221,7 @@ export default function CashierReceiptsPage({ user }) {
                                                     className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-3 py-1.5 rounded-xl transition text-xs cursor-pointer flex items-center gap-1 mx-auto"
                                                     title="حذف الفاتورة"
                                                 >
-                                                    <span>🗑️</span>
+                                                    <span><icons.trash size={14} className="inline" /></span>
                                                     <span>حذف</span>
                                                 </button>
                                             </td>

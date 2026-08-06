@@ -41,6 +41,10 @@ import {
     RefreshCw,
     Archive,
     Gauge,
+    Zap,
+    Calendar,
+    CalendarRange,
+    Infinity as InfinityIcon,
 } from 'lucide-react';
 
 const icons = {
@@ -84,6 +88,10 @@ const icons = {
     restore: RefreshCw,
     archive: Archive,
     gauge: Gauge,
+    zap: Zap,
+    calendar: Calendar,
+    calendarRange: CalendarRange,
+    infinity: InfinityIcon,
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -128,4 +136,8 @@ export {
     RefreshCw,
     Archive,
     Gauge,
+    Zap,
+    Calendar,
+    CalendarRange,
+    InfinityIcon,
 };

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { filterOrdersByPeriod } from './periodFilterUtils';
+import icons from './icons';
 
 const ARABIC_MONTHS = [
     { value: 0, label: 'يناير' },
@@ -194,7 +195,7 @@ export default function PeriodFilter({
                 {/* 1. Quick Shortcuts */}
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
-                        <span>⚡</span> الوصول السريع:
+                        <span><icons.zap size={13} className="inline" /></span> الوصول السريع:
                     </span>
                     <button
                         type="button"
@@ -205,7 +206,7 @@ export default function PeriodFilter({
                                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                         }`}
                     >
-                        📅 اليوم
+                        <icons.calendar size={14} className="inline" /> اليوم
                     </button>
                     <button
                         type="button"
@@ -216,7 +217,7 @@ export default function PeriodFilter({
                                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                         }`}
                     >
-                        🗓️ هذا الأسبوع
+                        <icons.history size={14} className="inline" /> هذا الأسبوع
                     </button>
                     <button
                         type="button"
@@ -227,14 +228,14 @@ export default function PeriodFilter({
                                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-surface-3'
                         }`}
                     >
-                        ♾️ كل الأوقات
+                        <icons.infinity size={14} className="inline" /> كل الأوقات
                     </button>
                 </div>
 
                 {/* 2. Historical Year + Month Picker */}
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                     <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
-                        <span>🗓️</span> تصفية تاريخية:
+                        <span><icons.calendarRange size={13} className="inline" /></span> تصفية تاريخية:
                     </span>
                     
                     {/* Year Dropdown */}
@@ -279,7 +280,7 @@ export default function PeriodFilter({
                 {/* Specific Day */}
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
-                        <span>📅</span> تحديد يوم محدد:
+                        <span><icons.calendar size={13} className="inline" /></span> تحديد يوم محدد:
                     </span>
                     <input
                         type="date"
@@ -302,7 +303,7 @@ export default function PeriodFilter({
                 {/* Date Range */}
                 <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                     <span className="text-xs font-bold text-slate-400 flex items-center gap-1 ml-1">
-                        <span>📆</span> فترة زمنية:
+                        <span><icons.calendarRange size={13} className="inline" /></span> فترة زمنية:
                     </span>
                     <span className="text-xs text-slate-500">من</span>
                     <input

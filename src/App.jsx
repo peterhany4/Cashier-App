@@ -7,6 +7,7 @@ import SettingsPage from './features/admin/SettingsPage';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './components/ui';
 import ConfirmProvider from './components/ui/ConfirmProvider';
+import icons from './components/icons';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null); // holds user object when logged in
@@ -132,7 +133,7 @@ export default function App() {
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/40'
                     }`}
                   >
-                    سجل فواتيري 🧾
+                    سجل فواتيري <icons.receipt size={15} className="inline" />
                   </button>
                 )}
               </div>
@@ -148,7 +149,7 @@ export default function App() {
                         : 'text-slate-300 hover:text-white hover:bg-slate-700/40'
                     }`}
                   >
-                    ⚙️ الإعدادات
+                    <icons.settings size={16} className="inline" /> الإعدادات
                   </button>
                 </div>
               )}

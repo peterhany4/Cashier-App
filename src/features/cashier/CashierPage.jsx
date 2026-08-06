@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useCart } from '../../context/CartContext';
+import icons from '../../components/icons';
 
 export default function CashierPage({ user, menu = [], categories = [] }) {
     const [activeCategory, setActiveCategory] = useState(null);
@@ -77,7 +78,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                         {/* Search Bar */}
                         <div className="flex items-center gap-3">
                             <div className="relative flex-1">
-                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"><icons.search size={16} /></span>
                                 <input
                                     type="text"
                                     value={searchQuery}
@@ -168,7 +169,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-right p-4 space-y-3">
                         {cart.length === 0 ? (
                             <div className="h-full flex flex-col justify-center items-center text-slate-500">
-                                <span className="text-4xl mb-2">🛒</span>
+                                <span className="text-4xl mb-2"><icons.cart size={48} strokeWidth={1.5} /></span>
                                 <p>السلة فارغة. ابدأ بإضافة وجبات</p>
                             </div>
                         ) : (
@@ -176,7 +177,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                                 <div key={item.id} className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 flex justify-between items-center">
                                     <div>
                                         <h4 className="font-bold text-sm text-slate-200">{item.name}</h4>
-                                        <span className="text-xs text-slate-400">{item.price} جنية × {item.quantity}</span>
+                                        <span className="text-xs text-slate-400 tabular-nums">{item.price} جنية × {item.quantity}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
@@ -206,7 +207,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                     <div className="text-xs text-slate-400 font-bold">
                         الإجمالي الكلي {cart.length > 0 ? `(${cart.reduce((n, it) => n + it.quantity, 0)} صنف)` : ''}
                     </div>
-                    <div className="text-2xl font-black text-emerald-400">{total.toFixed(2)} جنية</div>
+                    <div className="text-2xl font-black text-emerald-400 tabular-nums">{total.toFixed(2)} جنية</div>
                 </div>
                 <div className="flex gap-3">
                     <button
@@ -219,7 +220,7 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                         onClick={() => handleCheckout(true)}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm shadow shadow-emerald-900/30 cursor-pointer"
                     >
-                        حفظ وطباعة الفاتورة 🖨️
+                        حفظ وطباعة الفاتورة <icons.printer size={16} className="inline" />
                     </button>
                 </div>
             </div>

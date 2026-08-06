@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import icons from '../../components/icons';
 
 export default function LoginPage({ onLoginSuccess }) {
     const [view, setView] = useState('login'); // 'login', 'reset', 'register'
@@ -210,8 +211,8 @@ export default function LoginPage({ onLoginSuccess }) {
                     /* --- نموذج إنشاء المدير الرئيسي (أول تشغيل) --- */
                     <form onSubmit={handleRegisterSubmit} className="space-y-4">
                         <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-xs text-emerald-300 text-center mb-2">
-                            ⚠️ لم يتم العثور على حسابات في النظام. الرجاء تعيين بيانات المسؤول الأول للبدء.
-                        </div>
+                                <icons.warning size={14} className="inline" /> لم يتم العثور على حسابات في النظام. الرجاء تعيين بيانات المسؤول الأول للبدء.
+                            </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-300 mb-1">
                                 اسم المستخدم للمسؤول

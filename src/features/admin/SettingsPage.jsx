@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import icons from '../../components/icons';
 
 export default function SettingsPage() {
     const [toast, setToast] = useState(null);
@@ -105,7 +106,7 @@ export default function SettingsPage() {
                 {/* ===== Backup / Restore ===== */}
                 <div className="bg-slate-800/40 border border-slate-700/55 rounded-2xl p-6 shadow-xl backdrop-blur-md">
                     <h3 className="text-xl font-black text-slate-100 flex items-center gap-2 mb-1">
-                        <span className="text-emerald-400 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20">💾</span>
+                        <span className="text-emerald-400 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20"><icons.archive size={18} /></span>
                         النسخ الاحتياطي للبيانات
                     </h3>
                     <p className="text-slate-400 text-sm mb-5">
@@ -115,7 +116,7 @@ export default function SettingsPage() {
                     {/* Backup */}
                     <div className="bg-slate-900/50 border border-slate-700/60 rounded-xl p-4 mb-4">
                         <div className="flex items-start gap-3">
-                            <span className="text-2xl">📤</span>
+                            <span className="text-2xl"><icons.upload size={28} /></span>
                             <div className="flex-1">
                                 <h4 className="font-bold text-slate-100 mb-1">إنشاء نسخة احتياطية</h4>
                                 <p className="text-xs text-slate-400 mb-3">
@@ -126,7 +127,7 @@ export default function SettingsPage() {
                                     disabled={busy}
                                     className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-emerald-950/40"
                                 >
-                                    {busy ? 'جاري...' : '💾 نسخ احتياطي'}
+                                    {busy ? 'جاري...' : <> <icons.save size={16} className="inline" /> نسخ احتياطي</>}
                                 </button>
                             </div>
                         </div>
@@ -135,7 +136,7 @@ export default function SettingsPage() {
                     {/* Restore */}
                     <div className="bg-slate-900/50 border border-amber-500/30 rounded-xl p-4">
                         <div className="flex items-start gap-3">
-                            <span className="text-2xl">📥</span>
+                            <span className="text-2xl"><icons.download size={28} /></span>
                             <div className="flex-1">
                                 <h4 className="font-bold text-slate-100 mb-1">استعادة نسخة احتياطية</h4>
                                 <p className="text-xs text-slate-400 mb-3">
@@ -146,11 +147,9 @@ export default function SettingsPage() {
                                     disabled={busy}
                                     className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer shadow shadow-amber-950/40"
                                 >
-                                    {busy ? 'جاري...' : '🔄 استعادة نسخة'}
+                                    {busy ? 'جاري...' : <> <icons.restore size={16} className="inline" /> استعادة نسخة</>}
                                 </button>
-                                <p className="text-[11px] text-amber-400/80 mt-3">
-                                    ⚠️ تحذير: الاستعادة ستستبدل كل بيانات المخزن والرواتب والفواتير الحالية.
-                                </p>
+                                <span className="text-[11px] text-amber-400/80 mt-3 flex items-center gap-1.5"><icons.warning size={13} /> تحذير: الاستعادة ستستبدل كل بيانات المخزن والرواتب والفواتير الحالية.</span>
                             </div>
                         </div>
                     </div>
@@ -159,7 +158,7 @@ export default function SettingsPage() {
                 {/* ===== Printer Settings (Feature 10 placeholder) ===== */}
                 <div className="bg-slate-800/40 border border-dashed border-slate-600/60 rounded-2xl p-6 shadow-xl backdrop-blur-md">
                     <h3 className="text-xl font-black text-slate-100 flex items-center gap-2 mb-1">
-                        <span className="text-indigo-400 bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/20">🖨️</span>
+                        <span className="text-indigo-400 bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/20"><icons.printer size={18} /></span>
                         إعدادات الطباعة
                     </h3>
                     <p className="text-slate-400 text-sm mb-5">
