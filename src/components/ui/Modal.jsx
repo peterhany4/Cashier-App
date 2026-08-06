@@ -20,10 +20,10 @@ export default function Modal({ open, onClose, title, size = 'md', className = '
             >
                 {title && (
                     <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-2">
-                        <h3 className="text-lg font-bold text-ink">{title}</h3>
+                        <h3 className="text-lg font-bold text-white">{title}</h3>
                         <button
                             onClick={onClose}
-                            className="text-slate-500 hover:text-ink cursor-pointer p-1 rounded-lg hover:bg-surface-3/60 transition"
+                            className="text-slate-400 hover:text-white cursor-pointer p-1 rounded-lg hover:bg-surface-3/40 transition"
                             aria-label="إغلاق"
                         >
                             <X size={18} />

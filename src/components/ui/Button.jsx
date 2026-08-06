@@ -2,12 +2,12 @@ import { Loader2 } from 'lucide-react';
 import { cx } from './utils';
 
 const VARIANTS = {
-    primary: 'bg-brand-600 hover:bg-brand-500 text-white shadow shadow-brand-950/20',
-    secondary: 'bg-surface-3 hover:bg-surface-4 text-slate-700 shadow-sm',
-    danger: 'bg-danger-500/10 hover:bg-danger-500/20 text-danger-700 border border-danger-500/30',
-    warning: 'bg-warning-500/15 hover:bg-warning-500/25 text-warning-700 border border-warning-600/30',
-    ghost: 'text-slate-600 hover:text-ink hover:bg-surface-3/60',
-    outline: 'border border-surface-4 text-slate-700 hover:bg-surface-3/40',
+    primary: 'bg-brand-600 hover:bg-brand-500 text-white shadow shadow-brand-950/40',
+    secondary: 'bg-surface-3 hover:bg-surface-4 text-slate-200 shadow-sm',
+    danger: 'bg-danger-500/10 hover:bg-danger-500/20 text-danger-400 border border-danger-500/30',
+    warning: 'bg-warning-500/15 hover:bg-warning-500/25 text-warning-500 border border-warning-600/30',
+    ghost: 'text-slate-300 hover:text-white hover:bg-surface-3/50',
+    outline: 'border border-surface-4 text-slate-200 hover:bg-surface-3/40',
 };
 
 const SIZES = {

@@ -224,32 +224,29 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 
 ---
 
-## 🎚️ Visual Restyle — LIGHT THEME ✅ IMPLEMENTED (2026-08-05)
+## 🎚️ Visual Restyle — Depth & Polish (=== IN PROGRESS ===)
 
-> **Why this exists:** Phases 0–3 delivered the design *system* but the screens weren't visually restyled — visible change was only font + icons. The user then decided the **whole-app colors** weren't right and preferred **light mode over dark**.
+> **Why this section exists:** Phases 0–3 delivered the design *system* (tokens, primitives, icons, font, unified toast/confirm) but the screens were **not visually restyled** — so the visible change was limited to font + icons. This is the pass that actually makes the UI *feel* different.
 
 ### Decision (agreed 2026-08-05)
-- **Pivot to light mode:** switched the app from dark (slate-900) to a **warm off-white + emerald** light theme (chosen: "warm off-white + emerald"). Keep emerald as the brand accent.
-- **How:** redefined the surface tokens to light (`surface-0` warm page, `surface-1` white panels, etc.), added `ink`/`ink-soft` text tokens, light `app-bg`, adjusted the emerald/amber/rose accents to darker shades for contrast, swept every screen + shared primitives + `PeriodFilter` to the light palette.
+- **Keep the dark + emerald identity.**
+- **Direction selected: Option 1 — Depth & polish.** Add real elevation: layered cards, gradients on metrics, softer borders, refined header + buttons, better empty states, consistent spacing/rounding. Same palette → noticeably more "premium/designed."
+- Tasklist below tracks the per-screen work.
 
-### Alternatives — ON HOLD (in case the light theme is disliked)
-- **Option 2 — Different accent:** if emerald-on-light isn't right, swap the accent (amber/gold, teal, etc.) — same light framework, just a different brand color.
-- **Option 3 — Different layout:** restructure screens (sidebar nav, left cart pane, bigger touch targets) for a different *feel* beyond colors.
-- **Option 4 — Go back to dark:** the pre-light dark theme is preserved in git history (the `Phase 2 / depth` commit) if we want to revert.
+### Alternatives — ON HOLD (remember these in case the new design is disliked)
+- **Option 2 — New accent + depth:** same depth polish, but swap the brand accent (emerald → amber/gold or teal) for a noticeably fresh look.
+- **Option 3 — Different layout:** restructure major screens (e.g., left sidebar nav instead of top tabs, left receipt/cart pane, big touch targets on POS) — a clearly different feel beyond colors.
 
 | Task | Status |
 |---|---|
-| Light surface tokens + ink text tokens | ✅ |
-| Light `app-bg` + scrollbar | ✅ |
-| App header light | ✅ |
-| Login light | ✅ |
-| POS / cart / checkout light | ✅ |
-| Receipts light | ✅ |
-| Settings light | ✅ |
-| Admin dashboard light (incl. metric cards) | ✅ |
-| `PeriodFilter` light | ✅ |
-| Shared primitives (Button/Card/Badge/Field/...) updated | ✅ |
-| Verify lint, tests, build green | ✅ lint 0, 12 frontend, 50 backend, build |
+| Global layered page backdrop (subtle gradient, not flat) | ✅ `app-bg` applied to all page roots |
+| Branded, elevated App header (brand tile + blur-bg) | ✅ |
+| Login: elevated card + depth | ✅ |
+| POS: refined item cards + cart panel + checkout | ✅ |
+| Admin: metric cards depth + section polish | ✅ metric depth; section polish partial |
+| Tables: consistent header/badges | ▢ |
+| Empty states replace plain text | ▢ |
+| Verify lint, tests, build green | ✅ lint 0, 12 frontend, build |
 
 ---
 
