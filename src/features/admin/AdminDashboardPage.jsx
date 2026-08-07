@@ -1118,7 +1118,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                             
                             {/* Form: Add Menu Item */}
                             <div className="bg-slate-800 border border-slate-700/60 rounded-xl p-5 shadow-sm space-y-4">
@@ -1213,8 +1213,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </div>
 
                             {/* Table: Menu List */}
-                            <div className="lg:col-span-2 bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm flex flex-col h-full min-h-0">
-                                <div className={cx(tableWrap, 'flex-1 min-h-0 overflow-y-auto scrollbar-right')}>
+                            <div className="lg:col-span-2 bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm flex flex-col min-h-0">
+                                <div className={cx(tableWrap, 'max-h-[70vh] overflow-y-auto scrollbar-right')}>
                                     <table className="w-full text-right border-collapse">
                                         <thead className={theadClass}>
                                             <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
