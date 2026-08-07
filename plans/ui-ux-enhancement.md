@@ -264,6 +264,25 @@ User verdicts after review: **keep dark + emerald, keep the TOP NAVBAR (no rail)
 
 ### ✅ File status: COMPLETE
 
+---
+
+## 🚀 NEXT: 7.5/10 → 8.5–9/10 (Roadmap — agreed 2026-08-07, start in next session)
+
+Current honest rating ~**7.5–8/10**. To cross into ~9, the work is **per-screen visual depth**, not more system. Keep dark + emerald + top navbar. Verify each step green (lint / 50 backend / 12 frontend / build) and `npm run electron:dev` for pixel QA.
+
+| # | Track | Concrete moves | Est. |
+|---|---|---|---|
+| 1 | **Admin per-tab polish (finish the "partial")** | Toned section headers with icon tiles; consistent section cards/rounding; tighten spacing rhythm across the 4 tabs (menu / inventory / purchases / salaries). Deep-polish each tab's header+form+table block so it no longer reads "generic card." | M–L |
+| 2 | **Spacing & grid rhythm pass (all screens)** | Standardize vertical rhythm (section gaps), card padding, and radius scale (token-driven). Denser admin sections; consistent 0.25/0.5/0.75 gaps everywhere. Fix any leftover horizontal-overflow spots. | M |
+| 3 | **Button/action tone tuning** | One consistent action hierarchy: primary (emerald), secondary (slate), danger (rose) — verify every destructive action is rose, every confirm is emerald; unify borders/glows so nothing looks "borrowed." | S–M |
+| 4 | **POS touch ergonomics** | On the touchscreen POS: larger item-card touch targets, clearer "add" feedback, spaceship the checkout bar. Category tabs static-active (already done) — ensure hit areas comfortable. | S–M |
+| 5 | **Visual QA in `electron:dev`** | The #1 untapped item: run `npm run electron:dev`, review every screen in RTL, kill any overflow/misalignment/mismatched shadow. Present a before/after to the user for the final rating. | M |
+
+**Rules:** keep behavior identical (tests are the guardrail), keep dark+emerald+top-nav, RTL-first, and keep a commit per track with all suites green.
+
+### Last verification state (all green)
+`npm run lint` 0 · `npm test` 50 backend · `npm run test:frontend` 12 · `npm run build` ✓
+
 ### Last verification state (all green)
 `npm run lint` 0 · `npm test` 50 backend · `npm run test:frontend` 12 · `npm run build` ✓ — after every commit in this section.
 
