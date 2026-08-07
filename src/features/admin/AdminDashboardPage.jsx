@@ -115,6 +115,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     const [newItemPrice, setNewItemPrice] = useState('');
     const [newItemCategory, setNewItemCategory] = useState('');
     const [menuSearch, setMenuSearch] = useState('');
+    const [menuCategoryFilter, setMenuCategoryFilter] = useState('');
 
     // Category management
     const [newCategoryName, setNewCategoryName] = useState('');
@@ -1095,14 +1096,26 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
                                 <span className="text-emerald-400"><icons.menu size={18} /></span> إدارة قائمة المأكولات والمشروبات
                             </h3>
-                            {/* Search bar */}
-                            <input
-                                type="text"
-                                placeholder="ابحث عن صنف معين..."
-                                value={menuSearch}
-                                onChange={(e) => setMenuSearch(e.target.value)}
-                                className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right w-full sm:w-64"
-                            />
+                            {/* Search bar + category filter */}
+                            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                                <input
+                                    type="text"
+                                    placeholder="ابحث عن صنف معين..."
+                                    value={menuSearch}
+                                    onChange={(e) => setMenuSearch(e.target.value)}
+                                    className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right flex-1 min-w-40"
+                                />
+                                <select
+                                    value={menuCategoryFilter}
+                                    onChange={(e) => setMenuCategoryFilter(e.target.value)}
+                                    className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-right cursor-pointer"
+                                >
+                                    <option value="">كل الفئات</option>
+                                    {categories.map(cat => (
+                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -1129,7 +1142,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 type="number"
                                                 required
                                                 min="0.01"
-                                                step="0.01"
+                                                step="1"
                                                 value={newItemPrice}
                                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                                 placeholder="65.00"
@@ -1213,6 +1226,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                         </thead>
                                         <tbody className={tbodyClass}>
                                             {menu
+                                                .filter(item => menuCategoryFilter === '' || item.category === menuCategoryFilter)
                                                 .filter(item => item.name.toLowerCase().includes(menuSearch.toLowerCase()))
                                                 .map((item) => (
                                                     <Fragment key={item.id}>
@@ -1355,7 +1369,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                     type="number"
                                                                                     required
                                                                                     min="0.001"
-                                                                                    step="any"
+                                                                                    step="1"
                                                                                     value={newCompQty}
                                                                                     onChange={(e) => setNewCompQty(e.target.value)}
                                                                                     placeholder="1"
@@ -1652,7 +1666,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                 type="number"
                                                 required
                                                 min="0.001"
-                                                step="any"
+                                                step="1"
                                                 value={newPurchaseQty}
                                                 onChange={(e) => setNewPurchaseQty(e.target.value)}
                                                 placeholder="7"
