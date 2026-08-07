@@ -1213,8 +1213,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                             </div>
 
                             {/* Table: Menu List */}
-                            <div className="lg:col-span-2 bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                                <div className={tableWrap}>
+                            <div className="lg:col-span-2 bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm flex flex-col min-h-0">
+                                <div className={cx(tableWrap, 'max-h-[70vh] overflow-y-auto scrollbar-right')}>
                                     <table className="w-full text-right border-collapse">
                                         <thead className={theadClass}>
                                             <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
@@ -1368,7 +1368,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                                                                 <input
                                                                                     type="number"
                                                                                     required
-                                                                                    min="0.001"
+                                                                                    min="1"
                                                                                     step="1"
                                                                                     value={newCompQty}
                                                                                     onChange={(e) => setNewCompQty(e.target.value)}
@@ -1665,7 +1665,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                                             <input
                                                 type="number"
                                                 required
-                                                min="0.001"
+                                                min="1"
                                                 step="1"
                                                 value={newPurchaseQty}
                                                 onChange={(e) => setNewPurchaseQty(e.target.value)}
@@ -2449,8 +2449,8 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
                         })()}
 
                         {/* Orders Table */}
-                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm">
-                            <div className={tableWrap}>
+                        <div className="bg-slate-800 border border-slate-700/60 rounded-xl overflow-hidden shadow-sm flex flex-col min-h-0">
+                            <div className={cx(tableWrap, 'max-h-[60vh] overflow-y-auto scrollbar-right')}>
                                 <table className="w-full text-right border-collapse">
                                     <thead className={theadClass}>
                                         <tr className="bg-slate-700/50 text-slate-300 border-b border-slate-700 text-sm">
