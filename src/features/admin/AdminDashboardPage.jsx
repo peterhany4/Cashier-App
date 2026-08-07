@@ -173,7 +173,7 @@ export default function AdminDashboardPage({ user, menu, setMenu, categories = [
     // In-app Toast — replaces native alert() to keep Electron window focus
     // Shared in-app toast + confirm (shims keep existing call sites unchanged)
     const toast = useToast();
-    const showToast = (msg, type = 'success') => toast(type === 'success' ? 'success' : 'danger');
+    const showToast = (msg, type = 'success') => toast(msg, type);
     const confirm = useConfirm();
     const showConfirm = (message, onConfirm) => {
         confirm({ message }).then((ok) => { if (ok) onConfirm(); });
