@@ -260,7 +260,9 @@ User verdicts after review: **keep dark + emerald, keep the TOP NAVBAR (no rail)
 7. ✅ **Integer-only number arrows** — all `<input type="number">` `step="1"`; quantity fields `min="1"` (no 0.1 steps / no `min="0.001"`). `d2932b1`, `7c94604`.
 8. ✅ **Menu table height = add-item form column** — grid `items-stretch`, table card `h-full`, inner `flex-1 min-h-0` (own scroll). `99e8587`.
 9. ✅ **Login username autofocus** on app open. `99e8587`.
-10. ▢ **Pending / user-rated later:** refine POS item cards + category-tab active state (`animate-pulse` → static), and any remaining per-screen polish. The user said they'll rate the whole UI/UX pass once these layout items are in — so they're the last mile.
+10. ✅ **POS polish (last-mile)** — category-tab active state is already a **static** treatment (no `animate-pulse`); item cards already refined (gradient hover, emerald add affordance); converted the 3 remaining POS plain-text empties (no-categories, no-items/search, empty cart) to the shared `EmptyState`. `fff5d37`+this.
+
+### ✅ File status: COMPLETE
 
 ### Last verification state (all green)
 `npm run lint` 0 · `npm test` 50 backend · `npm run test:frontend` 12 · `npm run build` ✓ — after every commit in this section.

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import icons from '../../components/icons';
 import { useToast } from '../../components/ui';
+import EmptyState from '../../components/ui/EmptyState';
+import { SearchX, UtensilsCrossed, ShoppingCart } from 'lucide-react';
 
 export default function CashierPage({ user, menu = [], categories = [] }) {
     const [activeCategory, setActiveCategory] = useState(null);
@@ -106,7 +108,9 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                                 </button>
                             ))}
                             {categories.length === 0 && (
-                                <div className="text-slate-500 text-sm py-4">لا توجد فئات. أضف فئات من لوحة التحكم أولاً.</div>
+                                <div className="w-full">
+                                    <EmptyState className="py-6" icon={UtensilsCrossed} title="لا توجد فئات" message="أضف فئات من لوحة التحكم أولاً." />
+                                </div>
                             )}
                         </div>
                     </div>
@@ -132,10 +136,12 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                                 </button>
                             ))}
                             {filteredMenu.length === 0 && (
-                                <div className="col-span-2 xl:col-span-3 py-16 text-center text-slate-500 bg-slate-800/40 rounded-2xl border border-slate-700/40">
-                                    {isSearching
-                                        ? `لا توجد نتائج تطابق "${searchQuery}".`
-                                        : 'لا توجد أصناف في هذه الفئة.'}
+                                <div className="col-span-2 xl:col-span-3">
+                                    <EmptyState
+                                        icon={isSearching ? SearchX : UtensilsCrossed}
+                                        title={isSearching ? 'لا توجد نتائج' : 'لا توجد أصناف'}
+                                        message={isSearching ? `لا توجد نتائج تطابق "${searchQuery}".` : 'لا توجد أصناف في هذه الفئة.'}
+                                    />
                                 </div>
                             )}
                         </div>
@@ -156,10 +162,11 @@ export default function CashierPage({ user, menu = [], categories = [] }) {
                     {/* Cart Items List */}
                     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-right p-4 space-y-3">
                         {cart.length === 0 ? (
-                            <div className="h-full flex flex-col justify-center items-center text-slate-500">
-                                <span className="text-4xl mb-2"><icons.cart size={48} strokeWidth={1.5} /></span>
-                                <p>السلة فارغة. ابدأ بإضافة وجبات</p>
-                            </div>
+                            <EmptyState
+                                icon={ShoppingCart}
+                                title="السلة فارغة"
+                                message="ابدأ بإضافة الوجبات من القائمة."
+                            />
                         ) : (
                             cart.map(item => (
                                 <div key={item.id} className="bg-surface-1/90 border border-slate-700/60 p-3 rounded-xl flex justify-between items-center hover:border-emerald-500/40 transition-colors">
