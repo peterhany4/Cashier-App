@@ -1,7 +1,7 @@
 # 🎨 Cashier App — UI/UX Enhancement Plan (Full Redesign)
 
 > **Created:** 2026-08-05
-> **Status:** ✅ COMPLETE — Phases 0 (foundation), 1 (primitives), 2 (global sweep), 3 (per-screen) all done (2026-08-05)
+> **Status:** ✅ COMPLETE at the design-system level (Phases 0–3) + visual restyle (depth & polish) done (2026-08-07). Small UI features + follow-up polish tracked in §"🎚️ Visual Restyle — Forward Direction". Keeps: dark + emerald, ORIGINAL TOP NAVBAR (no rail), no light mode.
 > **Stack:** Electron + React (Vite) + Tailwind CSS 4 + SQLite (better-sqlite3)
 > **Language:** Arabic UI (RTL)
 
@@ -224,19 +224,19 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 
 ---
 
-## 🎚️ Visual Restyle — Depth & Polish (=== IN PROGRESS ===)
+## 🎚️ Visual Restyle — Depth & Polish (=== DONE, small-feature follow-ups landed ===)
 
-> **Why this section exists:** Phases 0–3 delivered the design *system* (tokens, primitives, icons, font, unified toast/confirm) but the screens were **not visually restyled** — so the visible change was limited to font + icons. This is the pass that actually makes the UI *feel* different.
+> **Why this section exists:** Phases 0–3 delivered the design *system* (tokens, primitives, icons, font, unified toast/confirm) but the screens were **not visually restyled** — so the visible change was limited to font + icons. This pass made the UI *feel* different. It is now effectively complete; new work is small features/polish recorded in "Forward direction" below.
 
-### Decision (agreed 2026-08-05)
-- **Keep the dark + emerald identity.**
-- **Direction selected: Option 1 — Depth & polish.** Add real elevation: layered cards, gradients on metrics, softer borders, refined header + buttons, better empty states, consistent spacing/rounding. Same palette → noticeably more "premium/designed."
-- Tasklist below tracks the per-screen work.
+### Decision (agreed 2026-08-05, confirmed 2026-08-07)
+- **Keep the dark + emerald identity + ORIGINAL TOP NAVBAR.** Light theme and side rail were tried and reverted.
+- **Direction: Depth & polish + layout hygiene** — layered cards, gradients on metrics, contained scroll, master/detail, consistent tables/empties.
 
 ### Alternatives — revisited (2026-08-07)
 - ~~**Light theme** — TRIED and REVERTED (commit `4ba31f4` → reverted by `a91d5`). The user disliked the light palette; reverted back to dark + emerald, which is the working state.~~
-- **Option 2 — New accent + depth:** same depth polish, but swap the brand accent (emerald → amber/gold or teal) for a noticeably fresh look.
-- **Option 3 — Different layout:** restructure major screens (e.g., left sidebar nav instead of top tabs, category/left receipt & cart pane, big touch targets on POS) — a clearly different feel beyond colors. **The user has now pointed at LAYOUT as the main thing they don't like** ("it is the layout, it could be better"), so layout restructuring is the forward direction.
+- ~~**Side rail nav** — TRIED (right-hand rail) and REVERTED to the original **top navbar** (`1c025e2` + `2b63080` built it, `1e99f35` restored the top header). The user found the side rail hurt dashboard responsiveness and storage (a horizontal scrollbar appeared), then later asked to "return to the normal top navbar." **Verified decision: KEEP the original TOP NAVBAR — do not re-introduce a side/left rail.**
+- **Option 2 — New accent + depth:** swap the brand accent (emerald → amber/gold or teal) for a fresh look.
+- **Option 3 — Different layout:** the user's real dislike is the "one long page/column" feel, resolved via internal-scroll cards + master/detail (see Forward direction below), NOT a rail.
 
 | Task | Status |
 |---|---|
@@ -249,14 +249,21 @@ All three phases done → the UI/UX enhancement here is functionally complete at
 | Empty states replace plain text | ✅ EmptyState adopted across receipts + all admin tables/lists |
 | Verify lint, tests, build green | ✅ lint 0, 50 backend, 12 frontend, build |
 
-### Forward direction — LAYOUT (the user's main dislike, 2026-08-07)
-The user reverted the light theme and clarified that **layout, not color**, is what feels off. Direction picked by the user: **Option 3 — persistent side rail**, placed on the **RIGHT (RTL)**. Keeping dark + emerald and behavior unchanged. Progress:
-1. ✅ **Right-hand side rail nav** — brand + user + nav + logout moved from the top header into a persistent dark rail; POS checkout bar constrained to the content area (was full-viewport `fixed`). `1c025e2`.
-2. ▢ Decide whether the rail should collapse to icons-only on narrow windows (touchscreen friendliness).
-3. ▢ Admin `MenuTab` tall column — split "add form + table + components editor" so headers/forms pin and only the table scrolls; component editor as a contained panel instead of a giant expanding `<tr>`.
-4. ▢ Receipts order-details — master/detail contained panel instead of pushing the whole page down.
-5. ▢ Category tabs active state — replace jarring `animate-pulse` with a clean static active treatment.
-6. ▢ Consistent table headers/badges + empty states (the two open to-do rows, above).
+### Forward direction — Layout & polish (2026-08-07 onward)
+User verdicts after review: **keep dark + emerald, keep the TOP NAVBAR (no rail), and make long lists scroll internally instead of growing the page.** The "layout" complaint = tables tall enough to need their own scroll + detail panels that don't shove the page. Progress:
+1. ✅ **Top navbar restored** — original brand + user chip + nav tabs + logout; POS checkout bar back to full-width `fixed`. `1e99f35`.
+2. ✅ **Master/detail order details** — receipts + admin orders now expand into a **full-width contained detail panel** (header bar + total + clean rows) instead of inline-in-a-cell. `1e99f35`.
+3. ✅ **Consistent table headers/badges + empty states** — shared `theadClass`/`thClass`/`rowClass`/`tdClass` on all 8 tables; all plain-text "لا توجد…" rows → shared `EmptyState`. `2fca695`.
+4. ✅ **Admin MenuTab column split** — 3-col grid (form+category mgmt | table spans 2); the component editor is a contained full-width panel (not a giant expanding `<tr>`).
+5. ✅ **Big-table internal scroll** — menu table (`max-h`, later `flex-1 h-full` matching the form column) + orders table (`max-h-[60vh]`) now scroll internally instead of stretching the page. `7c94604`, `99e8587`.
+6. ✅ **Category filter** in "إدارة قائمة المأكولات" — "كل الفئات" dropdown next to search (combines with search). `d2932b1`.
+7. ✅ **Integer-only number arrows** — all `<input type="number">` `step="1"`; quantity fields `min="1"` (no 0.1 steps / no `min="0.001"`). `d2932b1`, `7c94604`.
+8. ✅ **Menu table height = add-item form column** — grid `items-stretch`, table card `h-full`, inner `flex-1 min-h-0` (own scroll). `99e8587`.
+9. ✅ **Login username autofocus** on app open. `99e8587`.
+10. ▢ **Pending / user-rated later:** refine POS item cards + category-tab active state (`animate-pulse` → static), and any remaining per-screen polish. The user said they'll rate the whole UI/UX pass once these layout items are in — so they're the last mile.
+
+### Last verification state (all green)
+`npm run lint` 0 · `npm test` 50 backend · `npm run test:frontend` 12 · `npm run build` ✓ — after every commit in this section.
 
 ---
 
